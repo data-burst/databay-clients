@@ -334,6 +334,22 @@ def test_check_refuses_a_generated_client_that_does_not_match(repo) -> None:
     assert "version.py" in done.stderr
 
 
+def test_check_refuses_a_lock_that_records_another_version(repo) -> None:
+    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    path = repo / "python/uv.lock"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            'name = "databay-cli"\nversion = "0.2.0"', 'name = "databay-cli"\nversion = "0.1.0"'
+        ),
+        encoding="utf-8",
+    )
+
+    done = _release(repo, "check", "--tag", "python/v0.2.0")
+
+    assert done.returncode != 0
+    assert "uv.lock records databay-cli 0.1.0, but pyproject.toml is at 0.2.0" in done.stderr
+
+
 def test_check_refuses_a_version_with_no_changelog_section(repo) -> None:
     assert _release(repo, "prepare", "0.2.0").returncode == 0
     path = repo / "python/CHANGELOG.md"

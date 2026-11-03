@@ -1,5 +1,5 @@
 """
-The ``X-Databay-Feature`` header on the 404 a feature gate answers (docs/entitlements-errors.md).
+The ``X-Databay-Feature`` header on the 404 a feature gate answers.
 
 A gated feature that is off answers ``404 {"detail": "Not Found"}``, and an authenticated caller also
 gets this header naming the feature and why it is off. Standard library only: the server's tests load

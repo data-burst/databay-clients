@@ -105,7 +105,8 @@ def _revoke_superseded(http: httpx.Client, records: list[Credential], console: C
             console.inform(
                 "revoke_failed",
                 {"sub": record.sub, "error": exc.code},
-                f"warning: could not revoke the replaced session ({exc.code}); see docs/cli-auth.md to revoke it",
+                f"warning: could not revoke the replaced session ({exc.code}); "
+                "ask whoever runs the server to revoke it (docs/cli.md, Sign out)",
             )
             continue
         revoked += record.refresh_token is not None

@@ -293,7 +293,7 @@ def _message(detail: Any, status: int, code: str | None) -> str:  # noqa: ANN401
     if isinstance(detail, str):
         return detail
     if isinstance(detail, dict) and isinstance(detail.get("message"), str):
-        # The envelope some services answer under ``detail`` (docs/workspace-api.md).
+        # The envelope some services answer under ``detail``: ``{"message": ..., ...}``.
         return detail["message"]
     return f"HTTP {status}" + (f" {code}" if code else "")
 

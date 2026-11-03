@@ -42,11 +42,11 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `no_profile` | 3 | do_first | none | Sign in with databay login --server URL, or pass --profile NAME. |
 | `non_databay_answer` | 1 | fix_and_retry | none | Something other than Databay answered (a proxy, a gateway or a wrong server URL): check the profile's server. |
 | `not_ready` | 9 | fix_and_retry | none | Fix what the answer names, then run the check again. |
-| `offline_access_not_granted` | 3 | ask_human | none | Keycloak did not grant offline_access: an admin gives the user that role (default-roles-databay composes it; see docs/cli-auth.md). |
+| `offline_access_not_granted` | 3 | ask_human | none | Keycloak did not grant offline_access: ask whoever runs the server to give your user that role (docs/cli.md, Sign in). |
 | `profile_invalid` | 3 | fix_and_retry | none | Fix config.toml as the message says. |
 | `project_conflict` | 2 | fix_and_retry | none | Send one project: X-Databay-Project-ID must match the route and the body. |
 | `response_invalid` | 8 | ask_human | unknown | The answer does not match this CLI's models. Upgrade the CLI or report it. |
-| `revoke_failed` | 1 | ask_human | partial | The local credential is deleted, but Keycloak may still hold the session: an admin revokes it (docs/cli-auth.md, Listing and revoking a user's CLI sessions). |
+| `revoke_failed` | 1 | ask_human | partial | The local credential is deleted, but Keycloak may still hold the session: ask whoever runs the server to revoke it (docs/cli.md, Sign out). |
 | `secret_required` | 2 | fix_and_retry | none | Pass the secret with --<field>-env NAME or --<field>-stdin; it is never a flag. |
 | `server_too_old` | 7 | ask_human | none | This command needs a newer server. Upgrade the server or use an older CLI. |
 | `server_unavailable` | 6 | retry | unknown | The server answered without a Databay error body. Try again later. |

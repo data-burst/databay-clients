@@ -117,8 +117,8 @@ LOCAL_CODES: dict[str, LocalCode] = {
         3,
         "ask_human",
         "none",
-        "Keycloak did not grant offline_access: an admin gives the user that role "
-        "(default-roles-databay composes it; see docs/cli-auth.md).",
+        "Keycloak did not grant offline_access: ask whoever runs the server to give your user that role "
+        "(docs/cli.md, Sign in).",
     ),
     "expired_token": LocalCode(
         3, "retry", "none", "The sign-in code expired before it was approved. Run databay login again.", 1
@@ -136,8 +136,8 @@ LOCAL_CODES: dict[str, LocalCode] = {
         1,
         "ask_human",
         "partial",
-        "The local credential is deleted, but Keycloak may still hold the session: an admin revokes it "
-        "(docs/cli-auth.md, Listing and revoking a user's CLI sessions).",
+        "The local credential is deleted, but Keycloak may still hold the session: ask whoever runs the "
+        "server to revoke it (docs/cli.md, Sign out).",
     ),
     "token_missing": LocalCode(
         3, "do_first", "none", "Set DATABAY_TOKEN to an access token; the profile reads it from there."

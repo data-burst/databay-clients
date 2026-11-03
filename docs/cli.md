@@ -29,11 +29,25 @@ databay status
 
 `databay status` prints the profile, server, product, `api_version` and user.
 
+A person's sign-in asks for `offline_access`, so the CLI can renew its session without a new login.
+If the server's identity provider does not grant it, `databay login` stops with
+`offline_access_not_granted`: whoever runs the server gives your user that role.
+
+## Sign out
+
+```bash
+databay logout
+```
+
+`databay logout` revokes the profile's session at the identity provider and deletes the stored
+credential. When the revocation fails (`revoke_failed`), the local credential is still deleted, and
+whoever runs the server can end the session from the identity provider's list of the user's sessions.
+
 ## Versions
 
 Two versions, which move separately:
 
-- **The package version** (`0.2.0`), in `python/pyproject.toml`. `src/databay/version.py` is generated
+- **The package version**, in `python/pyproject.toml`. `src/databay/version.py` is generated
   from it. Tags and the changelog use this one.
 - **`api_version`** (`1.0`), in `contract/api_version.json`. The server reports it from
   `GET /api/auth/client-config`. A client refuses a server on another major (`server_version_mismatch`)

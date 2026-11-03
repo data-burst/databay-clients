@@ -69,6 +69,21 @@ def test_a_meta_that_disagrees_with_its_spec_is_an_error(reader, tmp_path) -> No
         reader.load_released(path)
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("since", ["GET /a"], "since is not an object"),
+        ("error_codes", "pipe_not_found", "error_codes is not a list of strings"),
+        ("cdc_error_codes", [1], "cdc_error_codes is not a list of strings"),
+    ],
+)
+def test_a_meta_value_of_the_wrong_type_is_an_error(reader, tmp_path, field, value, message) -> None:
+    path = _released(tmp_path, _meta(**{field: value}))
+
+    with pytest.raises(reader.ContractError, match=message):
+        reader.load_released(path)
+
+
 def test_an_api_version_file_with_another_key_is_an_error(reader, tmp_path) -> None:
     path = tmp_path / "api_version.json"
     path.write_text(json.dumps({"api_version": "1.0", "minimum": "1.0"}), encoding="utf-8")

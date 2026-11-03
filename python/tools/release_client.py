@@ -99,6 +99,16 @@ def _set_version(version: str) -> None:
     _replace_once(CLIENT_LOCK, rf'^(name = "{PACKAGE}"\nversion = )"[^"]+"$', rf'\g<1>"{version}"')
 
 
+def lock_version() -> str:
+    """The version ``uv.lock`` records for this package."""
+    found = re.findall(
+        rf'^name = "{PACKAGE}"\nversion = "([^"]+)"$', CLIENT_LOCK.read_text(encoding="utf-8"), re.MULTILINE
+    )
+    if len(found) != 1:
+        raise ReleaseRefused(f"{CLIENT_LOCK.name}: expected one {PACKAGE} entry, found {len(found)}")
+    return found[0]
+
+
 def _unreleased_notes(text: str) -> str:
     if text.count(f"{UNRELEASED_HEADING}\n") != 1:
         raise ReleaseRefused(f"{CHANGELOG.name}: expected one '{UNRELEASED_HEADING}' heading")
@@ -205,8 +215,13 @@ def prepare(version: str) -> str:
     _git("switch", "--quiet", "-c", branch)
     try:
         _write_release(version)
-    except Exception:
-        _roll_back(start, branch)
+    except Exception as exc:
+        try:
+            _roll_back(start, branch)
+        except ReleaseRefused as failed:
+            raise ReleaseRefused(
+                f"{exc}\nthen rolling back failed, so the repository is not as it was: {failed}"
+            ) from exc
         raise
     return branch
 
@@ -220,6 +235,9 @@ def check(tag: str) -> None:
     current = project_version()
     if version != current:
         raise ReleaseRefused(f"tag {tag} names {version}, but {PYPROJECT.name} is at {current}")
+    locked = lock_version()
+    if locked != current:
+        raise ReleaseRefused(f"{CLIENT_LOCK.name} records {PACKAGE} {locked}, but {PYPROJECT.name} is at {current}")
     refuse_unless_one_release()
     differ = _generated_files_differ()
     if differ is not None:

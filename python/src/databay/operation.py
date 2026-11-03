@@ -2,7 +2,7 @@
 What one exposed API operation is to the SDK and CLI, as plain data.
 
 The generated ``databay.operations.<noun>`` modules hold one ``Operation`` per route, built from the
-route's ``x-databay-client`` declaration (docs/client-contract.md). Both the SDK resources and the
+route's ``x-databay-client`` declaration in ``contract/core.json``. Both the SDK resources and the
 CLI commands read them, so the two never disagree on a path, a flag or a wait. This module imports
 only the standard library: ``python/tools/gen_client.py`` builds these objects too.
 """

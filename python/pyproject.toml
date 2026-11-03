@@ -36,7 +36,8 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling>=1.26"]
+# Exact, so the wheel a tag publishes is built by the backend the PR was tested with.
+requires = ["hatchling==1.32.4"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -77,9 +78,9 @@ ignore = [
     "PLR0913",
     "FBT001",
     "FBT002",
-    # Docstrings say what a function returns ("The project ``op`` is sent for."), as in the backend.
+    # Docstrings say what a function returns ("The project ``op`` is sent for.").
     "D401",
-    # The exception names are the design's (DatabayServerUnavailable, DatabayResponseInvalid).
+    # The exception names are part of the SDK's API (DatabayServerUnavailable, DatabayResponseInvalid).
     "N818",
     "PLR0917",
     "C901",

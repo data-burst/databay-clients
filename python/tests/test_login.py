@@ -1,8 +1,5 @@
 """
 ``databay login`` and ``databay logout`` against a scripted server and a scripted Keycloak.
-
-The flows against the real Keycloak, the realm's own client and its consent page are in the
-backend suite (``tests/auth/test_cli_keycloak.py``).
 """
 
 from __future__ import annotations

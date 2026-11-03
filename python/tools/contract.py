@@ -95,6 +95,11 @@ def load_released(released_spec: Path) -> Released | None:
         found = sorted(data) if isinstance(data, dict) else type(data).__name__
         raise ContractError(f"{meta.name}: expected exactly the keys {sorted(META_KEYS)}, found {found}")
     parse_api_version(data["api_version"])
+    if not isinstance(data["since"], dict):
+        raise ContractError(f"{meta.name}: since is not an object")
+    for key in ("error_codes", "cdc_error_codes"):
+        if not isinstance(data[key], list) or not all(isinstance(code, str) for code in data[key]):
+            raise ContractError(f"{meta.name}: {key} is not a list of strings")
     for key, value in data["since"].items():
         try:
             parse_api_version(value)

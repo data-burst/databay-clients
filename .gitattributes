@@ -1,5 +1,6 @@
 # Generated files: GitHub folds them in diffs. python/tests/test_generator.py fails when a generated file
-# is not marked here. contract/ is copied from the server by its sync and never edited here.
+# is not marked here. contract/ is copied from the server by its sync and never edited here; -text keeps
+# its bytes, which contract/SOURCE records digests of, unchanged on checkout.
 python/src/databay/models/** linguist-generated=true
 python/src/databay/operations/** linguist-generated=true
 python/src/databay/resources/** linguist-generated=true
@@ -11,4 +12,4 @@ python/src/databay/version.py linguist-generated=true
 python/src/databay/skill/references/commands.md linguist-generated=true
 python/src/databay/skill/references/errors.md linguist-generated=true
 python/uv.lock linguist-generated=true
-contract/** linguist-generated=true
+contract/** -text linguist-generated=true

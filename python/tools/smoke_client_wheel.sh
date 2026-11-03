@@ -9,9 +9,11 @@ expected=$3
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-python3 -m zipfile -l "$wheel" >"$work/listing"
+python3 -c 'import sys, zipfile; print("\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))' "$wheel" >"$work/listing"
 for file in databay/skill/SKILL.md databay/skill/references/commands.md databay/skill/references/errors.md licenses/LICENSE; do
-  grep -q "$file" "$work/listing" || {
+  # The path itself, or the path under a folder such as the .dist-info one.
+  awk -v f="$file" '$0 == f || substr($0, length($0) - length(f)) == "/" f { found = 1 } END { exit !found }' \
+    "$work/listing" || {
     echo "the wheel does not hold $file" >&2
     exit 1
   }
@@ -23,7 +25,7 @@ uv pip install --quiet --python venv/bin/python "$wheel"
 databay=$work/venv/bin/databay
 
 "$databay" --help >/dev/null
-"$databay" --version | grep -q "databay $expected " || {
+"$databay" --version | grep -qF "databay $expected " || {
   echo "the wheel reports $("$databay" --version), expected $expected" >&2
   exit 1
 }
@@ -36,7 +38,7 @@ for file in SKILL.md references/commands.md references/errors.md; do
     exit 1
   }
 done
-grep -q "$expected" target/.claude/skills/databay/SKILL.md || {
+grep -qxF "  databay-cli-version: \"$expected\"" target/.claude/skills/databay/SKILL.md || {
   echo "the installed SKILL.md does not record version $expected" >&2
   exit 1
 }

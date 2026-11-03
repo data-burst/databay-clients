@@ -1094,7 +1094,7 @@ def python_schema_names(document: dict[str, Any]) -> dict[str, Any]:
     A name that still is not a class name, or that another schema already has, is an error.
     """
     schemas = document.get("components", {}).get("schemas", {})
-    renames = {name: re.sub(r"\W", "", name) for name in schemas if not name.isidentifier()}
+    renames = {name: pascal(name) for name in schemas if not name.isidentifier()}
     if not renames:
         return document
     taken = set(schemas) - set(renames)
