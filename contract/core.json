@@ -18389,7 +18389,7 @@
      "columns": [],
      "destructive": false,
      "examples": [
-      "databay canvas-table-check get <run_id>"
+      "databay canvas-table-check get <project_id> <run_id>"
      ],
      "idempotent": false,
      "kind": "exposed",
@@ -25198,7 +25198,7 @@
      "columns": [],
      "destructive": true,
      "examples": [
-      "databay warehouse-access-settings set <project_id> --personal-logins-enabled true --yes"
+      "databay warehouse-access-settings set <project_id> --personal-logins-enabled --yes"
      ],
      "idempotent": false,
      "kind": "exposed",
