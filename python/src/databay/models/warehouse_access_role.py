@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
-from databay.models.shared import AccessScopeMode, AllOf-Output, AnyOf-Output, ReconcileOut, RowCondition
+from databay.models.shared import AccessScopeMode, AllOfOutput, AnyOfOutput, ReconcileOut, RowCondition
 
 
 class AccessRoleOrigin(OpenStrEnum):
@@ -36,7 +36,7 @@ class AccessRoleCreate(RequestModel):
 class AccessRuleOut(ResponseModel):
     columns: list[str] | None
     db_uuid: str
-    row_filter: RowCondition | AllOf-Output | AnyOf-Output | None
+    row_filter: RowCondition | AllOfOutput | AnyOfOutput | None
     status: RuleStatus
     status_reason: str | None
     table_name: str | None
@@ -66,18 +66,18 @@ class AccessRolePatch(RequestModel):
     revision: int
 
 
-class AnyOf-Input(RequestModel):
-    any: list[RowCondition | AllOf-Input | AnyOf-Input]
+class AnyOfInput(RequestModel):
+    any: list[RowCondition | AllOfInput | AnyOfInput]
 
 
-class AllOf-Input(RequestModel):
-    all: list[RowCondition | AllOf-Input | AnyOf-Input]
+class AllOfInput(RequestModel):
+    all: list[RowCondition | AllOfInput | AnyOfInput]
 
 
 class AccessRuleIn(RequestModel):
     columns: list[str] | None = None
     db_uuid: str
-    row_filter: RowCondition | AllOf-Input | AnyOf-Input | None = None
+    row_filter: RowCondition | AllOfInput | AnyOfInput | None = None
     table_name: str | None = None
 
 

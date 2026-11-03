@@ -365,12 +365,12 @@ class RowCondition(ResponseModel):
     value: bool | int | float | str | list[bool | int | float | str] | None = None
 
 
-class AnyOf-Output(ResponseModel):
-    any: list[RowCondition | AllOf-Output | AnyOf-Output]
+class AnyOfOutput(ResponseModel):
+    any: list[RowCondition | AllOfOutput | AnyOfOutput]
 
 
-class AllOf-Output(ResponseModel):
-    all: list[RowCondition | AllOf-Output | AnyOf-Output]
+class AllOfOutput(ResponseModel):
+    all: list[RowCondition | AllOfOutput | AnyOfOutput]
 
 
 class BackfillRunResponse(ResponseModel):

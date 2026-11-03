@@ -259,3 +259,22 @@ def test_every_generated_file_is_marked_linguist_generated(monkeypatch):
     unmarked = [line for line in done.stdout.splitlines() if not line.endswith(": true")]
     assert len(paths) > 200
     assert unmarked == []
+
+
+def test_a_schema_name_with_a_dash_becomes_a_class_name_everywhere_it_is_referred_to(monkeypatch):
+    generator = _load_generator(monkeypatch)
+    ref = {"$ref": "#/components/schemas/Row-Output"}
+    document = {"paths": {"/a": {"get": ref}}, "components": {"schemas": {"Row-Output": {"items": ref}}}}
+
+    renamed = generator.python_schema_names(document)
+
+    new_ref = {"$ref": "#/components/schemas/RowOutput"}
+    assert renamed["components"]["schemas"] == {"RowOutput": {"items": new_ref}}
+    assert renamed["paths"]["/a"]["get"] == new_ref
+
+
+def test_a_schema_name_that_would_clash_with_another_class_is_a_generation_error(monkeypatch):
+    generator = _load_generator(monkeypatch)
+
+    with pytest.raises(generator.SpecError, match="Row-Output: this schema name cannot become the class name"):
+        generator.python_schema_names({"components": {"schemas": {"Row-Output": {}, "RowOutput": {}}}})

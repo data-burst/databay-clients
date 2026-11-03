@@ -1086,9 +1086,43 @@ def render_version(pyproject: Path) -> str:
     )
 
 
+def python_schema_names(document: dict[str, Any]) -> dict[str, Any]:
+    """
+    ``document`` with each component schema named as a Python class: ``AnyOf-Output`` becomes ``AnyOfOutput``.
+
+    The server names the request and response forms of one model ``<Model>-Input`` and ``<Model>-Output``.
+    A name that still is not a class name, or that another schema already has, is an error.
+    """
+    schemas = document.get("components", {}).get("schemas", {})
+    renames = {name: re.sub(r"\W", "", name) for name in schemas if not name.isidentifier()}
+    if not renames:
+        return document
+    taken = set(schemas) - set(renames)
+    for old, new in renames.items():
+        if not new.isidentifier() or keyword.iskeyword(new) or new in taken:
+            raise SpecError(f"{old}: this schema name cannot become the class name {new!r}")
+        taken.add(new)
+    prefix = "#/components/schemas/"
+
+    def rename(node: object) -> object:
+        if isinstance(node, dict):
+            return {key: rename(value) for key, value in node.items()}
+        if isinstance(node, list):
+            return [rename(value) for value in node]
+        if isinstance(node, str) and node.startswith(prefix) and node.removeprefix(prefix) in renames:
+            return prefix + renames[node.removeprefix(prefix)]
+        return node
+
+    renamed: dict[str, Any] = {key: rename(value) for key, value in document.items()}
+    renamed["components"]["schemas"] = {
+        renames.get(name, name): schema for name, schema in renamed["components"]["schemas"].items()
+    }
+    return renamed
+
+
 def generate(spec_path: Path, registry_path: Path, released_spec: Path = RELEASED_SPEC) -> dict[Path, str]:
     """Every generated file's path and text."""
-    spec = Spec(json.loads(spec_path.read_text(encoding="utf-8")))
+    spec = Spec(python_schema_names(json.loads(spec_path.read_text(encoding="utf-8"))))
     version = api_version_in(API_VERSION_FILE)
     since = since_by_operation(spec.document, load_released(released_spec), version)
     collected, plan = collect(spec, since)
