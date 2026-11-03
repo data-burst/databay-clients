@@ -1,0 +1,3 @@
+# The contract is copied from the server, and the workflows can publish to PyPI.
+/contract/ @ShAlireza
+/.github/ @ShAlireza
