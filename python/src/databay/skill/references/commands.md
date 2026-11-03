@@ -770,7 +770,7 @@ Acts in a project, sent as path project_id: --project, else the profile's active
 
 ```
 Examples:
-  databay canvas-table-check get <run_id>
+  databay canvas-table-check get <project_id> <run_id>
 ```
 
 Usage: `databay canvas-table-check get PROJECT_ID RUN_ID [OPTIONS]`
@@ -5483,7 +5483,7 @@ Removes or overwrites state: asks on a terminal, and needs --yes when output is 
 
 ```
 Examples:
-  databay warehouse-access-settings set <project_id> --personal-logins-enabled true --yes
+  databay warehouse-access-settings set <project_id> --personal-logins-enabled --yes
 ```
 
 Usage: `databay warehouse-access-settings set [PROJECT_ID] [OPTIONS]`

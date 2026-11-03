@@ -109,7 +109,7 @@ WAREHOUSE_ACCESS_SETTINGS_SET = Operation(
         shape='object',
     ),
     examples=(
-        'databay warehouse-access-settings set <project_id> --personal-logins-enabled true --yes',
+        'databay warehouse-access-settings set <project_id> --personal-logins-enabled --yes',
     ),
 )
 

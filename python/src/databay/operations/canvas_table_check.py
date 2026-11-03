@@ -41,7 +41,7 @@ CANVAS_TABLE_CHECK_GET = Operation(
         shape='object',
     ),
     examples=(
-        'databay canvas-table-check get <run_id>',
+        'databay canvas-table-check get <project_id> <run_id>',
     ),
 )
 
