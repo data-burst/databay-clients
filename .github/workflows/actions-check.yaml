@@ -1,0 +1,17 @@
+name: actions check
+
+# Proves GitHub Actions can start jobs in this repository.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "Actions can run jobs in this repository."
