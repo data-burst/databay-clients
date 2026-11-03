@@ -31,6 +31,7 @@ databay = "databay.cli.main:main"
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
+    "pyyaml>=6.0.2",
     "ruff>=0.15.12",
 ]
 

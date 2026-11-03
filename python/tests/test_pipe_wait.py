@@ -76,7 +76,16 @@ def _unavailable(code: str, *, retriable: bool | None, **fields: object) -> http
 def _warehouse(db_name: str | None = "analytics") -> httpx.Response:
     return answer(
         200,
-        {"uuid": SINK, "name": "w", "host": "h", "port": 1, "type": "clickhouse", "username": "u", "db_name": db_name},
+        {
+            "uuid": SINK,
+            "name": "w",
+            "host": "h",
+            "port": 1,
+            "type": "clickhouse",
+            "username": "u",
+            "db_name": db_name,
+            "access_capabilities": {"column_grants": False, "row_filters": False, "logins": False},
+        },
     )
 
 

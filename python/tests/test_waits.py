@@ -433,6 +433,7 @@ def _warehouse(status: str) -> httpx.Response:
             "type": "clickhouse",
             "username": "u",
             "status": status,
+            "access_capabilities": {"column_grants": False, "row_filters": False, "logins": False},
         },
     )
 
