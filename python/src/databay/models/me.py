@@ -29,6 +29,7 @@ class FeatureSource(OpenStrEnum):
 class Principal(OpenStrEnum):
     USER = 'user'
     API_KEY = 'api_key'
+    STAFF = 'staff'
 
 
 class FeatureGrant(ResponseModel):
@@ -40,6 +41,8 @@ class FeatureGrant(ResponseModel):
 
 class User(ResponseModel):
     access_token: str | None = None
+    acr: str | None = None
+    azp: str | None = None
     dashboard_flags: dict[str, bool] | None = None
     email: str | None = None
     entitlements: dict[str, Any] | None = None
@@ -59,6 +62,7 @@ class User(ResponseModel):
     preferred_username: str | None = None
     principal: Principal = 'user'
     roles: list[str] | None = None
+    staff_roles: list[str] | None = None
     sub: str
     trial_ends_at: datetime | None = None
     upgrade_cta: bool | None = None

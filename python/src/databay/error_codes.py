@@ -11,6 +11,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'access_pending': ErrorInfo('Try again in a moment; your warehouse access is still being set up.', 'retry', 'none', 5),
     'access_role_name_taken': ErrorInfo('Pick another name for the access role.', 'fix_and_retry', 'none', None),
     'access_role_revision_conflict': ErrorInfo('Reload the access settings, then make the change again.', 'fix_and_retry', 'none', None),
+    'account_already_a_source': ErrorInfo('Use the source that already reads this account, or choose another account.', 'fix_and_retry', 'none', None),
     'account_choice_required': ErrorInfo('Name one of the accounts detail lists.', 'fix_and_retry', 'none', None),
     'account_lookup_failed': ErrorInfo('Check the credentials, then try again.', 'fix_and_retry', 'none', None),
     'account_not_in_grant': ErrorInfo('Pick an account the credentials reach.', 'fix_and_retry', 'none', None),
@@ -98,7 +99,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'delete_blocked': ErrorInfo("Pick another target project, or first move what the answer's hint names.", 'fix_and_retry', 'none', None),
     'dest_schema_rejected': ErrorInfo('Point the pipe at a new destination table, or drop the existing table if you no longer need its data.', 'fix_and_retry', 'none', None),
     'dest_unreachable': ErrorInfo("Retry; if it keeps failing, check the destination warehouse's connection details.", 'retry', 'none', 3),
+    'destination_check_refused': ErrorInfo("Fix the warehouse's connection settings or its user's access as detail says, then retry.", 'fix_and_retry', 'none', None),
     'destination_table_exists': ErrorInfo('Pick another destination table, or change the transformation that already writes it.', 'fix_and_retry', 'none', None),
+    'destination_table_incompatible': ErrorInfo('Pick another destination table name, or drop the existing table, then retry.', 'fix_and_retry', 'none', None),
     'destination_table_taken': ErrorInfo('Pick another destination table.', 'fix_and_retry', 'none', None),
     'disable_reason_too_long': ErrorInfo('Shorten the reason.', 'fix_and_retry', 'none', None),
     'docs_article_moved': ErrorInfo("Follow Location to the article's current slug.", 'fix_and_retry', 'none', None),
@@ -134,6 +137,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'fx_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
     'home_conflict': ErrorInfo('Share the resource into the project instead; it already has a home project.', 'fix_and_retry', 'none', None),
     'host_not_allowed': ErrorInfo("Use your database's own address, a public hostname or a private address in your network.", 'fix_and_retry', 'none', None),
+    'idempotency_key_required': ErrorInfo('Send the apply again with an Idempotency-Key header.', 'fix_and_retry', 'none', None),
     'idempotency_key_reused': ErrorInfo('Send a new Idempotency-Key for a new request.', 'fix_and_retry', 'none', None),
     'immutable_source_field': ErrorInfo('Create a new source to change the fields listed.', 'fix_and_retry', 'none', None),
     'import_conflict': ErrorInfo('Choose which side wins for the conflicting overrides, then import again.', 'fix_and_retry', 'none', None),
@@ -200,16 +204,23 @@ REGISTRY: dict[str, ErrorInfo] = {
     'notification_replay_expired': ErrorInfo('Run the replay again with a future --not-after.', 'fix_and_retry', 'none', None),
     'notification_replay_no_address': ErrorInfo("Fix the recipient's contact, then run the replay again.", 'ask_human', 'none', None),
     'notification_replay_not_eligible': ErrorInfo('Pick a row in a status replay takes; a sent row needs --include-sent.', 'fix_and_retry', 'none', None),
+    'oauth_access_denied': ErrorInfo("Sign in again and allow Databay access on the provider's screen.", 'fix_and_retry', 'none', None),
     'oauth_callback_invalid': ErrorInfo('Start connecting again.', 'ask_human', 'none', None),
     'oauth_exchange_failed': ErrorInfo('Connect again.', 'ask_human', 'none', None),
     'oauth_not_configured': ErrorInfo("Ask an operator to set up the provider's OAuth app, or connect with your own credentials.", 'ask_human', 'none', None),
+    'oauth_scopes_missing': ErrorInfo('Sign in again and leave every permission ticked.', 'fix_and_retry', 'none', None),
     'oauth_source_field_not_editable': ErrorInfo('Edit only the name, and reconnect the source to renew its credentials.', 'fix_and_retry', 'none', None),
     'oauth_state_invalid': ErrorInfo('Start connecting again.', 'ask_human', 'none', None),
+    'operator_preview_stale': ErrorInfo('Preview the change again and confirm the new preview.', 'fix_and_retry', 'none', None),
+    'operator_request_not_received': ErrorInfo('Treat the change as not applied, and apply it again with a new key if it is still wanted.', 'ask_human', 'none', None),
     'org_not_found': ErrorInfo('Sign in again; if this persists, contact support.', 'ask_human', 'none', None),
     'org_visible_destination': ErrorInfo('Confirm with acknowledge_org_visible=true, or pick a destination of this project.', 'fix_and_retry', 'none', None),
     'organization_required': ErrorInfo('Ask an admin to add you to an organization, then sign in again.', 'ask_human', 'none', None),
     'organization_warehouse_unmapped': ErrorInfo('Contact support; the organization maps to no warehouse database.', 'ask_human', 'none', None),
     'outbox_full': ErrorInfo('Retry in a moment; the service refuses writes while its event queue catches up.', 'retry', 'none', 3),
+    'owner_answer_invalid': ErrorInfo('Ask an engineer to check that the staff console and the service run the same release.', 'ask_human', 'unknown', None),
+    'owner_answer_mismatch': ErrorInfo("Ask an engineer to compare this request with the service's own audit log.", 'ask_human', 'unknown', None),
+    'owner_unavailable': ErrorInfo('Try again in a minute; an apply sent again with the same key never applies twice.', 'retry', 'unknown', 3),
     'payg_not_allowed': ErrorInfo('Move the organization to a plan that allows overage, or keep within the limit.', 'fix_and_retry', 'none', None),
     'permission_denied': ErrorInfo('Ask an admin for the role this action needs.', 'ask_human', 'none', None),
     'personal_login_dropping': ErrorInfo('Your previous login for this warehouse is still being removed; try again in a minute.', 'retry', 'none', 3),
@@ -236,6 +247,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'precheck_busy': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'precheck_limiter_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'precheck_rate_limited': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
+    'preview_expired': ErrorInfo('Preview the change again, then apply it within five minutes.', 'fix_and_retry', 'none', None),
+    'preview_mismatch': ErrorInfo('Apply the change exactly as previewed, or preview the new change first.', 'fix_and_retry', 'none', None),
+    'preview_not_found': ErrorInfo('Preview the change again and apply the new preview.', 'fix_and_retry', 'none', None),
     'principal_disabled': ErrorInfo('Ask a project admin to enable this login, then rotate it for a new password.', 'ask_human', 'none', None),
     'profile_incomplete': ErrorInfo('Add an email, a given name and a family name to the profile, then try again.', 'fix_and_retry', 'none', None),
     'project_admin_required': ErrorInfo('Ask a project admin to do this, or to make you a project admin.', 'ask_human', 'none', None),
@@ -268,9 +282,12 @@ REGISTRY: dict[str, ErrorInfo] = {
     'reader_partition_conflict': ErrorInfo('Create the pipe without reader_id to give it a reader of its own.', 'fix_and_retry', 'none', None),
     'reader_publication_mode_mismatch': ErrorInfo('Create the pipe without reader_id; it then gets a reader of its own.', 'fix_and_retry', 'none', None),
     'reader_scope_required': ErrorInfo('Send the request again with "scope": "reader"; the answer lists the pipes it changes.', 'fix_and_retry', 'none', None),
+    'reason_required': ErrorInfo('Say why you are making the change, then send it again.', 'fix_and_retry', 'none', None),
+    'reason_too_short': ErrorInfo('Say why you are making the change in at least 15 characters.', 'fix_and_retry', 'none', None),
     'rebuild_in_progress': ErrorInfo("Wait for the pipe's open rebuild or migration to finish, then try again.", 'do_first', 'none', None),
     'rebuild_source_invalid': ErrorInfo('Pick a rebuild source this pipe supports.', 'fix_and_retry', 'none', None),
     'reconnect_different_account': ErrorInfo("Pick the source's own account when reconnecting.", 'fix_and_retry', 'none', None),
+    'reconnect_different_login': ErrorInfo('Sign in again with the login this source was set up with.', 'fix_and_retry', 'none', None),
     'reconnect_wrong_type': ErrorInfo('Reconnect with a source of the same type.', 'fix_and_retry', 'none', None),
     'removed_setting': ErrorInfo('Ask an operator to remove the setting named in setting from the environment.', 'ask_human', 'none', None),
     'replication_key_outside_identity': ErrorInfo("Choose a replication key within the reader's identity columns, or create the pipe without reader_id.", 'fix_and_retry', 'none', None),
@@ -359,6 +376,12 @@ REGISTRY: dict[str, ErrorInfo] = {
     'source_uninstalled': ErrorInfo("Reinstall the source's app.", 'ask_human', 'none', None),
     'source_updating': ErrorInfo('Retry once the source reports connected.', 'retry', 'none', 5),
     'source_wal_level_not_logical': ErrorInfo('Have the database admin set wal_level to logical and restart PostgreSQL, then create the pipe again.', 'ask_human', 'none', None),
+    'staff_action_unknown': ErrorInfo('Pick one of the actions this install lists.', 'fix_and_retry', 'none', None),
+    'staff_read_not_served': ErrorInfo('Ask an engineer to check which service serves this section on this install.', 'ask_human', 'none', None),
+    'staff_read_unavailable': ErrorInfo('Try again in a minute; reading changed nothing.', 'retry', 'none', 3),
+    'staff_reauth_required': ErrorInfo('Sign in to the staff console again with your one-time code, then retry.', 'do_first', 'none', None),
+    'staff_request_not_found': ErrorInfo('Check the request key: no staff change was made under it.', 'fix_and_retry', 'none', None),
+    'staff_required': ErrorInfo('Sign in to the staff console and retry from there.', 'do_first', 'none', None),
     'stream_not_found': ErrorInfo('Pick a stream the source has.', 'fix_and_retry', 'none', None),
     'subscription_changed': ErrorInfo('Retry; the subscription changed while this ran.', 'retry', 'none', 3),
     'support_delivery_failed': ErrorInfo('Retry; the message was not sent.', 'retry', 'none', 2),
@@ -421,6 +444,10 @@ class AccessRoleNameTakenError(DatabayApiError):
 
 class AccessRoleRevisionConflictError(DatabayApiError):
     code = 'access_role_revision_conflict'
+
+
+class AccountAlreadyASourceError(DatabayApiError):
+    code = 'account_already_a_source'
 
 
 class AccountChoiceRequiredError(DatabayApiError):
@@ -771,8 +798,16 @@ class DestUnreachableError(DatabayApiError):
     code = 'dest_unreachable'
 
 
+class DestinationCheckRefusedError(DatabayApiError):
+    code = 'destination_check_refused'
+
+
 class DestinationTableExistsError(DatabayApiError):
     code = 'destination_table_exists'
+
+
+class DestinationTableIncompatibleError(DatabayApiError):
+    code = 'destination_table_incompatible'
 
 
 class DestinationTableTakenError(DatabayApiError):
@@ -913,6 +948,10 @@ class HomeConflictError(DatabayApiError):
 
 class HostNotAllowedError(DatabayApiError):
     code = 'host_not_allowed'
+
+
+class IdempotencyKeyRequiredError(DatabayApiError):
+    code = 'idempotency_key_required'
 
 
 class IdempotencyKeyReusedError(DatabayApiError):
@@ -1179,6 +1218,10 @@ class NotificationReplayNotEligibleError(DatabayApiError):
     code = 'notification_replay_not_eligible'
 
 
+class OauthAccessDeniedError(DatabayApiError):
+    code = 'oauth_access_denied'
+
+
 class OauthCallbackInvalidError(DatabayApiError):
     code = 'oauth_callback_invalid'
 
@@ -1191,12 +1234,24 @@ class OauthNotConfiguredError(DatabayApiError):
     code = 'oauth_not_configured'
 
 
+class OauthScopesMissingError(DatabayApiError):
+    code = 'oauth_scopes_missing'
+
+
 class OauthSourceFieldNotEditableError(DatabayApiError):
     code = 'oauth_source_field_not_editable'
 
 
 class OauthStateInvalidError(DatabayApiError):
     code = 'oauth_state_invalid'
+
+
+class OperatorPreviewStaleError(DatabayApiError):
+    code = 'operator_preview_stale'
+
+
+class OperatorRequestNotReceivedError(DatabayApiError):
+    code = 'operator_request_not_received'
 
 
 class OrgNotFoundError(DatabayApiError):
@@ -1217,6 +1272,18 @@ class OrganizationWarehouseUnmappedError(DatabayApiError):
 
 class OutboxFullError(DatabayApiError):
     code = 'outbox_full'
+
+
+class OwnerAnswerInvalidError(DatabayApiError):
+    code = 'owner_answer_invalid'
+
+
+class OwnerAnswerMismatchError(DatabayApiError):
+    code = 'owner_answer_mismatch'
+
+
+class OwnerUnavailableError(DatabayApiError):
+    code = 'owner_unavailable'
 
 
 class PaygNotAllowedError(DatabayApiError):
@@ -1321,6 +1388,18 @@ class PrecheckLimiterUnavailableError(DatabayApiError):
 
 class PrecheckRateLimitedError(DatabayApiError):
     code = 'precheck_rate_limited'
+
+
+class PreviewExpiredError(DatabayApiError):
+    code = 'preview_expired'
+
+
+class PreviewMismatchError(DatabayApiError):
+    code = 'preview_mismatch'
+
+
+class PreviewNotFoundError(DatabayApiError):
+    code = 'preview_not_found'
 
 
 class PrincipalDisabledError(DatabayApiError):
@@ -1451,6 +1530,14 @@ class ReaderScopeRequiredError(DatabayApiError):
     code = 'reader_scope_required'
 
 
+class ReasonRequiredError(DatabayApiError):
+    code = 'reason_required'
+
+
+class ReasonTooShortError(DatabayApiError):
+    code = 'reason_too_short'
+
+
 class RebuildInProgressError(DatabayApiError):
     code = 'rebuild_in_progress'
 
@@ -1461,6 +1548,10 @@ class RebuildSourceInvalidError(DatabayApiError):
 
 class ReconnectDifferentAccountError(DatabayApiError):
     code = 'reconnect_different_account'
+
+
+class ReconnectDifferentLoginError(DatabayApiError):
+    code = 'reconnect_different_login'
 
 
 class ReconnectWrongTypeError(DatabayApiError):
@@ -1815,6 +1906,30 @@ class SourceWalLevelNotLogicalError(DatabayApiError):
     code = 'source_wal_level_not_logical'
 
 
+class StaffActionUnknownError(DatabayApiError):
+    code = 'staff_action_unknown'
+
+
+class StaffReadNotServedError(DatabayApiError):
+    code = 'staff_read_not_served'
+
+
+class StaffReadUnavailableError(DatabayApiError):
+    code = 'staff_read_unavailable'
+
+
+class StaffReauthRequiredError(DatabayApiError):
+    code = 'staff_reauth_required'
+
+
+class StaffRequestNotFoundError(DatabayApiError):
+    code = 'staff_request_not_found'
+
+
+class StaffRequiredError(DatabayApiError):
+    code = 'staff_required'
+
+
 class StreamNotFoundError(DatabayApiError):
     code = 'stream_not_found'
 
@@ -1985,6 +2100,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'access_pending': AccessPendingError,
     'access_role_name_taken': AccessRoleNameTakenError,
     'access_role_revision_conflict': AccessRoleRevisionConflictError,
+    'account_already_a_source': AccountAlreadyASourceError,
     'account_choice_required': AccountChoiceRequiredError,
     'account_lookup_failed': AccountLookupFailedError,
     'account_not_in_grant': AccountNotInGrantError,
@@ -2072,7 +2188,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'delete_blocked': DeleteBlockedError,
     'dest_schema_rejected': DestSchemaRejectedError,
     'dest_unreachable': DestUnreachableError,
+    'destination_check_refused': DestinationCheckRefusedError,
     'destination_table_exists': DestinationTableExistsError,
+    'destination_table_incompatible': DestinationTableIncompatibleError,
     'destination_table_taken': DestinationTableTakenError,
     'disable_reason_too_long': DisableReasonTooLongError,
     'docs_article_moved': DocsArticleMovedError,
@@ -2108,6 +2226,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'fx_unavailable': FxUnavailableError,
     'home_conflict': HomeConflictError,
     'host_not_allowed': HostNotAllowedError,
+    'idempotency_key_required': IdempotencyKeyRequiredError,
     'idempotency_key_reused': IdempotencyKeyReusedError,
     'immutable_source_field': ImmutableSourceFieldError,
     'import_conflict': ImportConflictError,
@@ -2174,16 +2293,23 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'notification_replay_expired': NotificationReplayExpiredError,
     'notification_replay_no_address': NotificationReplayNoAddressError,
     'notification_replay_not_eligible': NotificationReplayNotEligibleError,
+    'oauth_access_denied': OauthAccessDeniedError,
     'oauth_callback_invalid': OauthCallbackInvalidError,
     'oauth_exchange_failed': OauthExchangeFailedError,
     'oauth_not_configured': OauthNotConfiguredError,
+    'oauth_scopes_missing': OauthScopesMissingError,
     'oauth_source_field_not_editable': OauthSourceFieldNotEditableError,
     'oauth_state_invalid': OauthStateInvalidError,
+    'operator_preview_stale': OperatorPreviewStaleError,
+    'operator_request_not_received': OperatorRequestNotReceivedError,
     'org_not_found': OrgNotFoundError,
     'org_visible_destination': OrgVisibleDestinationError,
     'organization_required': OrganizationRequiredError,
     'organization_warehouse_unmapped': OrganizationWarehouseUnmappedError,
     'outbox_full': OutboxFullError,
+    'owner_answer_invalid': OwnerAnswerInvalidError,
+    'owner_answer_mismatch': OwnerAnswerMismatchError,
+    'owner_unavailable': OwnerUnavailableError,
     'payg_not_allowed': PaygNotAllowedError,
     'permission_denied': PermissionDeniedError,
     'personal_login_dropping': PersonalLoginDroppingError,
@@ -2210,6 +2336,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'precheck_busy': PrecheckBusyError,
     'precheck_limiter_unavailable': PrecheckLimiterUnavailableError,
     'precheck_rate_limited': PrecheckRateLimitedError,
+    'preview_expired': PreviewExpiredError,
+    'preview_mismatch': PreviewMismatchError,
+    'preview_not_found': PreviewNotFoundError,
     'principal_disabled': PrincipalDisabledError,
     'profile_incomplete': ProfileIncompleteError,
     'project_admin_required': ProjectAdminRequiredError,
@@ -2242,9 +2371,12 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'reader_partition_conflict': ReaderPartitionConflictError,
     'reader_publication_mode_mismatch': ReaderPublicationModeMismatchError,
     'reader_scope_required': ReaderScopeRequiredError,
+    'reason_required': ReasonRequiredError,
+    'reason_too_short': ReasonTooShortError,
     'rebuild_in_progress': RebuildInProgressError,
     'rebuild_source_invalid': RebuildSourceInvalidError,
     'reconnect_different_account': ReconnectDifferentAccountError,
+    'reconnect_different_login': ReconnectDifferentLoginError,
     'reconnect_wrong_type': ReconnectWrongTypeError,
     'removed_setting': RemovedSettingError,
     'replication_key_outside_identity': ReplicationKeyOutsideIdentityError,
@@ -2333,6 +2465,12 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'source_uninstalled': SourceUninstalledError,
     'source_updating': SourceUpdatingError,
     'source_wal_level_not_logical': SourceWalLevelNotLogicalError,
+    'staff_action_unknown': StaffActionUnknownError,
+    'staff_read_not_served': StaffReadNotServedError,
+    'staff_read_unavailable': StaffReadUnavailableError,
+    'staff_reauth_required': StaffReauthRequiredError,
+    'staff_request_not_found': StaffRequestNotFoundError,
+    'staff_required': StaffRequiredError,
     'stream_not_found': StreamNotFoundError,
     'subscription_changed': SubscriptionChangedError,
     'support_delivery_failed': SupportDeliveryFailedError,

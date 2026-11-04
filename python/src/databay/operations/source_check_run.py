@@ -90,7 +90,7 @@ SOURCE_CHECK_RUN_START = Operation(
                 location='body',
                 kind='boolean',
                 required=False,
-                description='also open a real replication connection and create a temporary replication slot; passing them is what lets a new pipe use this source',
+                description="also run the type's active probes (Postgres: open a real replication connection and create a temporary replication slot; a type with none runs only its catalog checks); passing them is what lets a new pipe use this source",
             ),
             Param(
                 name='config',

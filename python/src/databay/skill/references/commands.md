@@ -4445,7 +4445,7 @@ Usage: `databay source-check-run start [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `--active-probes` / `--no-active-probes` |  | also open a real replication connection and create a temporary replication slot; passing them is what lets a new pipe use this source |
+| `--active-probes` / `--no-active-probes` |  | also run the type's active probes (Postgres: open a real replication connection and create a temporary replication slot; a type with none runs only its catalog checks); passing them is what lets a new pipe use this source |
 | `--config JSON` |  | a new source's connection (JSON) |
 | `--name STRING` |  | a new source's name |
 | `--password-env NAME` |  | name of the environment variable that holds password (secret) |
@@ -4714,6 +4714,92 @@ Usage: `databay source-readiness-override set SOURCE_UUID [OPTIONS]`
 | `SOURCE_UUID` | yes | uuid of the connected source |
 | `--reason STRING` | yes | why, for the audit record |
 | `--requirement-ids LIST` (repeat) |  | checks to accept; all current blockers when omitted |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+## source-setup-choice
+
+### databay source-setup-choice check
+
+Start the source's check run for one option, without saving it; answers at once with the run.
+
+422 ``request_invalid`` for an unknown ``value``. ``publication`` answers the publication check's refusals: 409
+``not_checked``, ``publication_modes_off``, ``publication_mode_not_applicable`` or ``source_check_run_active``, 429
+``precheck_rate_limited``, and 503 ``precheck_busy`` or ``precheck_limiter_unavailable``.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay source-setup-choice check <source_uuid> publication --value customer_managed
+```
+
+Usage: `databay source-setup-choice check SOURCE_UUID CHOICE [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `SOURCE_UUID` | yes | uuid of the connected source |
+| `CHOICE` | yes | the choice a journey recipe names |
+| `--value STRING` | yes | the option to save or check, one of the choice's option values |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay source-setup-choice get
+
+Read one guided-setup choice: its saved option, whether it can still change, and every option with why one is off.
+
+``publication`` answers the publication route's refusals: 409 ``publication_modes_off``, 409
+``publication_mode_not_applicable`` and 503 ``publication_state_unavailable``.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay source-setup-choice get <source_uuid> publication
+```
+
+Usage: `databay source-setup-choice get SOURCE_UUID CHOICE [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `SOURCE_UUID` | yes | uuid of the connected source |
+| `CHOICE` | yes | the choice a journey recipe names |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay source-setup-choice set
+
+Save a guided-setup choice; the source is then held to that option's checks.
+
+422 ``request_invalid`` when ``value`` is not one of the choice's options (``allowed`` lists them). ``publication``
+answers the publication route's refusals: 409 ``publication_mode_locked``, ``publication_mode_unsupported``,
+``publication_modes_off`` or ``publication_mode_not_applicable``, and 503 ``publication_state_unavailable``.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay source-setup-choice set <source_uuid> publication --value customer_managed
+```
+
+Usage: `databay source-setup-choice set SOURCE_UUID CHOICE [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `SOURCE_UUID` | yes | uuid of the connected source |
+| `CHOICE` | yes | the choice a journey recipe names |
+| `--value STRING` | yes | the option to save or check, one of the choice's option values |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |

@@ -500,6 +500,7 @@ class CardRunRequest(RequestModel):
 
 
 class PrecheckFixView(ResponseModel):
+    action: str | None = None
     note: str | None = None
     provider: str
     sql: str | None = None

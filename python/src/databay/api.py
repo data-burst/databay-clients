@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     from databay.resources.source_pipe import SourcePipeResource
     from databay.resources.source_publication import SourcePublicationResource
     from databay.resources.source_readiness_override import SourceReadinessOverrideResource
+    from databay.resources.source_setup_choice import SourceSetupChoiceResource
     from databay.resources.source_stream import SourceStreamResource
     from databay.resources.source_table import SourceTableResource
     from databay.resources.sql import SqlResource
@@ -484,6 +485,12 @@ class Api:
         from databay.resources.source_readiness_override import SourceReadinessOverrideResource
 
         return SourceReadinessOverrideResource(self._session)
+
+    @cached_property
+    def source_setup_choice(self) -> SourceSetupChoiceResource:
+        from databay.resources.source_setup_choice import SourceSetupChoiceResource
+
+        return SourceSetupChoiceResource(self._session)
 
     @cached_property
     def source_stream(self) -> SourceStreamResource:
