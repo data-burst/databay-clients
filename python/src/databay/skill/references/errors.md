@@ -78,6 +78,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `access_pending` | 6 | retry | none | 5 | Try again in a moment; your warehouse access is still being set up. |
 | `access_role_name_taken` | 1 | fix_and_retry | none |  | Pick another name for the access role. |
 | `access_role_revision_conflict` | 1 | fix_and_retry | none |  | Reload the access settings, then make the change again. |
+| `account_already_a_source` | 1 | fix_and_retry | none |  | Use the source that already reads this account, or choose another account. |
 | `account_choice_required` | 1 | fix_and_retry | none |  | Name one of the accounts detail lists. |
 | `account_lookup_failed` | 1 | fix_and_retry | none |  | Check the credentials, then try again. |
 | `account_not_in_grant` | 1 | fix_and_retry | none |  | Pick an account the credentials reach. |
@@ -165,7 +166,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `delete_blocked` | 1 | fix_and_retry | none |  | Pick another target project, or first move what the answer's hint names. |
 | `dest_schema_rejected` | 1 | fix_and_retry | none |  | Point the pipe at a new destination table, or drop the existing table if you no longer need its data. |
 | `dest_unreachable` | 6 | retry | none | 3 | Retry; if it keeps failing, check the destination warehouse's connection details. |
+| `destination_check_refused` | 1 | fix_and_retry | none |  | Fix the warehouse's connection settings or its user's access as detail says, then retry. |
 | `destination_table_exists` | 1 | fix_and_retry | none |  | Pick another destination table, or change the transformation that already writes it. |
+| `destination_table_incompatible` | 1 | fix_and_retry | none |  | Pick another destination table name, or drop the existing table, then retry. |
 | `destination_table_taken` | 1 | fix_and_retry | none |  | Pick another destination table. |
 | `disable_reason_too_long` | 1 | fix_and_retry | none |  | Shorten the reason. |
 | `docs_article_moved` | 1 | fix_and_retry | none |  | Follow Location to the article's current slug. |
@@ -201,6 +204,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `fx_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
 | `home_conflict` | 1 | fix_and_retry | none |  | Share the resource into the project instead; it already has a home project. |
 | `host_not_allowed` | 1 | fix_and_retry | none |  | Use your database's own address, a public hostname or a private address in your network. |
+| `idempotency_key_required` | 1 | fix_and_retry | none |  | Send the apply again with an Idempotency-Key header. |
 | `idempotency_key_reused` | 1 | fix_and_retry | none |  | Send a new Idempotency-Key for a new request. |
 | `immutable_source_field` | 1 | fix_and_retry | none |  | Create a new source to change the fields listed. |
 | `import_conflict` | 1 | fix_and_retry | none |  | Choose which side wins for the conflicting overrides, then import again. |
@@ -267,16 +271,23 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `notification_replay_expired` | 1 | fix_and_retry | none |  | Run the replay again with a future --not-after. |
 | `notification_replay_no_address` | 1 | ask_human | none |  | Fix the recipient's contact, then run the replay again. |
 | `notification_replay_not_eligible` | 1 | fix_and_retry | none |  | Pick a row in a status replay takes; a sent row needs --include-sent. |
+| `oauth_access_denied` | 1 | fix_and_retry | none |  | Sign in again and allow Databay access on the provider's screen. |
 | `oauth_callback_invalid` | 1 | ask_human | none |  | Start connecting again. |
 | `oauth_exchange_failed` | 1 | ask_human | none |  | Connect again. |
 | `oauth_not_configured` | 1 | ask_human | none |  | Ask an operator to set up the provider's OAuth app, or connect with your own credentials. |
+| `oauth_scopes_missing` | 1 | fix_and_retry | none |  | Sign in again and leave every permission ticked. |
 | `oauth_source_field_not_editable` | 1 | fix_and_retry | none |  | Edit only the name, and reconnect the source to renew its credentials. |
 | `oauth_state_invalid` | 1 | ask_human | none |  | Start connecting again. |
+| `operator_preview_stale` | 1 | fix_and_retry | none |  | Preview the change again and confirm the new preview. |
+| `operator_request_not_received` | 1 | ask_human | none |  | Treat the change as not applied, and apply it again with a new key if it is still wanted. |
 | `org_not_found` | 1 | ask_human | none |  | Sign in again; if this persists, contact support. |
 | `org_visible_destination` | 1 | fix_and_retry | none |  | Confirm with acknowledge_org_visible=true, or pick a destination of this project. |
 | `organization_required` | 1 | ask_human | none |  | Ask an admin to add you to an organization, then sign in again. |
 | `organization_warehouse_unmapped` | 1 | ask_human | none |  | Contact support; the organization maps to no warehouse database. |
 | `outbox_full` | 6 | retry | none | 3 | Retry in a moment; the service refuses writes while its event queue catches up. |
+| `owner_answer_invalid` | 1 | ask_human | unknown |  | Ask an engineer to check that the staff console and the service run the same release. |
+| `owner_answer_mismatch` | 1 | ask_human | unknown |  | Ask an engineer to compare this request with the service's own audit log. |
+| `owner_unavailable` | 6 | retry | unknown | 3 | Try again in a minute; an apply sent again with the same key never applies twice. |
 | `payg_not_allowed` | 1 | fix_and_retry | none |  | Move the organization to a plan that allows overage, or keep within the limit. |
 | `permission_denied` | 1 | ask_human | none |  | Ask an admin for the role this action needs. |
 | `personal_login_dropping` | 6 | retry | none | 3 | Your previous login for this warehouse is still being removed; try again in a minute. |
@@ -303,6 +314,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `precheck_busy` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `precheck_limiter_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `precheck_rate_limited` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
+| `preview_expired` | 1 | fix_and_retry | none |  | Preview the change again, then apply it within five minutes. |
+| `preview_mismatch` | 1 | fix_and_retry | none |  | Apply the change exactly as previewed, or preview the new change first. |
+| `preview_not_found` | 1 | fix_and_retry | none |  | Preview the change again and apply the new preview. |
 | `principal_disabled` | 1 | ask_human | none |  | Ask a project admin to enable this login, then rotate it for a new password. |
 | `profile_incomplete` | 1 | fix_and_retry | none |  | Add an email, a given name and a family name to the profile, then try again. |
 | `project_admin_required` | 1 | ask_human | none |  | Ask a project admin to do this, or to make you a project admin. |
@@ -335,9 +349,12 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `reader_partition_conflict` | 1 | fix_and_retry | none |  | Create the pipe without reader_id to give it a reader of its own. |
 | `reader_publication_mode_mismatch` | 1 | fix_and_retry | none |  | Create the pipe without reader_id; it then gets a reader of its own. |
 | `reader_scope_required` | 1 | fix_and_retry | none |  | Send the request again with "scope": "reader"; the answer lists the pipes it changes. |
+| `reason_required` | 1 | fix_and_retry | none |  | Say why you are making the change, then send it again. |
+| `reason_too_short` | 1 | fix_and_retry | none |  | Say why you are making the change in at least 15 characters. |
 | `rebuild_in_progress` | 1 | do_first | none |  | Wait for the pipe's open rebuild or migration to finish, then try again. |
 | `rebuild_source_invalid` | 1 | fix_and_retry | none |  | Pick a rebuild source this pipe supports. |
 | `reconnect_different_account` | 1 | fix_and_retry | none |  | Pick the source's own account when reconnecting. |
+| `reconnect_different_login` | 1 | fix_and_retry | none |  | Sign in again with the login this source was set up with. |
 | `reconnect_wrong_type` | 1 | fix_and_retry | none |  | Reconnect with a source of the same type. |
 | `removed_setting` | 1 | ask_human | none |  | Ask an operator to remove the setting named in setting from the environment. |
 | `replication_key_outside_identity` | 1 | fix_and_retry | none |  | Choose a replication key within the reader's identity columns, or create the pipe without reader_id. |
@@ -426,6 +443,12 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `source_uninstalled` | 1 | ask_human | none |  | Reinstall the source's app. |
 | `source_updating` | 6 | retry | none | 5 | Retry once the source reports connected. |
 | `source_wal_level_not_logical` | 1 | ask_human | none |  | Have the database admin set wal_level to logical and restart PostgreSQL, then create the pipe again. |
+| `staff_action_unknown` | 1 | fix_and_retry | none |  | Pick one of the actions this install lists. |
+| `staff_read_not_served` | 1 | ask_human | none |  | Ask an engineer to check which service serves this section on this install. |
+| `staff_read_unavailable` | 6 | retry | none | 3 | Try again in a minute; reading changed nothing. |
+| `staff_reauth_required` | 1 | do_first | none |  | Sign in to the staff console again with your one-time code, then retry. |
+| `staff_request_not_found` | 1 | fix_and_retry | none |  | Check the request key: no staff change was made under it. |
+| `staff_required` | 1 | do_first | none |  | Sign in to the staff console and retry from there. |
 | `stream_not_found` | 1 | fix_and_retry | none |  | Pick a stream the source has. |
 | `subscription_changed` | 6 | retry | none | 3 | Retry; the subscription changed while this ran. |
 | `support_delivery_failed` | 6 | retry | none | 2 | Retry; the message was not sent. |
@@ -519,6 +542,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `decimal_too_wide` | fix_and_retry | unknown |  | Create a new pipe that leaves the column out, or cast it to a narrower type in a view. |
 | `dest_schema_rejected` | fix_and_retry | unknown |  | Point the pipe at a new destination table, or drop the existing table if you no longer need its data. |
 | `dest_unreachable` | retry | unknown | 3 | Retry the pipe; if it keeps failing, check the destination warehouse's connection details. |
+| `destination_table_incompatible` | fix_and_retry | none |  | Drop or rename the existing destination table and restart the pipe, or land it under another name. |
 | `internal_unclassified` | ask_human | unknown |  | Send the error reference to Databay support. |
 | `lane_spill_exhausted` | do_first | partial |  | Resync the pipe to copy the table again; contact support if it happens again. |
 | `lane_stalled` | do_first | partial |  | Check the pipe's errors, then resync the pipe to copy the table again. |

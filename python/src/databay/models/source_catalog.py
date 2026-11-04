@@ -26,6 +26,11 @@ class SourceFieldDescriptorType(OpenStrEnum):
     ENUM = 'enum'
 
 
+class SourceCatalogEntryOauthApps(OpenStrEnum):
+    DATABAY = 'databay'
+    OWN = 'own'
+
+
 class RequirementView(ResponseModel):
     blocking: bool
     docs_href: str | None = None
@@ -62,10 +67,11 @@ class SourceCatalogEntry(ResponseModel):
     egress_addresses: list[str] | None = None
     fields_: list[SourceFieldDescriptor] = Field(alias='fields')
     journey: bool = False
+    journey_recipe: dict[str, Any] | None = None
     manual_fields: list[SourceFieldDescriptor] | None = None
+    oauth_apps: list[SourceCatalogEntryOauthApps] | None = None
     oauth_coming_soon: bool = False
     oauth_methods: list[str] | None = None
-    publication_step: bool = False
     requirements: list[RequirementView] | None = None
     setup_steps: list[SetupStepView] | None = None
     supports_oauth: bool = True

@@ -270,6 +270,12 @@
    "side_effects": "unknown",
    "max_retries": 3
   },
+  "destination_table_incompatible": {
+   "hint": "Drop or rename the existing destination table and restart the pipe, or land it under another name.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "internal_unclassified": {
    "hint": "Send the error reference to Databay support.",
    "action": "ask_human",
@@ -538,6 +544,12 @@
   },
   "access_role_revision_conflict": {
    "hint": "Reload the access settings, then make the change again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "account_already_a_source": {
+   "hint": "Use the source that already reads this account, or choose another account.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -1064,8 +1076,20 @@
    "side_effects": "none",
    "max_retries": 3
   },
+  "destination_check_refused": {
+   "hint": "Fix the warehouse's connection settings or its user's access as detail says, then retry.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "destination_table_exists": {
    "hint": "Pick another destination table, or change the transformation that already writes it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "destination_table_incompatible": {
+   "hint": "Pick another destination table name, or drop the existing table, then retry.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -1276,6 +1300,12 @@
   },
   "host_not_allowed": {
    "hint": "Use your database's own address, a public hostname or a private address in your network.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "idempotency_key_required": {
+   "hint": "Send the apply again with an Idempotency-Key header.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -1676,6 +1706,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "oauth_access_denied": {
+   "hint": "Sign in again and allow Databay access on the provider's screen.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "oauth_callback_invalid": {
    "hint": "Start connecting again.",
    "action": "ask_human",
@@ -1694,6 +1730,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "oauth_scopes_missing": {
+   "hint": "Sign in again and leave every permission ticked.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "oauth_source_field_not_editable": {
    "hint": "Edit only the name, and reconnect the source to renew its credentials.",
    "action": "fix_and_retry",
@@ -1702,6 +1744,18 @@
   },
   "oauth_state_invalid": {
    "hint": "Start connecting again.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "operator_preview_stale": {
+   "hint": "Preview the change again and confirm the new preview.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "operator_request_not_received": {
+   "hint": "Treat the change as not applied, and apply it again with a new key if it is still wanted.",
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
@@ -1734,6 +1788,24 @@
    "hint": "Retry in a moment; the service refuses writes while its event queue catches up.",
    "action": "retry",
    "side_effects": "none",
+   "max_retries": 3
+  },
+  "owner_answer_invalid": {
+   "hint": "Ask an engineer to check that the staff console and the service run the same release.",
+   "action": "ask_human",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
+  "owner_answer_mismatch": {
+   "hint": "Ask an engineer to compare this request with the service's own audit log.",
+   "action": "ask_human",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
+  "owner_unavailable": {
+   "hint": "Try again in a minute; an apply sent again with the same key never applies twice.",
+   "action": "retry",
+   "side_effects": "unknown",
    "max_retries": 3
   },
   "payg_not_allowed": {
@@ -1891,6 +1963,24 @@
    "action": "retry",
    "side_effects": "none",
    "max_retries": 3
+  },
+  "preview_expired": {
+   "hint": "Preview the change again, then apply it within five minutes.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "preview_mismatch": {
+   "hint": "Apply the change exactly as previewed, or preview the new change first.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "preview_not_found": {
+   "hint": "Preview the change again and apply the new preview.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
   },
   "principal_disabled": {
    "hint": "Ask a project admin to enable this login, then rotate it for a new password.",
@@ -2084,6 +2174,18 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "reason_required": {
+   "hint": "Say why you are making the change, then send it again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "reason_too_short": {
+   "hint": "Say why you are making the change in at least 15 characters.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "rebuild_in_progress": {
    "hint": "Wait for the pipe's open rebuild or migration to finish, then try again.",
    "action": "do_first",
@@ -2098,6 +2200,12 @@
   },
   "reconnect_different_account": {
    "hint": "Pick the source's own account when reconnecting.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "reconnect_different_login": {
+   "hint": "Sign in again with the login this source was set up with.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -2627,6 +2735,42 @@
   "source_wal_level_not_logical": {
    "hint": "Have the database admin set wal_level to logical and restart PostgreSQL, then create the pipe again.",
    "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "staff_action_unknown": {
+   "hint": "Pick one of the actions this install lists.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "staff_read_not_served": {
+   "hint": "Ask an engineer to check which service serves this section on this install.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "staff_read_unavailable": {
+   "hint": "Try again in a minute; reading changed nothing.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "staff_reauth_required": {
+   "hint": "Sign in to the staff console again with your one-time code, then retry.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "staff_request_not_found": {
+   "hint": "Check the request key: no staff change was made under it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "staff_required": {
+   "hint": "Sign in to the staff console and retry from there.",
+   "action": "do_first",
    "side_effects": "none",
    "max_retries": null
   },
