@@ -28,6 +28,10 @@ or without a display the device flow is used, and the CLI says so.
 An org API key signs in with --api-key-id and its secret from
 --api-key-env NAME or --api-key-stdin; never as a flag value.
 \b
+A person who belongs to several organizations picks the active one with
+--org KEY_OR_NAME; without it, the CLI asks on a terminal when none is
+active yet, and fails with org_choice_required when it cannot ask.
+\b
 Tokens go to the OS keyring; --token-store file keeps them in a 0600 file
 under the config dir instead. The profile (default: {DEFAULT_PROFILE}) becomes
 the current one when there is none yet. Signing in again revokes the
@@ -171,6 +175,53 @@ def _save(name: str, server: str, record: Credential, store: TokenStore, console
     }
 
 
+def _choose_org(
+    name: str, wanted: str | None, values: dict[str, Any], console: Console, state: dict[str, Any]
+) -> str | None:
+    """
+    The organization the new sign-in acts in: ``wanted``, else the stored one, else the person's choice.
+
+    Runs after the credential is saved, so a refusal here leaves the profile signed in.
+    """
+    from databay.cli.org import (  # noqa: PLC0415
+        choose_interactively,
+        interactive,
+        list_orgs,
+        report_no_usable_org,
+        resolve_org,
+        switch_to,
+    )
+    from databay.cli.runner import session_for  # noqa: PLC0415
+    from databay.errors import DatabayUsageError  # noqa: PLC0415
+    from databay.profiles import load_profile  # noqa: PLC0415
+    from databay.stored_token import stored_token  # noqa: PLC0415
+
+    profile = load_profile(name)
+    # The credential just saved, even where $DATABAY_TOKEN is set: it is the sign-in this command made.
+    session = session_for(profile, stored_token(profile, state.get("http")), values, console, state)
+    try:
+        listing = list_orgs(session)
+        if wanted is not None:
+            chosen = resolve_org(listing, wanted, profile.server)
+        elif not listing.needs_org_choice:
+            if listing.active_org is None and listing.usable_orgs == 0:
+                report_no_usable_org(listing, profile.server, console)
+            return listing.active_org
+        elif interactive(console):
+            chosen = choose_interactively(listing, console)
+        else:
+            raise DatabayUsageError(
+                f"signed in to {profile.server}, but you belong to {len(listing.organizations)} organizations "
+                "and none is active; pass --org KEY_OR_NAME",
+                code="org_choice_required",
+                details={"organizations": [o.organization for o in listing.organizations]},
+                next_command="databay org list",
+            )
+        return switch_to(session, profile, chosen, console, state)["organization"]
+    finally:
+        session.transport.close()
+
+
 @click.command("login", help=LOGIN_HELP, short_help="Sign in and save a profile")
 @click.option("--server", required=True, help="the Databay server URL, e.g. https://databay.example.com")
 @click.option("--device", is_flag=True, default=False, help="sign in with a link and code instead of the browser")
@@ -184,6 +235,9 @@ def _save(name: str, server: str, record: Credential, store: TokenStore, console
 @click.option("--api-key-id", default=None, metavar="CLIENT_ID", help="sign in as an org API key (apikey-<org>-<id>)")
 @click.option("--api-key-env", default=None, metavar="NAME", help="the variable that holds the API key's secret")
 @click.option("--api-key-stdin", is_flag=True, default=False, help="read the API key's secret from stdin")
+@click.option(
+    "--org", "org", default=None, metavar="KEY_OR_NAME", help="the organization to make active after signing in"
+)
 @login_options
 @click.pass_context
 def login(
@@ -194,6 +248,7 @@ def login(
     api_key_id: str | None,
     api_key_env: str | None,
     api_key_stdin: bool,
+    org: str | None,
     **values: Any,  # noqa: ANN401
 ) -> None:
     from databay import compat, login_flow, oidc  # noqa: PLC0415
@@ -210,6 +265,8 @@ def login(
     state["context"] = {"server": server, "profile": name}
     if device and api_key_id:
         raise DatabayUsageError("--device signs a person in; an API key signs in with --api-key-id alone")
+    if org is not None and api_key_id:
+        raise DatabayUsageError("--org chooses a person's organization; an API key belongs to one organization")
     secret = _api_key_secret(api_key_id, api_key_env, api_key_stdin)
     store = open_store(token_store)
     store.ready()
@@ -246,6 +303,7 @@ def login(
         record = login_flow.credential(server, info, signed, client_id, secret)
         saved = _save(name, server, record, store, console)
         revoked = _revoke_superseded(http, saved["replaced"], console)
+    chosen_org = None if secret is not None else _choose_org(name, org, values, console, state)
     claims = oidc.claims(record.access_token)
     result = {
         "profile": name,
@@ -256,6 +314,7 @@ def login(
         "token_store": store.kind,
         "current": saved["current"],
         "revoked_superseded": revoked,
+        "org": chosen_org,
     }
     next_command = "databay status" if saved["current"] else f"databay profile use {name}"
     emit(console, {"result": result, "next": next_command}, ())

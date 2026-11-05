@@ -79,6 +79,12 @@ class StoredToken:
                 record = self._renew(record)
         return self._hand_out(record.access_token, record.expires_at)
 
+    def renewed(self) -> str:
+        """A token issued now, whatever the current one's expiry: it carries a change the server just stored."""
+        with locked(self.key):
+            record = self._renew(self._load())
+        return self._hand_out(record.access_token, record.expires_at)
+
     def _hand_out(self, token: str, expires_at: float) -> str:
         self.sent = token
         self._held = (token, expires_at)
