@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from databay.cli.flags import Flag
     from databay.operation import Body, Operation, Param, Wait
     from databay.profiles import Profile
+    from databay.tokens import TokenProvider
 
 
 def _usage(message: str, code: str = "usage_invalid") -> DatabayUsageError:
@@ -224,13 +225,22 @@ def _resume_command(
 
 def open_session(values: dict[str, Any], console: Console, state: dict[str, Any]) -> tuple[Session, Profile]:
     """A session as the profile ``--profile`` (else ``current_profile``) names, with the common flags applied."""
-    from databay.profiles import load_profile, login_command  # noqa: PLC0415
+    from databay.profiles import load_profile  # noqa: PLC0415
     from databay.tokens import token_provider  # noqa: PLC0415
 
     profile = load_profile(values.get("profile"))
+    return session_for(profile, token_provider(profile, state.get("http")), values, console, state), profile
+
+
+def session_for(
+    profile: Profile, tokens: TokenProvider, values: dict[str, Any], console: Console, state: dict[str, Any]
+) -> Session:
+    """A session as ``profile`` with ``tokens``, the common flags applied."""
+    from databay.profiles import login_command  # noqa: PLC0415
+
     transport = Transport(
         server=profile.server,
-        tokens=token_provider(profile, state.get("http")),
+        tokens=tokens,
         client_kind="cli",
         retries=not values.get("no_retry"),
         verbose=bool(values.get("verbose")),
@@ -238,7 +248,7 @@ def open_session(values: dict[str, Any], console: Console, state: dict[str, Any]
         http=state.get("http"),
         login_command=login_command(profile),
     )
-    return Session(transport, active_project=profile.active_project, profile=profile.name), profile
+    return Session(transport, active_project=profile.active_project, profile=profile.name)
 
 
 def run(ctx: click.Context, op: Operation, variant: str | None, flags: list[Flag], values: dict[str, Any]) -> None:

@@ -50,6 +50,14 @@ instead of guessing a flag.
    A machine without a browser signs in with an org API key whose secret is in a variable:
    `databay login --server https://databay.example.com --api-key-id <client_id> --api-key-env DATABAY_API_KEY`.
 
+   `status` shows the `org` the token names. If `needs_org_choice` is true, or the user wants another
+   organization, list them, ask the user which one, and switch; switching clears the active project:
+
+   ```
+   databay org list --output json
+   databay org switch <organization> --output json
+   ```
+
 2. Set the project. Most commands act in the profile's active project. If `status` shows
    none, list the projects, ask the user which one, and set it by id:
 
