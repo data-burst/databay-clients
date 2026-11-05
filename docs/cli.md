@@ -27,7 +27,24 @@ databay skill install --target claude            # or codex: lets an agent drive
 databay status
 ```
 
-`databay status` prints the profile, server, product, `api_version` and user.
+`databay status` prints the profile, server, product, `api_version`, user and the organization the
+token names.
+
+## Organizations
+
+The server stores one active organization per person, and every token names it. A person in several
+organizations picks one at sign-in with `--org` (a key or a display name); without it, `databay login`
+asks on a terminal when none is active yet, and stops with `org_choice_required` (still signed in)
+when it cannot ask. Later:
+
+```bash
+databay org list                     # every organization you belong to; is_active marks the active one
+databay org switch <organization>    # store it as active, refresh the token, clear the active project
+```
+
+A profile whose token comes from `DATABAY_TOKEN` cannot be refreshed by the CLI: the switch is stored,
+and the next token you mint names the new organization. An API key belongs to one organization and
+cannot switch.
 
 A person's sign-in asks for `offline_access`, so the CLI can renew its session without a new login.
 If the server's identity provider does not grant it, `databay login` stops with

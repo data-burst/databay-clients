@@ -73,6 +73,20 @@ LOCAL_CODES: dict[str, LocalCode] = {
         "none",
         "Pass --target claude or --target codex; no other agent has a verified skill format.",
     ),
+    "org_choice_required": LocalCode(
+        2,
+        "fix_and_retry",
+        "partial",
+        "You are signed in, but you belong to several organizations and none is active. "
+        "Run databay org switch <organization>, or sign in again with --org.",
+    ),
+    "org_not_in_token": LocalCode(
+        1,
+        "ask_human",
+        "complete",
+        "The server stored the organization, but the new token names another one. Run databay status; "
+        "if it persists, ask whoever runs the server.",
+    ),
     "cancelled": LocalCode(1, "ask_human", "none", "Nothing was changed. Run the command again and answer y."),
     "feature_disabled": LocalCode(
         1,

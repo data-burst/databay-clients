@@ -43,6 +43,8 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `non_databay_answer` | 1 | fix_and_retry | none | Something other than Databay answered (a proxy, a gateway or a wrong server URL): check the profile's server. |
 | `not_ready` | 9 | fix_and_retry | none | Fix what the answer names, then run the check again. |
 | `offline_access_not_granted` | 3 | ask_human | none | Keycloak did not grant offline_access: ask whoever runs the server to give your user that role (docs/cli.md, Sign in). |
+| `org_choice_required` | 2 | fix_and_retry | partial | You are signed in, but you belong to several organizations and none is active. Run databay org switch <organization>, or sign in again with --org. |
+| `org_not_in_token` | 1 | ask_human | complete | The server stored the organization, but the new token names another one. Run databay status; if it persists, ask whoever runs the server. |
 | `profile_invalid` | 3 | fix_and_retry | none | Fix config.toml as the message says. |
 | `project_conflict` | 2 | fix_and_retry | none | Send one project: X-Databay-Project-ID must match the route and the body. |
 | `response_invalid` | 8 | ask_human | unknown | The answer does not match this CLI's models. Upgrade the CLI or report it. |

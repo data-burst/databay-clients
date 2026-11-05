@@ -95,6 +95,7 @@ def test_status_names_who_where_and_the_output_rule(cli, server, monkeypatch, ar
         "sub": "u-1",
         "principal": "user",
         "org": "acme",
+        "needs_org_choice": None,
         "active_project": PROJECT,
         "output": {"format": "json", "rule": rule},
         "skill": {"state": "not_installed", "cli_version": CLIENT_VERSION, "installed": []},

@@ -81,9 +81,10 @@ def status(ctx: click.Context, **values: Any) -> None:  # noqa: ANN401
     """
     Show the profile, the server, and who you are signed in as.
 
-    Prints the server's product and API version, the user and org, the active project, which
-    output rule applied, and every installed agent skill. It calls the server, so it also checks the
-    sign-in works. skill.state is skill_outdated when an installed skill is from another CLI version.
+    Prints the server's product and API version, the user, the org the token names, the active project,
+    which output rule applied, and every installed agent skill. It calls the server, so it also checks the
+    sign-in works. needs_org_choice is true when no org is active and you belong to several: run
+    `databay org switch`. skill.state is skill_outdated when an installed skill is from another CLI version.
     """
     from databay.cli.console import output_rule  # noqa: PLC0415
     from databay.cli.output import emit  # noqa: PLC0415
@@ -96,7 +97,7 @@ def status(ctx: click.Context, **values: Any) -> None:  # noqa: ANN401
     session, chosen = open_session(values, console, state)
     state["context"] = {"server": chosen.server, "profile": chosen.name, "project": chosen.active_project}
     try:
-        me = session.call(ME_GET, CallValues()).parsed
+        me = session.call(ME_GET, CallValues(query={"include_orgs": True})).parsed
         assert session.server is not None
         info, _ = session.server
     finally:
@@ -111,10 +112,17 @@ def status(ctx: click.Context, **values: Any) -> None:  # noqa: ANN401
         "sub": me.sub,
         "principal": str(me.principal),
         "org": me.organization[0] if me.organization else None,
+        "needs_org_choice": me.needs_org_choice,
         "active_project": chosen.active_project,
         "output": {"format": console.output, "rule": rule},
         "skill": _skill_status(console),
     }
+    if me.needs_org_choice:
+        console.inform(
+            "org_choice_required",
+            {"next": "databay org list"},
+            "No organization is active: run databay org list, then databay org switch <organization>.",
+        )
     emit(console, {"result": result}, ())
 
 

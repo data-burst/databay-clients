@@ -35,6 +35,14 @@ DEVICE_ANSWER = {
     "interval": 0,
 }
 
+ORGS_PATH = "/api/auth/me/organizations"
+#: The listing of a person whose one organization is already active: login asks nothing.
+ONE_ORG = {
+    "organizations": [{"organization": "org-acme", "display_name": "Acme", "role": "org_admin", "is_active": True}],
+    "active_org": "org-acme",
+    "needs_org_choice": False,
+}
+
 
 def _form(request: httpx.Request) -> dict[str, str]:
     return {k: v[0] for k, v in parse_qs(request.content.decode()).items()}
@@ -61,6 +69,7 @@ def keycloak(server, monkeypatch):
     server.on("POST", DEVICE, answer(200, DEVICE_ANSWER))
     server.on("POST", TOKEN_PATH, answer(400, {"error": "authorization_pending"}), _tokens())
     server.on("POST", REVOKE_PATH, answer(200))
+    server.on("GET", ORGS_PATH, answer(200, ONE_ORG))
     return server
 
 
