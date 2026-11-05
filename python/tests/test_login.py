@@ -38,9 +38,12 @@ DEVICE_ANSWER = {
 ORGS_PATH = "/api/auth/me/organizations"
 #: The listing of a person whose one organization is already active: login asks nothing.
 ONE_ORG = {
-    "organizations": [{"organization": "org-acme", "display_name": "Acme", "role": "org_admin", "is_active": True}],
+    "organizations": [
+        {"organization": "org-acme", "display_name": "Acme", "role": "org_admin", "is_active": True, "enabled": True}
+    ],
     "active_org": "org-acme",
     "needs_org_choice": False,
+    "usable_orgs": 1,
 }
 
 

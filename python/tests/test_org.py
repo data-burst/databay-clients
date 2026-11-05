@@ -21,18 +21,21 @@ DEVICE_PATH = "/realms/databay/protocol/openid-connect/auth/device"
 RENEWED = "access-renewed"
 
 
-def _org(key: str, name: str, *, active: bool, role: str | None = "editor") -> dict[str, Any]:
-    return {"organization": key, "display_name": name, "role": role, "is_active": active}
+def _org(key: str, name: str, *, active: bool, role: str | None = "editor", enabled: bool = True) -> dict[str, Any]:
+    return {"organization": key, "display_name": name, "role": role, "is_active": active, "enabled": enabled}
 
 
-def _listing(*, active: str | None) -> dict[str, Any]:
+def _listing(*, active: str | None, disabled: frozenset[str] = frozenset()) -> dict[str, Any]:
+    orgs = [
+        _org("org-acme", "Acme", active=active == "org-acme", role="org_admin", enabled="org-acme" not in disabled),
+        _org("org-beta", "Beta Labs", active=active == "org-beta", enabled="org-beta" not in disabled),
+    ]
+    usable = sum(org["enabled"] for org in orgs)
     return {
-        "organizations": [
-            _org("org-acme", "Acme", active=active == "org-acme", role="org_admin"),
-            _org("org-beta", "Beta Labs", active=active == "org-beta"),
-        ],
+        "organizations": orgs,
         "active_org": active,
-        "needs_org_choice": active is None,
+        "needs_org_choice": active is None and usable > 0,
+        "usable_orgs": usable,
     }
 
 
@@ -66,7 +69,10 @@ def test_org_list_prints_each_org_and_which_one_is_active(cli, server):
 
     assert run.code == 0, run.stderr
     rows = list(csv.DictReader(io.StringIO(run.stdout)))
-    assert [(r["organization"], r["is_active"]) for r in rows] == [("org-acme", "false"), ("org-beta", "true")]
+    assert [(r["organization"], r["is_active"], r["enabled"]) for r in rows] == [
+        ("org-acme", "false", "true"),
+        ("org-beta", "true", "true"),
+    ]
 
 
 def test_org_switch_by_name_stores_it_renews_the_token_and_clears_the_project(cli, server, login_profile):
@@ -115,6 +121,20 @@ def test_org_switch_to_an_org_you_are_not_in_sends_no_write(cli, server, login_p
     assert error["code"] == "org_not_member"
     assert error["hint"] == "Pick one of the organizations you belong to."
     assert error["details"]["organizations"] == ["org-acme", "org-beta"]
+    assert server.calls("PUT", ACTIVE_PATH) == []
+
+
+def test_org_switch_to_a_disabled_org_sends_no_write(cli, server, login_profile):
+    server.on("GET", ORGS_PATH, answer(200, _listing(active="org-acme", disabled=frozenset({"org-beta"}))))
+
+    run = cli("org", "switch", "Beta Labs")
+
+    assert run.code == 1
+    error = run.error()
+    assert (error["code"], error["hint"]) == (
+        "org_disabled",
+        "This organization is disabled; pick another one or contact support.",
+    )
     assert server.calls("PUT", ACTIVE_PATH) == []
 
 
@@ -232,6 +252,29 @@ def test_login_without_org_on_a_terminal_asks_which_one(cli, signing_in, profile
 
     assert run.code == 0, run.stderr
     assert json.loads(signing_in.calls("PUT", ACTIVE_PATH)[0].content) == {"organization": "org-beta"}
+
+
+def test_login_prompt_offers_only_enabled_orgs(cli, signing_in, profile_env, monkeypatch):
+    signing_in.on("GET", ORGS_PATH, answer(200, _listing(active=None, disabled=frozenset({"org-acme"}))))
+    signing_in.on("PUT", ACTIVE_PATH, answer(200, {"active_org": "org-beta"}))
+    monkeypatch.setattr("databay.cli.org.interactive", lambda _console: True)
+
+    run = cli("login", "--server", SERVER, "--device", "--token-store", "file", stdin="1\n", monkeypatch=monkeypatch)
+
+    assert run.code == 0, run.stderr
+    assert json.loads(signing_in.calls("PUT", ACTIVE_PATH)[0].content) == {"organization": "org-beta"}
+
+
+def test_login_with_every_org_disabled_stays_signed_in_and_says_so(cli, signing_in, profile_env):
+    disabled = frozenset({"org-acme", "org-beta"})
+    signing_in.on("GET", ORGS_PATH, answer(200, _listing(active=None, disabled=disabled)))
+
+    run = cli("login", "--server", SERVER, "--device", "--token-store", "file")
+
+    assert run.code == 0, run.stderr
+    assert run.json()["result"]["org"] is None
+    assert run.events("no_usable_org")[0]["organizations"] == ["org-acme", "org-beta"]
+    assert signing_in.calls("PUT", ACTIVE_PATH) == []
 
 
 def test_login_with_an_active_org_asks_nothing(cli, signing_in, profile_env):

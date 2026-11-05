@@ -48,7 +48,7 @@ def resolve_org(listing: MyOrganizationsResponse, wanted: str, server: str) -> M
     keys = [org.organization for org in listing.organizations]
     by_key = [org for org in listing.organizations if org.organization == wanted]
     if by_key:
-        return by_key[0]
+        return _usable(by_key[0])
     by_name = [org for org in listing.organizations if org.display_name.casefold() == wanted.casefold()]
     if len(by_name) > 1:
         raise DatabayUsageError(
@@ -62,7 +62,21 @@ def resolve_org(listing: MyOrganizationsResponse, wanted: str, server: str) -> M
             status=403,
             details={"organization": wanted, "organizations": keys},
         )
-    return by_name[0]
+    return _usable(by_name[0])
+
+
+def _usable(org: MyOrganizationOut) -> MyOrganizationOut:
+    """``org``, unless it is disabled: no token can name a disabled organization."""
+    from databay.errors import api_error  # noqa: PLC0415
+
+    if not org.enabled:
+        raise api_error(
+            "org_disabled",
+            f"{org.display_name} ({org.organization}) is disabled",
+            status=403,
+            details={"organization": org.organization},
+        )
+    return org
 
 
 def switch_to(
@@ -132,13 +146,25 @@ def _token_org(session: Session) -> str | None:
 
 def choose_interactively(listing: MyOrganizationsResponse, console: Console) -> MyOrganizationOut:
     """Ask on the terminal which organization to make active."""
+    usable = [org for org in listing.organizations if org.enabled]
     lines = ["You belong to several organizations. Which one should be active?"]
-    for number, org in enumerate(listing.organizations, start=1):
+    for number, org in enumerate(usable, start=1):
         role = f", {org.role}" if org.role is not None else ""
         lines.append(f"  {number}) {org.display_name} ({org.organization}{role})")
     console.inform("org_choice", {}, "\n".join(lines))
-    picked = click.prompt("Organization", type=click.IntRange(1, len(listing.organizations)), err=True)
-    return listing.organizations[picked - 1]
+    picked = click.prompt("Organization", type=click.IntRange(1, len(usable)), err=True)
+    return usable[picked - 1]
+
+
+def report_no_usable_org(listing: MyOrganizationsResponse, server: str, console: Console) -> None:
+    """Say that no token can name an organization: every one is disabled, or there is none."""
+    console.inform(
+        "no_usable_org",
+        {"organizations": [org.organization for org in listing.organizations]},
+        f"You are signed in, but none of your organizations on {server} can be used "
+        f"({'every one is disabled' if listing.organizations else 'you belong to none'}). "
+        "Create one in the web app, or ask an organization admin to add you.",
+    )
 
 
 def interactive(console: Console) -> bool:

@@ -183,7 +183,14 @@ def _choose_org(
 
     Runs after the credential is saved, so a refusal here leaves the profile signed in.
     """
-    from databay.cli.org import choose_interactively, interactive, list_orgs, resolve_org, switch_to  # noqa: PLC0415
+    from databay.cli.org import (  # noqa: PLC0415
+        choose_interactively,
+        interactive,
+        list_orgs,
+        report_no_usable_org,
+        resolve_org,
+        switch_to,
+    )
     from databay.cli.runner import session_for  # noqa: PLC0415
     from databay.errors import DatabayUsageError  # noqa: PLC0415
     from databay.profiles import load_profile  # noqa: PLC0415
@@ -197,6 +204,8 @@ def _choose_org(
         if wanted is not None:
             chosen = resolve_org(listing, wanted, profile.server)
         elif not listing.needs_org_choice:
+            if listing.active_org is None and listing.usable_orgs == 0:
+                report_no_usable_org(listing, profile.server, console)
             return listing.active_org
         elif interactive(console):
             chosen = choose_interactively(listing, console)
