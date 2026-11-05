@@ -83,9 +83,10 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `account_lookup_failed` | 1 | fix_and_retry | none |  | Check the credentials, then try again. |
 | `account_not_in_grant` | 1 | fix_and_retry | none |  | Pick an account the credentials reach. |
 | `activation_unavailable` | 6 | retry | unknown | 3 | Retry the activation; contact support if it keeps failing. |
+| `active_org_not_stored` | 1 | ask_human | none |  | Contact support; your organization choice could not be saved. |
 | `actor_required` | 1 | fix_and_retry | none |  | Name an acting user who belongs to an organization. |
 | `ai_busy_today` | 1 | do_first | none |  | Try again after resets_at, or write the query in the SQL editor. |
-| `ai_daily_limit` | 1 | do_first | none |  | Wait until resets_at, or upgrade the plan for more questions. |
+| `ai_daily_limit` | 1 | do_first | none |  | Wait until resets_at, or contact us for more questions. |
 | `ai_plan_unknown` | 1 | ask_human | none |  | Contact support; the AI assistant cannot read your plan. |
 | `ai_quota_unavailable` | 6 | retry | none | 3 | Try again shortly. |
 | `alert_instance_not_found` | 1 | fix_and_retry | none |  | List the alerts and pick one you can see. |
@@ -198,7 +199,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `folder_not_found` | 1 | fix_and_retry | none |  | List the folders and pick one you can see. |
 | `folder_not_in_project` | 1 | fix_and_retry | none |  | Pick a folder of this project. |
 | `folder_too_deep` | 1 | fix_and_retry | none |  | Place the folder higher up; folders nest at most limit levels deep. |
-| `free_order_cap` | 1 | ask_human | none |  | Upgrade the plan to connect another source. |
+| `free_order_cap` | 1 | ask_human | none |  | Contact us for a plan with a higher order limit. |
 | `fx_rate_missing` | 1 | fix_and_retry | none |  | Pick a range or a reporting currency that has exchange rates. |
 | `fx_rate_unavailable` | 1 | fix_and_retry | none |  | Pick a reporting currency that has exchange rates for the currencies listed. |
 | `fx_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
@@ -225,6 +226,13 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `invalid_spec` | 1 | fix_and_retry | none |  | Fix the card named by key as reason says. |
 | `invalid_tenant_identifier` | 1 | ask_human | none |  | Contact support; the organization's name cannot be mapped to a warehouse database. |
 | `invalid_version` | 1 | fix_and_retry | none |  | Fix the problems listed, then try again. |
+| `invitation_email_mismatch` | 1 | do_first | none |  | Sign in with the email address the invitation was sent to. |
+| `invitation_inviter_not_admin` | 1 | ask_human | partial |  | Ask an admin of the organization for a new invitation. |
+| `invitation_link_unavailable` | 1 | ask_human | none |  | Ask the server's operator to set the public app URL and secret key. |
+| `invitation_not_found` | 1 | fix_and_retry | none |  | Reload the list of invitations and pick one that is still there. |
+| `invitation_not_valid` | 1 | ask_human | none |  | Ask the person who invited you for a new invitation. |
+| `invitation_rate_limited` | 6 | retry | none | 3 | Wait for the Retry-After interval, then open the link again. |
+| `invitation_single_org` | 1 | ask_human | none |  | Contact support to join another organization. |
 | `job_name_exists` | 1 | fix_and_retry | none |  | Pick another name for the transformation. |
 | `job_name_taken` | 1 | fix_and_retry | none |  | Pick another name; transformation names are unique in the organization. |
 | `job_not_found` | 1 | fix_and_retry | none |  | List the transformations and pick one you can see. |
@@ -280,7 +288,18 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `oauth_state_invalid` | 1 | ask_human | none |  | Start connecting again. |
 | `operator_preview_stale` | 1 | fix_and_retry | none |  | Preview the change again and confirm the new preview. |
 | `operator_request_not_received` | 1 | ask_human | none |  | Treat the change as not applied, and apply it again with a new key if it is still wanted. |
+| `operator_work_failed` | 1 | ask_human | unknown |  | Check the target's state before you try the action again. |
+| `operator_work_overdue` | 1 | ask_human | unknown |  | Check the target's state before you try the action again. |
+| `operator_work_started` | 1 | do_first | unknown |  | Check the request under the same key; do not resend it under a new key. |
+| `org_claim_invalid` | 1 | do_first | none |  | Sign in again; if this persists, contact support. |
+| `org_create_daily_limit` | 1 | do_first | none |  | Wait for the Retry-After interval, then create it again. |
+| `org_create_limit` | 1 | ask_human | none |  | The limit for new organizations is reached; ask an admin of an existing one to add you. |
+| `org_create_single_org` | 1 | ask_human | none |  | Contact support to create another organization. |
+| `org_disabled` | 1 | ask_human | none |  | This organization is disabled; pick another one or contact support. |
+| `org_key_conflict` | 6 | retry | none | 1 | Send the request again. |
 | `org_not_found` | 1 | ask_human | none |  | Sign in again; if this persists, contact support. |
+| `org_not_member` | 1 | fix_and_retry | none |  | Pick one of the organizations you belong to. |
+| `org_required` | 1 | do_first | none |  | Create or join an organization in the web app first. |
 | `org_visible_destination` | 1 | fix_and_retry | none |  | Confirm with acknowledge_org_visible=true, or pick a destination of this project. |
 | `organization_required` | 1 | ask_human | none |  | Ask an admin to add you to an organization, then sign in again. |
 | `organization_warehouse_unmapped` | 1 | ask_human | none |  | Contact support; the organization maps to no warehouse database. |
@@ -309,7 +328,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `plan_exists` | 1 | fix_and_retry | none |  | Pick another name, or replace the existing plan. |
 | `plan_file_invalid` | 1 | fix_and_retry | none |  | Fix the problems listed in the plan file. |
 | `plan_seed_invalid` | 1 | ask_human | none |  | Ask an operator to fix the built-in plan seed. |
-| `plan_source_limit` | 1 | ask_human | none |  | Upgrade the plan to connect another source. |
+| `plan_source_limit` | 1 | ask_human | none |  | Contact us for a plan with more sources. |
 | `platform_credentials_missing` | 1 | fix_and_retry | none |  | Supply your own platform credentials. |
 | `precheck_busy` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `precheck_limiter_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
@@ -404,6 +423,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `shopify_shop_info_unavailable` | 6 | retry | none | 3 | Retry in a moment. |
 | `shopify_sign_in_failed` | 1 | ask_human | none |  | Reinstall the app. |
 | `shopify_source_undeletable` | 1 | ask_human | none |  | Uninstall the app from Shopify to remove this source. |
+| `shopify_store_not_found` | 1 | fix_and_retry | none |  | Check the store's address, then try again. |
 | `sibling_being_removed` | 6 | retry | none | 3 | Retry in a few minutes; another account of this type is still being removed. |
 | `sink_column_type_required` | 1 | fix_and_retry | none |  | Send sink_column_type for the added column. |
 | `sink_in_use` | 1 | do_first | none |  | Delete the pipelines listed in pipes first. |
@@ -566,6 +586,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `signal_table_denied` | ask_human | unknown |  | Ask the database administrator to grant the source user CREATE on that schema, then retry the pipe. |
 | `source_auth_failed` | fix_and_retry | unknown |  | Update the source's username and password, then retry the pipe. |
 | `source_binlog_status_unreadable` | ask_human | none |  | Ask the database administrator to grant REPLICATION CLIENT to Databay's user, then restart the pipe. |
+| `source_database_dropped` | do_first | partial |  | Once the database is back, resync the pipe (a rebuild from the snapshot source) to copy it again. |
 | `source_host_changed_live_pipe` | do_first | partial |  | Delete and re-create the pipe to stream from the new host. |
 | `source_host_not_allowed` | fix_and_retry | unknown |  | Point the source at your database's own public or private address, then retry the pipe. |
 | `source_permission_denied` | ask_human | unknown |  | Ask the database administrator to grant the privilege the error names, then retry the pipe. |

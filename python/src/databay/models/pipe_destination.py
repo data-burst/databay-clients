@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
-from databay.models.shared import PipeDestinationUnavailableCode
+from databay.models.shared import PipeDestinationUnavailableCode, SyncMode
 
 
 class DestinationPreviewWarningCode(OpenStrEnum):
@@ -43,7 +43,9 @@ class DestinationCheckTable(RequestModel):
     columns: list[str] | None = None
     dest_table_name: str
     masked: list[str] | None = None
+    primary_key: list[str] | None = None
     schema_name: str = ''
+    sync_mode: SyncMode = 'incremental_deduped_history'
     table_name: str
 
 

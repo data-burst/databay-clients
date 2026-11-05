@@ -33,6 +33,13 @@ ME_GET = Operation(
             required=False,
             description='Also return billing usage and the plan state',
         ),
+        Param(
+            name='include_orgs',
+            location='query',
+            kind='boolean',
+            required=False,
+            description='Also return active_org and needs_org_choice, read from the identity provider',
+        ),
     ),
     body=None,
     response=Response(

@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from databay.resources.metabase_database import MetabaseDatabaseResource
     from databay.resources.nlq import NlqResource
     from databay.resources.notebook_credential import NotebookCredentialResource
+    from databay.resources.org import OrgResource
     from databay.resources.org_member import OrgMemberResource
     from databay.resources.org_offboarding import OrgOffboardingResource
     from databay.resources.pipe import PipeResource
@@ -299,6 +300,12 @@ class Api:
         from databay.resources.notebook_credential import NotebookCredentialResource
 
         return NotebookCredentialResource(self._session)
+
+    @cached_property
+    def org(self) -> OrgResource:
+        from databay.resources.org import OrgResource
+
+        return OrgResource(self._session)
 
     @cached_property
     def org_member(self) -> OrgMemberResource:

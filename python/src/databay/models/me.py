@@ -42,6 +42,7 @@ class FeatureGrant(ResponseModel):
 class User(ResponseModel):
     access_token: str | None = None
     acr: str | None = None
+    active_org: str | None = None
     azp: str | None = None
     dashboard_flags: dict[str, bool] | None = None
     email: str | None = None
@@ -54,9 +55,11 @@ class User(ResponseModel):
     iat: int | None = None
     max_sources: int | None = None
     name: str | None = None
+    needs_org_choice: bool | None = None
     orders_included: int | None = None
     orders_used: int | None = None
     organization: list[str] | None = None
+    orgs_unavailable: bool | None = None
     over_cap: bool = False
     plan: str | None = None
     preferred_username: str | None = None

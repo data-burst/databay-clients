@@ -43,6 +43,7 @@ class PipeDestinationResource(Resource):
         primary_key: list[str] | Unset = UNSET,
         sink_db_uuid: str | Unset = UNSET,
         dest_table_name: str | Unset = UNSET,
+        sync_mode: str | Unset = UNSET,
     ) -> DestinationPreviewResponse:
         """Get Destination Preview. ``databay pipe-destination preview``."""
-        return self._call(_ops.PIPE_DESTINATION_PREVIEW, {'source_id': source_id, 'table_name': table_name, 'schema_name': schema_name, 'primary_key': primary_key, 'sink_db_uuid': sink_db_uuid, 'dest_table_name': dest_table_name})
+        return self._call(_ops.PIPE_DESTINATION_PREVIEW, {'source_id': source_id, 'table_name': table_name, 'schema_name': schema_name, 'primary_key': primary_key, 'sink_db_uuid': sink_db_uuid, 'dest_table_name': dest_table_name, 'sync_mode': sync_mode})

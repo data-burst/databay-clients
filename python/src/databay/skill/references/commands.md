@@ -1754,6 +1754,7 @@ Usage: `databay me get [OPTIONS]`
 |---|---|---|
 | `--refresh-plan` / `--no-refresh-plan` |  | Bypass the plan cache and re-read the plan |
 | `--include-usage` / `--no-include-usage` |  | Also return billing usage and the plan state |
+| `--include-orgs` / `--no-include-orgs` |  | Also return active_org and needs_org_choice, read from the identity provider |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -2049,15 +2050,41 @@ Usage: `databay notebook-credential renew [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+## org
+
+### databay org list
+
+List the organizations the caller belongs to, their role in each, and which one is stored as active.
+
+`active_org` and `is_active` are the stored choice: the organization the next refreshed token names.
+The caller's current token may still name another one until it is refreshed. `needs_org_choice` is
+true when no usable organization is stored and one is usable: choose with `PUT /api/auth/me/active-org`,
+then refresh the token. `usable_orgs` 0 means every organization is disabled, or there is none.
+An org API key is refused with 403 `api_key_not_allowed`; 503 `auth_unavailable` means retry later.
+
+```
+Examples:
+  databay org list
+```
+
+Usage: `databay org list [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ## org-member
 
 ### databay org-member add
 
-Add an existing org-less user, or create one and send the set-password invitation.
+Add a person who has an account, or invite an address that has none (`status: invited`).
 
-A retry with the same `Idempotency-Key` returns the first answer, except a temporary password,
-which is only ever in the first answer: its `invite` is then `link_already_shown`. On this route
-a key does not expire.
+An invited address joins when its owner signs in and accepts. A retry of an add with the same
+`Idempotency-Key` returns the first answer; on this route a key does not expire. A repeated invite
+answers `already_invited` with the same invitation.
 
 ```
 Examples:
@@ -2070,6 +2097,7 @@ Usage: `databay org-member add [OPTIONS]`
 |---|---|---|
 | `--email STRING` | yes | Email |
 | `--first-name STRING` |  | First Name |
+| `--language STRING` |  | The inviter's UI language for the invitation mail an address without an account gets; English when omitted. One of: en, fa. |
 | `--last-name STRING` |  | Last Name |
 | `--role STRING` | yes | Role. One of: reader, editor, org_admin. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
@@ -2656,6 +2684,7 @@ Usage: `databay pipe-destination preview [OPTIONS]`
 | `--primary-key LIST` (repeat) |  | replication key to preview |
 | `--sink-db-uuid STRING` |  | sink db uuid |
 | `--dest-table-name STRING` |  | destination table name |
+| `--sync-mode STRING` |  | The draft's sync mode; a streamed Postgres table is previewed at the types the CDC engine lands it as. One of: incremental_deduped_history, incremental_append, full_refresh_overwrite, full_refresh_append. |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -4363,7 +4392,7 @@ Usage: `databay source-catalog setup-script SOURCE_TYPE [OPTIONS]`
 | `SOURCE_TYPE` | yes | source type |
 | `--username STRING` |  | the database user Databay will use |
 | `--db-name STRING` |  | the database to replicate |
-| `--provider STRING` |  | who runs the database. One of: rds, cloudsql, azure, self_managed, unknown. |
+| `--provider STRING` |  | who runs the database. One of: rds, cloudsql, azure, atlas, self_managed, unknown. |
 | `--step STRING` |  | only this step of the guided setup: replication or databay_user, and publication_admin or publication_databay where the deployment offers the choice |
 | `--publication-mode STRING` |  | the publication path the whole script prepares for. One of: customer_managed, databay_managed. |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -6119,6 +6148,7 @@ Usage: `databay warehouse-service-account-credential update PROJECT_ID SERVICE_A
 
 | Operation | Command |
 |---|---|
+| `PUT /api/auth/me/active-org` | `databay org switch` (not in this CLI version) |
 | `POST /api/configstore/sql/execute` | `databay sql` |
 
 ## Hand-written commands
