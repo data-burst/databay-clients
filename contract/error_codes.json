@@ -414,6 +414,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "source_database_dropped": {
+   "hint": "Once the database is back, resync the pipe (a rebuild from the snapshot source) to copy it again.",
+   "action": "do_first",
+   "side_effects": "partial",
+   "max_retries": null
+  },
   "source_host_changed_live_pipe": {
    "hint": "Delete and re-create the pipe to stream from the new host.",
    "action": "do_first",
@@ -578,6 +584,12 @@
    "side_effects": "unknown",
    "max_retries": 3
   },
+  "active_org_not_stored": {
+   "hint": "Contact support; your organization choice could not be saved.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "actor_required": {
    "hint": "Name an acting user who belongs to an organization.",
    "action": "fix_and_retry",
@@ -591,7 +603,7 @@
    "max_retries": null
   },
   "ai_daily_limit": {
-   "hint": "Wait until resets_at, or upgrade the plan for more questions.",
+   "hint": "Wait until resets_at, or contact us for more questions.",
    "action": "do_first",
    "side_effects": "none",
    "max_retries": null
@@ -1269,7 +1281,7 @@
    "max_retries": null
   },
   "free_order_cap": {
-   "hint": "Upgrade the plan to connect another source.",
+   "hint": "Contact us for a plan with a higher order limit.",
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
@@ -1427,6 +1439,48 @@
   "invalid_version": {
    "hint": "Fix the problems listed, then try again.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "invitation_email_mismatch": {
+   "hint": "Sign in with the email address the invitation was sent to.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "invitation_inviter_not_admin": {
+   "hint": "Ask an admin of the organization for a new invitation.",
+   "action": "ask_human",
+   "side_effects": "partial",
+   "max_retries": null
+  },
+  "invitation_link_unavailable": {
+   "hint": "Ask the server's operator to set the public app URL and secret key.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "invitation_not_found": {
+   "hint": "Reload the list of invitations and pick one that is still there.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "invitation_not_valid": {
+   "hint": "Ask the person who invited you for a new invitation.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "invitation_rate_limited": {
+   "hint": "Wait for the Retry-After interval, then open the link again.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "invitation_single_org": {
+   "hint": "Contact support to join another organization.",
+   "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1760,9 +1814,75 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "operator_work_failed": {
+   "hint": "Check the target's state before you try the action again.",
+   "action": "ask_human",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
+  "operator_work_overdue": {
+   "hint": "Check the target's state before you try the action again.",
+   "action": "ask_human",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
+  "operator_work_started": {
+   "hint": "Check the request under the same key; do not resend it under a new key.",
+   "action": "do_first",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
+  "org_claim_invalid": {
+   "hint": "Sign in again; if this persists, contact support.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_create_daily_limit": {
+   "hint": "Wait for the Retry-After interval, then create it again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_create_limit": {
+   "hint": "The limit for new organizations is reached; ask an admin of an existing one to add you.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_create_single_org": {
+   "hint": "Contact support to create another organization.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_disabled": {
+   "hint": "This organization is disabled; pick another one or contact support.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_key_conflict": {
+   "hint": "Send the request again.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 1
+  },
   "org_not_found": {
    "hint": "Sign in again; if this persists, contact support.",
    "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_not_member": {
+   "hint": "Pick one of the organizations you belong to.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "org_required": {
+   "hint": "Create or join an organization in the web app first.",
+   "action": "do_first",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1935,7 +2055,7 @@
    "max_retries": null
   },
   "plan_source_limit": {
-   "hint": "Upgrade the plan to connect another source.",
+   "hint": "Contact us for a plan with more sources.",
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
@@ -2501,6 +2621,12 @@
   "shopify_source_undeletable": {
    "hint": "Uninstall the app from Shopify to remove this source.",
    "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "shopify_store_not_found": {
+   "hint": "Check the store's address, then try again.",
+   "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
   },

@@ -43,6 +43,7 @@ class PrecheckReportViewProvider(OpenStrEnum):
     RDS = 'rds'
     CLOUDSQL = 'cloudsql'
     AZURE = 'azure'
+    ATLAS = 'atlas'
     SELF_MANAGED = 'self_managed'
     UNKNOWN = 'unknown'
 

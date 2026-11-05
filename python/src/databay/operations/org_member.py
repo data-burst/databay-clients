@@ -13,7 +13,7 @@ ORG_MEMBER_ADD = Operation(
     method='post',
     path='/api/auth/org/members',
     summary='Add Member',
-    description='Add an existing org-less user, or create one and send the set-password invitation.\n\nA retry with the same `Idempotency-Key` returns the first answer, except a temporary password,\nwhich is only ever in the first answer: its `invite` is then `link_already_shown`. On this route\na key does not expire.',
+    description='Add a person who has an account, or invite an address that has none (`status: invited`).\n\nAn invited address joins when its owner signs in and accepts. A retry of an add with the same\n`Idempotency-Key` returns the first answer; on this route a key does not expire. A repeated invite\nanswers `already_invited` with the same invitation.',
     project=None,
     destructive=False,
     idempotent=True,
@@ -36,6 +36,17 @@ ORG_MEMBER_ADD = Operation(
                 required=False,
                 description='First Name',
                 nullable=True,
+            ),
+            Param(
+                name='language',
+                location='body',
+                kind='string',
+                required=False,
+                description="The inviter's UI language for the invitation mail an address without an account gets; English when omitted.",
+                choices=(
+                    'en',
+                    'fa',
+                ),
             ),
             Param(
                 name='last_name',

@@ -16,9 +16,10 @@ REGISTRY: dict[str, ErrorInfo] = {
     'account_lookup_failed': ErrorInfo('Check the credentials, then try again.', 'fix_and_retry', 'none', None),
     'account_not_in_grant': ErrorInfo('Pick an account the credentials reach.', 'fix_and_retry', 'none', None),
     'activation_unavailable': ErrorInfo('Retry the activation; contact support if it keeps failing.', 'retry', 'unknown', 3),
+    'active_org_not_stored': ErrorInfo('Contact support; your organization choice could not be saved.', 'ask_human', 'none', None),
     'actor_required': ErrorInfo('Name an acting user who belongs to an organization.', 'fix_and_retry', 'none', None),
     'ai_busy_today': ErrorInfo('Try again after resets_at, or write the query in the SQL editor.', 'do_first', 'none', None),
-    'ai_daily_limit': ErrorInfo('Wait until resets_at, or upgrade the plan for more questions.', 'do_first', 'none', None),
+    'ai_daily_limit': ErrorInfo('Wait until resets_at, or contact us for more questions.', 'do_first', 'none', None),
     'ai_plan_unknown': ErrorInfo('Contact support; the AI assistant cannot read your plan.', 'ask_human', 'none', None),
     'ai_quota_unavailable': ErrorInfo('Try again shortly.', 'retry', 'none', 3),
     'alert_instance_not_found': ErrorInfo('List the alerts and pick one you can see.', 'fix_and_retry', 'none', None),
@@ -131,7 +132,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'folder_not_found': ErrorInfo('List the folders and pick one you can see.', 'fix_and_retry', 'none', None),
     'folder_not_in_project': ErrorInfo('Pick a folder of this project.', 'fix_and_retry', 'none', None),
     'folder_too_deep': ErrorInfo('Place the folder higher up; folders nest at most limit levels deep.', 'fix_and_retry', 'none', None),
-    'free_order_cap': ErrorInfo('Upgrade the plan to connect another source.', 'ask_human', 'none', None),
+    'free_order_cap': ErrorInfo('Contact us for a plan with a higher order limit.', 'ask_human', 'none', None),
     'fx_rate_missing': ErrorInfo('Pick a range or a reporting currency that has exchange rates.', 'fix_and_retry', 'none', None),
     'fx_rate_unavailable': ErrorInfo('Pick a reporting currency that has exchange rates for the currencies listed.', 'fix_and_retry', 'none', None),
     'fx_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
@@ -158,6 +159,13 @@ REGISTRY: dict[str, ErrorInfo] = {
     'invalid_spec': ErrorInfo('Fix the card named by key as reason says.', 'fix_and_retry', 'none', None),
     'invalid_tenant_identifier': ErrorInfo("Contact support; the organization's name cannot be mapped to a warehouse database.", 'ask_human', 'none', None),
     'invalid_version': ErrorInfo('Fix the problems listed, then try again.', 'fix_and_retry', 'none', None),
+    'invitation_email_mismatch': ErrorInfo('Sign in with the email address the invitation was sent to.', 'do_first', 'none', None),
+    'invitation_inviter_not_admin': ErrorInfo('Ask an admin of the organization for a new invitation.', 'ask_human', 'partial', None),
+    'invitation_link_unavailable': ErrorInfo("Ask the server's operator to set the public app URL and secret key.", 'ask_human', 'none', None),
+    'invitation_not_found': ErrorInfo('Reload the list of invitations and pick one that is still there.', 'fix_and_retry', 'none', None),
+    'invitation_not_valid': ErrorInfo('Ask the person who invited you for a new invitation.', 'ask_human', 'none', None),
+    'invitation_rate_limited': ErrorInfo('Wait for the Retry-After interval, then open the link again.', 'retry', 'none', 3),
+    'invitation_single_org': ErrorInfo('Contact support to join another organization.', 'ask_human', 'none', None),
     'job_name_exists': ErrorInfo('Pick another name for the transformation.', 'fix_and_retry', 'none', None),
     'job_name_taken': ErrorInfo('Pick another name; transformation names are unique in the organization.', 'fix_and_retry', 'none', None),
     'job_not_found': ErrorInfo('List the transformations and pick one you can see.', 'fix_and_retry', 'none', None),
@@ -213,7 +221,18 @@ REGISTRY: dict[str, ErrorInfo] = {
     'oauth_state_invalid': ErrorInfo('Start connecting again.', 'ask_human', 'none', None),
     'operator_preview_stale': ErrorInfo('Preview the change again and confirm the new preview.', 'fix_and_retry', 'none', None),
     'operator_request_not_received': ErrorInfo('Treat the change as not applied, and apply it again with a new key if it is still wanted.', 'ask_human', 'none', None),
+    'operator_work_failed': ErrorInfo("Check the target's state before you try the action again.", 'ask_human', 'unknown', None),
+    'operator_work_overdue': ErrorInfo("Check the target's state before you try the action again.", 'ask_human', 'unknown', None),
+    'operator_work_started': ErrorInfo('Check the request under the same key; do not resend it under a new key.', 'do_first', 'unknown', None),
+    'org_claim_invalid': ErrorInfo('Sign in again; if this persists, contact support.', 'do_first', 'none', None),
+    'org_create_daily_limit': ErrorInfo('Wait for the Retry-After interval, then create it again.', 'do_first', 'none', None),
+    'org_create_limit': ErrorInfo('The limit for new organizations is reached; ask an admin of an existing one to add you.', 'ask_human', 'none', None),
+    'org_create_single_org': ErrorInfo('Contact support to create another organization.', 'ask_human', 'none', None),
+    'org_disabled': ErrorInfo('This organization is disabled; pick another one or contact support.', 'ask_human', 'none', None),
+    'org_key_conflict': ErrorInfo('Send the request again.', 'retry', 'none', 1),
     'org_not_found': ErrorInfo('Sign in again; if this persists, contact support.', 'ask_human', 'none', None),
+    'org_not_member': ErrorInfo('Pick one of the organizations you belong to.', 'fix_and_retry', 'none', None),
+    'org_required': ErrorInfo('Create or join an organization in the web app first.', 'do_first', 'none', None),
     'org_visible_destination': ErrorInfo('Confirm with acknowledge_org_visible=true, or pick a destination of this project.', 'fix_and_retry', 'none', None),
     'organization_required': ErrorInfo('Ask an admin to add you to an organization, then sign in again.', 'ask_human', 'none', None),
     'organization_warehouse_unmapped': ErrorInfo('Contact support; the organization maps to no warehouse database.', 'ask_human', 'none', None),
@@ -242,7 +261,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'plan_exists': ErrorInfo('Pick another name, or replace the existing plan.', 'fix_and_retry', 'none', None),
     'plan_file_invalid': ErrorInfo('Fix the problems listed in the plan file.', 'fix_and_retry', 'none', None),
     'plan_seed_invalid': ErrorInfo('Ask an operator to fix the built-in plan seed.', 'ask_human', 'none', None),
-    'plan_source_limit': ErrorInfo('Upgrade the plan to connect another source.', 'ask_human', 'none', None),
+    'plan_source_limit': ErrorInfo('Contact us for a plan with more sources.', 'ask_human', 'none', None),
     'platform_credentials_missing': ErrorInfo('Supply your own platform credentials.', 'fix_and_retry', 'none', None),
     'precheck_busy': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'precheck_limiter_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
@@ -337,6 +356,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'shopify_shop_info_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'none', 3),
     'shopify_sign_in_failed': ErrorInfo('Reinstall the app.', 'ask_human', 'none', None),
     'shopify_source_undeletable': ErrorInfo('Uninstall the app from Shopify to remove this source.', 'ask_human', 'none', None),
+    'shopify_store_not_found': ErrorInfo("Check the store's address, then try again.", 'fix_and_retry', 'none', None),
     'sibling_being_removed': ErrorInfo('Retry in a few minutes; another account of this type is still being removed.', 'retry', 'none', 3),
     'sink_column_type_required': ErrorInfo('Send sink_column_type for the added column.', 'fix_and_retry', 'none', None),
     'sink_in_use': ErrorInfo('Delete the pipelines listed in pipes first.', 'do_first', 'none', None),
@@ -464,6 +484,10 @@ class AccountNotInGrantError(DatabayApiError):
 
 class ActivationUnavailableError(DatabayApiError):
     code = 'activation_unavailable'
+
+
+class ActiveOrgNotStoredError(DatabayApiError):
+    code = 'active_org_not_stored'
 
 
 class ActorRequiredError(DatabayApiError):
@@ -1034,6 +1058,34 @@ class InvalidVersionError(DatabayApiError):
     code = 'invalid_version'
 
 
+class InvitationEmailMismatchError(DatabayApiError):
+    code = 'invitation_email_mismatch'
+
+
+class InvitationInviterNotAdminError(DatabayApiError):
+    code = 'invitation_inviter_not_admin'
+
+
+class InvitationLinkUnavailableError(DatabayApiError):
+    code = 'invitation_link_unavailable'
+
+
+class InvitationNotFoundError(DatabayApiError):
+    code = 'invitation_not_found'
+
+
+class InvitationNotValidError(DatabayApiError):
+    code = 'invitation_not_valid'
+
+
+class InvitationRateLimitedError(DatabayApiError):
+    code = 'invitation_rate_limited'
+
+
+class InvitationSingleOrgError(DatabayApiError):
+    code = 'invitation_single_org'
+
+
 class JobNameExistsError(DatabayApiError):
     code = 'job_name_exists'
 
@@ -1254,8 +1306,52 @@ class OperatorRequestNotReceivedError(DatabayApiError):
     code = 'operator_request_not_received'
 
 
+class OperatorWorkFailedError(DatabayApiError):
+    code = 'operator_work_failed'
+
+
+class OperatorWorkOverdueError(DatabayApiError):
+    code = 'operator_work_overdue'
+
+
+class OperatorWorkStartedError(DatabayApiError):
+    code = 'operator_work_started'
+
+
+class OrgClaimInvalidError(DatabayApiError):
+    code = 'org_claim_invalid'
+
+
+class OrgCreateDailyLimitError(DatabayApiError):
+    code = 'org_create_daily_limit'
+
+
+class OrgCreateLimitError(DatabayApiError):
+    code = 'org_create_limit'
+
+
+class OrgCreateSingleOrgError(DatabayApiError):
+    code = 'org_create_single_org'
+
+
+class OrgDisabledError(DatabayApiError):
+    code = 'org_disabled'
+
+
+class OrgKeyConflictError(DatabayApiError):
+    code = 'org_key_conflict'
+
+
 class OrgNotFoundError(DatabayApiError):
     code = 'org_not_found'
+
+
+class OrgNotMemberError(DatabayApiError):
+    code = 'org_not_member'
+
+
+class OrgRequiredError(DatabayApiError):
+    code = 'org_required'
 
 
 class OrgVisibleDestinationError(DatabayApiError):
@@ -1750,6 +1846,10 @@ class ShopifySourceUndeletableError(DatabayApiError):
     code = 'shopify_source_undeletable'
 
 
+class ShopifyStoreNotFoundError(DatabayApiError):
+    code = 'shopify_store_not_found'
+
+
 class SiblingBeingRemovedError(DatabayApiError):
     code = 'sibling_being_removed'
 
@@ -2105,6 +2205,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'account_lookup_failed': AccountLookupFailedError,
     'account_not_in_grant': AccountNotInGrantError,
     'activation_unavailable': ActivationUnavailableError,
+    'active_org_not_stored': ActiveOrgNotStoredError,
     'actor_required': ActorRequiredError,
     'ai_busy_today': AiBusyTodayError,
     'ai_daily_limit': AiDailyLimitError,
@@ -2247,6 +2348,13 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'invalid_spec': InvalidSpecError,
     'invalid_tenant_identifier': InvalidTenantIdentifierError,
     'invalid_version': InvalidVersionError,
+    'invitation_email_mismatch': InvitationEmailMismatchError,
+    'invitation_inviter_not_admin': InvitationInviterNotAdminError,
+    'invitation_link_unavailable': InvitationLinkUnavailableError,
+    'invitation_not_found': InvitationNotFoundError,
+    'invitation_not_valid': InvitationNotValidError,
+    'invitation_rate_limited': InvitationRateLimitedError,
+    'invitation_single_org': InvitationSingleOrgError,
     'job_name_exists': JobNameExistsError,
     'job_name_taken': JobNameTakenError,
     'job_not_found': JobNotFoundError,
@@ -2302,7 +2410,18 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'oauth_state_invalid': OauthStateInvalidError,
     'operator_preview_stale': OperatorPreviewStaleError,
     'operator_request_not_received': OperatorRequestNotReceivedError,
+    'operator_work_failed': OperatorWorkFailedError,
+    'operator_work_overdue': OperatorWorkOverdueError,
+    'operator_work_started': OperatorWorkStartedError,
+    'org_claim_invalid': OrgClaimInvalidError,
+    'org_create_daily_limit': OrgCreateDailyLimitError,
+    'org_create_limit': OrgCreateLimitError,
+    'org_create_single_org': OrgCreateSingleOrgError,
+    'org_disabled': OrgDisabledError,
+    'org_key_conflict': OrgKeyConflictError,
     'org_not_found': OrgNotFoundError,
+    'org_not_member': OrgNotMemberError,
+    'org_required': OrgRequiredError,
     'org_visible_destination': OrgVisibleDestinationError,
     'organization_required': OrganizationRequiredError,
     'organization_warehouse_unmapped': OrganizationWarehouseUnmappedError,
@@ -2426,6 +2545,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'shopify_shop_info_unavailable': ShopifyShopInfoUnavailableError,
     'shopify_sign_in_failed': ShopifySignInFailedError,
     'shopify_source_undeletable': ShopifySourceUndeletableError,
+    'shopify_store_not_found': ShopifyStoreNotFoundError,
     'sibling_being_removed': SiblingBeingRemovedError,
     'sink_column_type_required': SinkColumnTypeRequiredError,
     'sink_in_use': SinkInUseError,

@@ -146,6 +146,19 @@ PIPE_DESTINATION_PREVIEW = Operation(
             description='destination table name',
             nullable=True,
         ),
+        Param(
+            name='sync_mode',
+            location='query',
+            kind='string',
+            required=False,
+            description="The draft's sync mode; a streamed Postgres table is previewed at the types the CDC engine lands it as.",
+            choices=(
+                'incremental_deduped_history',
+                'incremental_append',
+                'full_refresh_overwrite',
+                'full_refresh_append',
+            ),
+        ),
     ),
     body=None,
     response=Response(

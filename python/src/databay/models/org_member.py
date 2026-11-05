@@ -12,6 +12,11 @@ from pydantic import Field
 from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
 
 
+class AddMemberRequestLanguage(OpenStrEnum):
+    EN = 'en'
+    FA = 'fa'
+
+
 class AddMemberRequestRole(OpenStrEnum):
     READER = 'reader'
     EDITOR = 'editor'
@@ -24,6 +29,14 @@ class ChangeRoleRequestRole(OpenStrEnum):
     ORG_ADMIN = 'org_admin'
 
 
+class InvitationAddressResultResult(OpenStrEnum):
+    INVITED = 'invited'
+    ALREADY_MEMBER = 'already_member'
+    ALREADY_INVITED = 'already_invited'
+    INVALID_EMAIL = 'invalid_email'
+    DUPLICATE = 'duplicate'
+
+
 class OrgMemberRefRole(OpenStrEnum):
     READER = 'reader'
     EDITOR = 'editor'
@@ -34,7 +47,7 @@ class OrgMemberAddResponseStatus(OpenStrEnum):
     PENDING = 'pending'
     DONE = 'done'
     FAILED = 'failed'
-    UNCHANGED = 'unchanged'
+    INVITED = 'invited'
 
 
 class OrgMemberChangeResponseStatus(OpenStrEnum):
@@ -53,6 +66,7 @@ class OrgMemberOutRole(OpenStrEnum):
 class AddMemberRequest(RequestModel):
     email: str
     first_name: str | None = None
+    language: AddMemberRequestLanguage = 'en'
     last_name: str | None = None
     role: AddMemberRequestRole
 
@@ -61,23 +75,18 @@ class ChangeRoleRequest(RequestModel):
     role: ChangeRoleRequestRole
 
 
+class InvitationAddressResult(ResponseModel):
+    email: str
+    invitation_id: str | None
+    result: InvitationAddressResultResult
+
+
 class InviteByEmail(ResponseModel):
     delivery: Literal['email']
 
 
-class InviteByLink(ResponseModel):
-    action_link: str
-    delivery: Literal['link']
-    temporary_password: str
-
-
 class InviteFailed(ResponseModel):
     delivery: Literal['failed']
-
-
-class InviteLinkAlreadyShown(ResponseModel):
-    action_link: str
-    delivery: Literal['link_already_shown']
 
 
 class InviteNotRecorded(ResponseModel):
@@ -90,8 +99,9 @@ class OrgMemberRef(ResponseModel):
 
 
 class OrgMemberAddResponse(ResponseModel):
-    invite: Annotated[InviteByEmail | InviteByLink | InviteFailed | InviteLinkAlreadyShown | InviteNotRecorded, Field(discriminator='delivery')] | None
-    member: OrgMemberRef
+    invitation: InvitationAddressResult | None
+    invite: Annotated[InviteByEmail | InviteFailed | InviteNotRecorded, Field(discriminator='delivery')] | None
+    member: OrgMemberRef | None
     operation_id: str | None
     status: OrgMemberAddResponseStatus
 

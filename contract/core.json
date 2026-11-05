@@ -625,6 +625,20 @@
     "title": "ActivationSecret",
     "type": "object"
    },
+   "ActiveOrgResponse": {
+    "properties": {
+     "active_org": {
+      "description": "The stored active organization. The caller's current token still names the previous one; refresh it (the refresh-token grant at the identity provider's token endpoint) and the new token names this one.",
+      "title": "Active Org",
+      "type": "string"
+     }
+    },
+    "required": [
+     "active_org"
+    ],
+    "title": "ActiveOrgResponse",
+    "type": "object"
+   },
    "AdAccountOption": {
     "description": "One selectable ad account from the provider (after consent).",
     "properties": {
@@ -747,6 +761,16 @@
        }
       ],
       "title": "First Name"
+     },
+     "language": {
+      "default": "en",
+      "description": "The inviter's UI language for the invitation mail an address without an account gets; English when omitted.",
+      "enum": [
+       "en",
+       "fa"
+      ],
+      "title": "Language",
+      "type": "string"
      },
      "last_name": {
       "anyOf": [
@@ -3499,6 +3523,8 @@
      "login_too_many_connections",
      "login_permission_denied",
      "login_failed",
+     "login_host_not_one_server",
+     "login_ssl_mode_unsupported",
      "not_applicable",
      "not_checked",
      "unknown_permission_denied",
@@ -3572,6 +3598,13 @@
      "binlog_retention_short",
      "binlog_retention_unset",
      "binlog_retention_never_purged",
+     "mongodb_replica_set_ok",
+     "mongodb_sharded_cluster",
+     "mongodb_standalone",
+     "mongodb_access_ok",
+     "mongodb_access_missing",
+     "mongodb_access_not_enforced",
+     "mongodb_access_login_required",
      "provider_signed_in",
      "provider_token_revoked",
      "provider_scopes_ok",
@@ -3579,6 +3612,7 @@
      "account_readable_ok",
      "account_not_enabled",
      "account_access_denied",
+     "shop_not_found",
      "developer_token_refused",
      "reports_readable_ok",
      "reports_access_denied",
@@ -3586,12 +3620,20 @@
      "service_account_key_rejected",
      "provider_app_not_configured",
      "scopes_not_needed",
+     "account_other_login",
      "properties_readable_ok",
      "property_not_readable",
      "property_reports_ok",
      "property_reports_denied",
      "unknown_provider_busy",
-     "unknown_provider_down"
+     "unknown_provider_down",
+     "mssql_edition_ok",
+     "mssql_edition_express",
+     "cdc_database_on",
+     "cdc_database_off",
+     "mssql_grants_ok",
+     "mssql_grants_missing",
+     "cdc_schema_missing"
     ],
     "title": "CheckDetailCode",
     "type": "string"
@@ -5761,10 +5803,32 @@
       "title": "masked columns",
       "type": "array"
      },
+     "primary_key": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 1024,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The draft's replication key in key order, as its create would send it; null means the source's own key.",
+      "title": "replication key"
+     },
      "schema_name": {
       "default": "",
       "title": "source schema",
       "type": "string"
+     },
+     "sync_mode": {
+      "$ref": "#/components/schemas/SyncMode",
+      "default": "incremental_deduped_history",
+      "description": "The draft's sync mode, as its create would send it; a streamed table's column types are checked.",
+      "title": "sync mode"
      },
      "table_name": {
       "title": "source table",
@@ -6895,6 +6959,45 @@
     "title": "InstagramConnectedConfig",
     "type": "object"
    },
+   "InvitationAddressResult": {
+    "properties": {
+     "email": {
+      "description": "The address as sent, or normalised (trimmed, lower-cased) when it was valid.",
+      "title": "Email",
+      "type": "string"
+     },
+     "invitation_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Set for invited and already_invited (resend that one instead).",
+      "title": "Invitation Id"
+     },
+     "result": {
+      "enum": [
+       "invited",
+       "already_member",
+       "already_invited",
+       "invalid_email",
+       "duplicate"
+      ],
+      "title": "Result",
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "result",
+     "invitation_id"
+    ],
+    "title": "InvitationAddressResult",
+    "type": "object"
+   },
    "InviteByEmail": {
     "properties": {
      "delivery": {
@@ -6907,32 +7010,6 @@
      "delivery"
     ],
     "title": "InviteByEmail",
-    "type": "object"
-   },
-   "InviteByLink": {
-    "description": "No SMTP: the account-console link and a temporary password that works for one sign-in.",
-    "properties": {
-     "action_link": {
-      "title": "Action Link",
-      "type": "string"
-     },
-     "delivery": {
-      "const": "link",
-      "title": "Delivery",
-      "type": "string"
-     },
-     "temporary_password": {
-      "format": "password",
-      "title": "Temporary Password",
-      "type": "string"
-     }
-    },
-    "required": [
-     "delivery",
-     "action_link",
-     "temporary_password"
-    ],
-    "title": "InviteByLink",
     "type": "object"
    },
    "InviteFailed": {
@@ -6948,26 +7025,6 @@
      "delivery"
     ],
     "title": "InviteFailed",
-    "type": "object"
-   },
-   "InviteLinkAlreadyShown": {
-    "description": "A retry of a ``link`` invite: the temporary password was only in the first answer and is not stored.\n\nTo issue another one, an administrator of the Databay server sets a temporary password.",
-    "properties": {
-     "action_link": {
-      "title": "Action Link",
-      "type": "string"
-     },
-     "delivery": {
-      "const": "link_already_shown",
-      "title": "Delivery",
-      "type": "string"
-     }
-    },
-    "required": [
-     "delivery",
-     "action_link"
-    ],
-    "title": "InviteLinkAlreadyShown",
     "type": "object"
    },
    "InviteNotRecorded": {
@@ -8296,6 +8353,97 @@
     "title": "MovePipeline",
     "type": "object"
    },
+   "MyOrganizationOut": {
+    "properties": {
+     "display_name": {
+      "description": "The name to show; an organization without one shows its key.",
+      "title": "Display Name",
+      "type": "string"
+     },
+     "enabled": {
+      "description": "False for a disabled organization: no token names it, and a switch to it is refused.",
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "is_active": {
+      "description": "Whether this is the stored active organization: the one the next refreshed token names. The current token may still name another until it is refreshed.",
+      "title": "Is Active",
+      "type": "boolean"
+     },
+     "organization": {
+      "description": "The organization key (the token's organization claim).",
+      "title": "Organization",
+      "type": "string"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "enum": [
+         "reader",
+         "editor",
+         "org_admin"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The person's role in this organization; null when they hold none.",
+      "title": "Role"
+     }
+    },
+    "required": [
+     "organization",
+     "display_name",
+     "role",
+     "is_active",
+     "enabled"
+    ],
+    "title": "MyOrganizationOut",
+    "type": "object"
+   },
+   "MyOrganizationsResponse": {
+    "properties": {
+     "active_org": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The stored active organization, the one the next refreshed token names; null when none is stored or the stored one is unusable (the person left it, or it is disabled).",
+      "title": "Active Org"
+     },
+     "needs_org_choice": {
+      "description": "True when no usable organization is stored (none stored, the person left it, or it is disabled) and at least one of the person's organizations is usable: choose one with PUT /api/auth/me/active-org. False when there is nothing to choose, including when usable_orgs is 0.",
+      "title": "Needs Org Choice",
+      "type": "boolean"
+     },
+     "organizations": {
+      "items": {
+       "$ref": "#/components/schemas/MyOrganizationOut"
+      },
+      "title": "Organizations",
+      "type": "array"
+     },
+     "usable_orgs": {
+      "description": "How many of the person's organizations are enabled. 0 means no token can name an organization: the person must create one or be added to one.",
+      "title": "Usable Orgs",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "organizations",
+     "active_org",
+     "needs_org_choice",
+     "usable_orgs"
+    ],
+    "title": "MyOrganizationsResponse",
+    "type": "object"
+   },
    "MySQLConnectedConfig": {
     "properties": {
      "db_name": {
@@ -9104,7 +9252,19 @@
     "type": "object"
    },
    "OrgMemberAddResponse": {
+    "description": "An existing account was added (``member`` set), or an address with no account was invited (``invitation`` set).\n\nAn invited address joins when its owner signs in and accepts, like any invitation.",
     "properties": {
+     "invitation": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/InvitationAddressResult"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The invitation made for an address with no account; null when an account was added."
+     },
      "invite": {
       "anyOf": [
        {
@@ -9112,8 +9272,6 @@
          "mapping": {
           "email": "#/components/schemas/InviteByEmail",
           "failed": "#/components/schemas/InviteFailed",
-          "link": "#/components/schemas/InviteByLink",
-          "link_already_shown": "#/components/schemas/InviteLinkAlreadyShown",
           "not_recorded": "#/components/schemas/InviteNotRecorded"
          },
          "propertyName": "delivery"
@@ -9123,13 +9281,7 @@
           "$ref": "#/components/schemas/InviteByEmail"
          },
          {
-          "$ref": "#/components/schemas/InviteByLink"
-         },
-         {
           "$ref": "#/components/schemas/InviteFailed"
-         },
-         {
-          "$ref": "#/components/schemas/InviteLinkAlreadyShown"
          },
          {
           "$ref": "#/components/schemas/InviteNotRecorded"
@@ -9140,10 +9292,19 @@
         "type": "null"
        }
       ],
+      "description": "How the set-password mail went for an account an older add created; otherwise null.",
       "title": "Invite"
      },
      "member": {
-      "$ref": "#/components/schemas/OrgMemberRef"
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OrgMemberRef"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The added member; null when the address was invited."
      },
      "operation_id": {
       "anyOf": [
@@ -9154,6 +9315,7 @@
         "type": "null"
        }
       ],
+      "description": "Null when the address was invited instead.",
       "title": "Operation Id"
      },
      "status": {
@@ -9161,7 +9323,7 @@
        "pending",
        "done",
        "failed",
-       "unchanged"
+       "invited"
       ],
       "title": "Status",
       "type": "string"
@@ -9171,7 +9333,8 @@
      "operation_id",
      "status",
      "member",
-     "invite"
+     "invite",
+     "invitation"
     ],
     "title": "OrgMemberAddResponse",
     "type": "object"
@@ -11998,6 +12161,7 @@
        "rds",
        "cloudsql",
        "azure",
+       "atlas",
        "self_managed",
        "unknown"
       ],
@@ -12651,6 +12815,7 @@
      "rds",
      "cloudsql",
      "azure",
+     "atlas",
      "self_managed",
      "unknown"
     ],
@@ -15526,6 +15691,22 @@
     "title": "StreamView",
     "type": "object"
    },
+   "SwitchActiveOrgRequest": {
+    "properties": {
+     "organization": {
+      "description": "The organization key to make active.",
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Organization",
+      "type": "string"
+     }
+    },
+    "required": [
+     "organization"
+    ],
+    "title": "SwitchActiveOrgRequest",
+    "type": "object"
+   },
    "SyncMode": {
     "description": "A pipe's sync mode: whether it streams changes or re-reads the table (public API naming convention).",
     "enum": [
@@ -16312,6 +16493,18 @@
       "description": "The level of authentication the sign-in reached, as Keycloak reports it.",
       "title": "Acr"
      },
+     "active_org": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The organization auth stores as the person's active one, read from the identity provider when include_orgs is set; null otherwise, or when none is stored.",
+      "title": "Active Org"
+     },
      "azp": {
       "anyOf": [
        {
@@ -16466,6 +16659,18 @@
       "description": "The full name of the user",
       "title": "Name"
      },
+     "needs_org_choice": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "When include_orgs is set: true when no usable organization is stored (none stored, the person left it, or it is disabled) and at least one of their organizations is usable, so the app asks them to choose. Null when include_orgs is not set.",
+      "title": "Needs Org Choice"
+     },
      "orders_included": {
       "anyOf": [
        {
@@ -16504,6 +16709,18 @@
       ],
       "description": "List of organizations the user belongs to",
       "title": "Organization"
+     },
+     "orgs_unavailable": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "When include_orgs is set: true when the identity provider could not be read, so active_org and needs_org_choice are null and say nothing; ask again later. Null when include_orgs is not set.",
+      "title": "Orgs Unavailable"
      },
      "over_cap": {
       "default": false,
@@ -17484,6 +17701,18 @@
        "title": "Include Usage",
        "type": "boolean"
       }
+     },
+     {
+      "description": "Also return active_org and needs_org_choice, read from the identity provider",
+      "in": "query",
+      "name": "include_orgs",
+      "required": false,
+      "schema": {
+       "default": false,
+       "description": "Also return active_org and needs_org_choice, read from the identity provider",
+       "title": "Include Orgs",
+       "type": "boolean"
+      }
      }
     ],
     "responses": {
@@ -17528,6 +17757,112 @@
      "kind": "exposed",
      "noun": "me",
      "verb": "get"
+    }
+   }
+  },
+  "/api/auth/me/active-org": {
+   "put": {
+    "description": "Store one of the caller's organizations as active; the token in hand still names the previous one.\n\nRefresh the token (refresh-token grant at the identity provider's token endpoint; `databay org switch`\ndoes it) and the new token names this one. Refusals:\n\n- 403 `org_not_member`: the caller does not belong to that organization;\n- 403 `org_disabled`: the organization is disabled, so no token could name it;\n- 403 `api_key_not_allowed`: the caller is an org API key, which belongs to one organization;\n- 503 `auth_unavailable`: the identity provider could not be read or written; retry later;\n- 500 `active_org_not_stored`: the identity provider dropped the choice; nothing was switched.",
+    "operationId": "org_switch",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SwitchActiveOrgRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ActiveOrgResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Active Org",
+    "tags": [
+     "auth",
+     "organization"
+    ],
+    "x-databay-client": {
+     "agent_shape": "curated:org switch",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay org switch <organization>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "org",
+     "verb": "switch"
+    }
+   }
+  },
+  "/api/auth/me/organizations": {
+   "get": {
+    "description": "List the organizations the caller belongs to, their role in each, and which one is stored as active.\n\n`active_org` and `is_active` are the stored choice: the organization the next refreshed token names.\nThe caller's current token may still name another one until it is refreshed. `needs_org_choice` is\ntrue when no usable organization is stored and one is usable: choose with `PUT /api/auth/me/active-org`,\nthen refresh the token. `usable_orgs` 0 means every organization is disabled, or there is none.\nAn org API key is refused with 403 `api_key_not_allowed`; 503 `auth_unavailable` means retry later.",
+    "operationId": "org_list",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MyOrganizationsResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get My Organizations",
+    "tags": [
+     "auth",
+     "organization"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [
+      "organization",
+      "display_name",
+      "role",
+      "is_active",
+      "enabled"
+     ],
+     "destructive": false,
+     "examples": [
+      "databay org list"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "org",
+     "verb": "list"
     }
    }
   },
@@ -17609,7 +17944,7 @@
     }
    },
    "post": {
-    "description": "Add an existing org-less user, or create one and send the set-password invitation.\n\nA retry with the same `Idempotency-Key` returns the first answer, except a temporary password,\nwhich is only ever in the first answer: its `invite` is then `link_already_shown`. On this route\na key does not expire.",
+    "description": "Add a person who has an account, or invite an address that has none (`status: invited`).\n\nAn invited address joins when its owner signs in and accepts. A retry of an add with the same\n`Idempotency-Key` returns the first answer; on this route a key does not expire. A repeated invite\nanswers `already_invited` with the same invitation.",
     "operationId": "org_member_add",
     "parameters": [
      {
@@ -19390,6 +19725,18 @@
         }
        ],
        "title": "destination table name"
+      }
+     },
+     {
+      "description": "The draft's sync mode; a streamed Postgres table is previewed at the types the CDC engine lands it as.",
+      "in": "query",
+      "name": "sync_mode",
+      "required": false,
+      "schema": {
+       "$ref": "#/components/schemas/SyncMode",
+       "default": "incremental_deduped_history",
+       "description": "The draft's sync mode; a streamed Postgres table is previewed at the types the CDC engine lands it as.",
+       "title": "sync mode"
       }
      }
     ],

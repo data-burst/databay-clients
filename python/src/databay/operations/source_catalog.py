@@ -91,6 +91,7 @@ SOURCE_CATALOG_SETUP_SCRIPT = Operation(
                 'rds',
                 'cloudsql',
                 'azure',
+                'atlas',
                 'self_managed',
                 'unknown',
             ),

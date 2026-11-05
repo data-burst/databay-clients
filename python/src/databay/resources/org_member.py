@@ -22,11 +22,12 @@ class OrgMemberResource(Resource):
         email: str,
         role: str,
         first_name: str | None | Unset = UNSET,
+        language: str | Unset = UNSET,
         last_name: str | None | Unset = UNSET,
         idempotency_key: str | None = None,
     ) -> OrgMemberAddResponse:
         """Add Member. ``databay org-member add``."""
-        return self._call(_ops.ORG_MEMBER_ADD, {'email': email, 'first_name': first_name, 'last_name': last_name, 'role': role}, idempotency_key=idempotency_key)
+        return self._call(_ops.ORG_MEMBER_ADD, {'email': email, 'first_name': first_name, 'language': language, 'last_name': last_name, 'role': role}, idempotency_key=idempotency_key)
 
     def list(self) -> OrgMembersResponse:
         """Get Members. ``databay org-member list``."""

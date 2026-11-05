@@ -21,6 +21,7 @@ class MeResource(Resource):
         *,
         refresh_plan: bool | Unset = UNSET,
         include_usage: bool | Unset = UNSET,
+        include_orgs: bool | Unset = UNSET,
     ) -> User:
         """Me. ``databay me get``."""
-        return self._call(_ops.ME_GET, {'refresh_plan': refresh_plan, 'include_usage': include_usage})
+        return self._call(_ops.ME_GET, {'refresh_plan': refresh_plan, 'include_usage': include_usage, 'include_orgs': include_orgs})
