@@ -27,7 +27,6 @@ class DBCreate(RequestModel):
 
 class WarehouseCreated(ResponseModel):
     binding_status: str | None
-    metabase_registration: str
     pending_home_project_id: str | None
     uuid: str
 

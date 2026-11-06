@@ -14,21 +14,7 @@ class ProvisioningStatusResponseDefaultClickhouseDb(OpenStrEnum):
     FAILED = 'failed'
 
 
-class ProvisioningStatusResponseMetabaseAccount(OpenStrEnum):
-    PENDING = 'pending'
-    READY = 'ready'
-    FAILED = 'failed'
-
-
-class ProvisioningStatusResponseMetabaseGroup(OpenStrEnum):
-    PENDING = 'pending'
-    READY = 'ready'
-    FAILED = 'failed'
-
-
 class ProvisioningStatusResponse(ResponseModel):
     default_clickhouse_db: ProvisioningStatusResponseDefaultClickhouseDb
     errors: dict[str, str]
-    metabase_account: ProvisioningStatusResponseMetabaseAccount
-    metabase_group: ProvisioningStatusResponseMetabaseGroup
     ready: bool

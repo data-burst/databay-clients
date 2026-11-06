@@ -58,7 +58,6 @@ WAREHOUSE_CREATE = Operation(
         failure=(
             'failed',
             'deleting',
-            'deleted',
         ),
         error_field='/last_error',
     ),
@@ -145,7 +144,6 @@ WAREHOUSE_GET = Operation(
         failure=(
             'failed',
             'deleting',
-            'deleted',
         ),
         error_field='/last_error',
     ),
@@ -158,7 +156,7 @@ WAREHOUSE_IMPACT = Operation(
     method='get',
     path='/api/configstore/databases/{db_uuid}/impact',
     summary='Warehouse Impact',
-    description='Report what a delete would break: pipelines, Metabase questions and dashboards.',
+    description='Report what a delete would break: the pipelines that write into the warehouse.',
     project='header',
     destructive=False,
     idempotent=False,
@@ -304,7 +302,6 @@ WAREHOUSE_RETRY = Operation(
         failure=(
             'failed',
             'deleting',
-            'deleted',
         ),
         error_field='/last_error',
     ),

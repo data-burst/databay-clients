@@ -22,7 +22,15 @@ RENEWED = "access-renewed"
 
 
 def _org(key: str, name: str, *, active: bool, role: str | None = "editor", enabled: bool = True) -> dict[str, Any]:
-    return {"organization": key, "display_name": name, "role": role, "is_active": active, "enabled": enabled}
+    return {
+        "organization": key,
+        "display_name": name,
+        "role": role,
+        "is_active": active,
+        "enabled": enabled,
+        "kind": None,
+        "member_count": 1,
+    }
 
 
 def _listing(*, active: str | None, disabled: frozenset[str] = frozenset()) -> dict[str, Any]:

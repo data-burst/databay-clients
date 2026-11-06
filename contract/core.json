@@ -5200,8 +5200,7 @@
      "provisioning",
      "ready",
      "failed",
-     "deleting",
-     "deleted"
+     "deleting"
     ],
     "title": "DBStatus",
     "type": "string"
@@ -7945,178 +7944,6 @@
     "title": "MetaAdsConnectedConfig",
     "type": "object"
    },
-   "MetabaseDatabaseIdResponse": {
-    "properties": {
-     "metabase_database_id": {
-      "title": "Metabase Database Id",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "metabase_database_id"
-    ],
-    "title": "MetabaseDatabaseIdResponse",
-    "type": "object"
-   },
-   "MetabaseDatabaseUsageResponse": {
-    "description": "``GET /api/dashboard/metabase/databases/{db_uuid}/usage``: what deleting the warehouse would break.",
-    "properties": {
-     "cards": {
-      "title": "Cards",
-      "type": "integer"
-     },
-     "dashboards": {
-      "title": "Dashboards",
-      "type": "integer"
-     },
-     "hidden_cards": {
-      "title": "Hidden Cards",
-      "type": "integer"
-     },
-     "hidden_dashboards": {
-      "title": "Hidden Dashboards",
-      "type": "integer"
-     },
-     "links": {
-      "items": {
-       "$ref": "#/components/schemas/MetabaseUsageLink"
-      },
-      "title": "Links",
-      "type": "array"
-     },
-     "registered": {
-      "title": "Registered",
-      "type": "boolean"
-     }
-    },
-    "required": [
-     "registered",
-     "cards",
-     "dashboards",
-     "hidden_cards",
-     "hidden_dashboards",
-     "links"
-    ],
-    "title": "MetabaseDatabaseUsageResponse",
-    "type": "object"
-   },
-   "MetabaseProjectResponse": {
-    "description": "``GET /api/dashboard/metabase/project``: where the launcher opens Dashboards.",
-    "properties": {
-     "collection_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Collection Id"
-     },
-     "group_ready": {
-      "default": false,
-      "title": "Group Ready",
-      "type": "boolean"
-     },
-     "project_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Project Id"
-     },
-     "surface_state": {
-      "enum": [
-       "legacy",
-       "scoped"
-      ],
-      "title": "Surface State",
-      "type": "string"
-     }
-    },
-    "required": [
-     "surface_state"
-    ],
-    "title": "MetabaseProjectResponse",
-    "type": "object"
-   },
-   "MetabaseSetupResponse": {
-    "description": "``POST /api/dashboard/metabase/setup``: the group the caller's Dashboards use.",
-    "properties": {
-     "metabase_group_id": {
-      "title": "Metabase Group Id",
-      "type": "integer"
-     },
-     "project_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Project Id"
-     }
-    },
-    "required": [
-     "metabase_group_id"
-    ],
-    "title": "MetabaseSetupResponse",
-    "type": "object"
-   },
-   "MetabaseSyncSchemaResponse": {
-    "description": "``POST /api/dashboard/metabase/sync-schema/{db_name}``: Metabase's answer to the sync request.",
-    "properties": {
-     "status": {
-      "title": "Status",
-      "type": "string"
-     }
-    },
-    "required": [
-     "status"
-    ],
-    "title": "MetabaseSyncSchemaResponse",
-    "type": "object"
-   },
-   "MetabaseUsageLink": {
-    "description": "One Metabase question or dashboard that uses the warehouse; ``url`` is relative to the Metabase site.",
-    "properties": {
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "name": {
-      "title": "Name",
-      "type": "string"
-     },
-     "type": {
-      "enum": [
-       "card",
-       "dashboard"
-      ],
-      "title": "Type",
-      "type": "string"
-     },
-     "url": {
-      "title": "Url",
-      "type": "string"
-     }
-    },
-    "required": [
-     "type",
-     "id",
-     "name",
-     "url"
-    ],
-    "title": "MetabaseUsageLink",
-    "type": "object"
-   },
    "Meter": {
     "enum": [
      "pipes",
@@ -8370,6 +8197,34 @@
       "title": "Is Active",
       "type": "boolean"
      },
+     "kind": {
+      "anyOf": [
+       {
+        "enum": [
+         "personal",
+         "company"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "personal or company, as asked when the organization was created through Databay; null when it was made another way (a store install, or before organizations could be created here).",
+      "title": "Kind"
+     },
+     "member_count": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The organization's people; API keys and other service accounts not counted. Null when it couldn't be read.",
+      "title": "Member Count"
+     },
      "organization": {
       "description": "The organization key (the token's organization claim).",
       "title": "Organization",
@@ -8398,7 +8253,9 @@
      "display_name",
      "role",
      "is_active",
-     "enabled"
+     "enabled",
+     "kind",
+     "member_count"
     ],
     "title": "MyOrganizationOut",
     "type": "object"
@@ -12823,21 +12680,15 @@
     "type": "string"
    },
    "ProvisionDefaultsResponse": {
-    "description": "``POST /provision/defaults``. Metabase registers the database asynchronously, so it is always pending here.",
+    "description": "``POST /provision/defaults``.",
     "properties": {
      "clickhouse": {
       "title": "Clickhouse",
       "type": "boolean"
-     },
-     "metabase_registration": {
-      "const": "pending",
-      "title": "Metabase Registration",
-      "type": "string"
      }
     },
     "required": [
-     "clickhouse",
-     "metabase_registration"
+     "clickhouse"
     ],
     "title": "ProvisionDefaultsResponse",
     "type": "object"
@@ -12861,24 +12712,6 @@
       "title": "Errors",
       "type": "object"
      },
-     "metabase_account": {
-      "enum": [
-       "pending",
-       "ready",
-       "failed"
-      ],
-      "title": "Metabase Account",
-      "type": "string"
-     },
-     "metabase_group": {
-      "enum": [
-       "pending",
-       "ready",
-       "failed"
-      ],
-      "title": "Metabase Group",
-      "type": "string"
-     },
      "ready": {
       "title": "Ready",
       "type": "boolean"
@@ -12886,8 +12719,6 @@
     },
     "required": [
      "ready",
-     "metabase_group",
-     "metabase_account",
      "default_clickhouse_db",
      "errors"
     ],
@@ -13757,6 +13588,11 @@
       "title": "Auth Providers",
       "type": "array"
      },
+     "code_sign_in": {
+      "description": "whether the emailed-code sign-in also creates the account, so one sign-in entry serves both",
+      "title": "Code Sign In",
+      "type": "boolean"
+     },
      "dlt_source_types": {
       "description": "the source types dlt ingests on this deployment",
       "items": {
@@ -13794,7 +13630,8 @@
      "features",
      "dlt_source_types",
      "ga4_multi_property",
-     "ga4_max_properties"
+     "ga4_max_properties",
+     "code_sign_in"
     ],
     "title": "RegistryManifestResponse",
     "type": "object"
@@ -16928,7 +16765,7 @@
     "type": "object"
    },
    "WarehouseCreated": {
-    "description": "``POST /db``'s answer: the registered warehouse, its Metabase registration and its binding to a project.",
+    "description": "``POST /db``'s answer: the registered warehouse and its binding to a project.",
     "properties": {
      "binding_status": {
       "anyOf": [
@@ -16940,10 +16777,6 @@
        }
       ],
       "title": "Binding Status"
-     },
-     "metabase_registration": {
-      "title": "Metabase Registration",
-      "type": "string"
      },
      "pending_home_project_id": {
       "anyOf": [
@@ -16963,7 +16796,6 @@
     },
     "required": [
      "uuid",
-     "metabase_registration",
      "binding_status",
      "pending_home_project_id"
     ],
@@ -16992,76 +16824,6 @@
     "title": "WarehouseErrorCode",
     "type": "string"
    },
-   "WarehouseImpactLink": {
-    "description": "A Metabase question or dashboard that uses the warehouse; ``url`` is relative to the Metabase site.",
-    "properties": {
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "name": {
-      "title": "Name",
-      "type": "string"
-     },
-     "type": {
-      "description": "card | dashboard",
-      "title": "Type",
-      "type": "string"
-     },
-     "url": {
-      "title": "Url",
-      "type": "string"
-     }
-    },
-    "required": [
-     "type",
-     "id",
-     "name",
-     "url"
-    ],
-    "title": "WarehouseImpactLink",
-    "type": "object"
-   },
-   "WarehouseImpactMetabase": {
-    "properties": {
-     "cards": {
-      "description": "Metabase questions on this warehouse, in every collection",
-      "title": "Cards",
-      "type": "integer"
-     },
-     "dashboards": {
-      "description": "Metabase dashboards showing at least one of those questions",
-      "title": "Dashboards",
-      "type": "integer"
-     },
-     "hidden_cards": {
-      "default": 0,
-      "description": "questions in collections of projects the caller cannot see (counted, never linked)",
-      "title": "Hidden Cards",
-      "type": "integer"
-     },
-     "hidden_dashboards": {
-      "default": 0,
-      "description": "dashboards in collections of projects the caller cannot see (counted, never linked)",
-      "title": "Hidden Dashboards",
-      "type": "integer"
-     },
-     "links": {
-      "description": "only items in collections of projects the caller can see",
-      "items": {
-       "$ref": "#/components/schemas/WarehouseImpactLink"
-      },
-      "title": "Links",
-      "type": "array"
-     }
-    },
-    "required": [
-     "cards",
-     "dashboards"
-    ],
-    "title": "WarehouseImpactMetabase",
-    "type": "object"
-   },
    "WarehouseImpactPipeline": {
     "description": "A pipeline that writes into the warehouse (only pipelines the caller can see).",
     "properties": {
@@ -17088,27 +16850,13 @@
     "type": "object"
    },
    "WarehouseImpactResponse": {
-    "description": "``GET /databases/{uuid}/impact``.\n\n``available`` is ``false`` when the Metabase side could not be read (``metabase`` is then\n``null``): unknown is never reported as zero, and the UI keeps Delete disabled.",
+    "description": "``GET /databases/{uuid}/impact``.\n\nWhen the pipelines cannot be read the route answers 502 ``pipe_lookup_failed``, so unknown\nis never reported as zero.",
     "properties": {
-     "available": {
-      "title": "Available",
-      "type": "boolean"
-     },
      "hidden_pipeline_count": {
       "default": 0,
       "description": "pipelines in projects the caller cannot see",
       "title": "Hidden Pipeline Count",
       "type": "integer"
-     },
-     "metabase": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/WarehouseImpactMetabase"
-       },
-       {
-        "type": "null"
-       }
-      ]
      },
      "pipelines": {
       "items": {
@@ -17118,9 +16866,6 @@
       "type": "array"
      }
     },
-    "required": [
-     "available"
-    ],
     "title": "WarehouseImpactResponse",
     "type": "object"
    },
@@ -17868,7 +17613,7 @@
   },
   "/api/auth/me/provisioning-status": {
    "get": {
-    "description": "Report the user's workspace-provisioning progress.\n\nAggregates the user's provisioning attempts per kind. Poll it after sign-up until\n``ready``; ``ready=true`` means the user can use\nMetabase and their default ClickHouse DB. Each kind is ``\"pending\"`` (not run yet or\nretrying), ``\"ready\"``, or ``\"failed\"`` with ``errors[kind]`` set to the last error.",
+    "description": "Report the user's workspace-provisioning progress.\n\nAggregates the user's provisioning attempts per kind. Poll it after sign-up until\n``ready``; ``ready=true`` means the user's default ClickHouse DB exists. Each kind is ``\"pending\"`` (not run yet or\nretrying), ``\"ready\"``, or ``\"failed\"`` with ``errors[kind]`` set to the last error.",
     "operationId": "provisioning_status",
     "responses": {
      "200": {
@@ -17944,7 +17689,7 @@
     }
    },
    "post": {
-    "description": "Add a person who has an account, or invite an address that has none (`status: invited`).\n\nAn invited address joins when its owner signs in and accepts. A retry of an add with the same\n`Idempotency-Key` returns the first answer; on this route a key does not expire. A repeated invite\nanswers `already_invited` with the same invitation.",
+    "description": "Add a person who has an account, or invite an address that has none (`status: invited`).\n\nA person already in another organization is invited too, unless the server keeps one organization per\nperson (then 409 `user_in_other_org`). An invited address joins when its owner signs in and accepts.\nA retry of an add with the same `Idempotency-Key` returns the first answer; on this route a key does not\nexpire. A repeated invite answers `already_invited` with the same invitation.",
     "operationId": "org_member_add",
     "parameters": [
      {
@@ -21814,8 +21559,7 @@
       "error_field": "/last_error",
       "failure": [
        "failed",
-       "deleting",
-       "deleted"
+       "deleting"
       ],
       "field": "/status",
       "pending": [
@@ -22066,7 +21810,7 @@
   },
   "/api/configstore/databases/{db_uuid}/impact": {
    "get": {
-    "description": "Report what a delete would break: pipelines, Metabase questions and dashboards.",
+    "description": "Report what a delete would break: the pipelines that write into the warehouse.",
     "operationId": "warehouse_impact",
     "parameters": [
      {
@@ -22195,8 +21939,7 @@
       "error_field": "/last_error",
       "failure": [
        "failed",
-       "deleting",
-       "deleted"
+       "deleting"
       ],
       "field": "/status",
       "pending": [
@@ -22261,7 +22004,7 @@
     }
    },
    "post": {
-    "description": "Register a database you run as a warehouse; its Metabase registration follows asynchronously.",
+    "description": "Register a database you run as a warehouse.",
     "operationId": "db_create",
     "parameters": [
      {
@@ -25878,7 +25621,7 @@
   },
   "/api/configstore/provision/defaults": {
    "post": {
-    "description": "Manual default-DB provisioning trigger.\n\nEnsures the org's default ClickHouse database exists; it is then registered with\nMetabase in the background. The response says ``metabase_registration: \"pending\"``\nbecause that registration is eventually consistent.",
+    "description": "Manual default-DB provisioning trigger.\n\nEnsures the org's default ClickHouse database exists.",
     "operationId": "provision_ensure_defaults",
     "responses": {
      "200": {
@@ -28599,275 +28342,6 @@
      "kind": "exposed",
      "noun": "warehouse-principal",
      "verb": "list"
-    }
-   }
-  },
-  "/api/dashboard/metabase/database-id/{db_uuid}": {
-   "get": {
-    "description": "Resolve a warehouse's ``db_uuid`` to its Metabase ``database_id``.\n\nScoped to the caller's organization. Use it to deep-link into Metabase's\nnative-query editor.\n\nReturns 404 (not 403) when the warehouse is not registered in Metabase for the\ncaller's organization, whether it is not registered yet or belongs to another\norganization: 404 hides existence either way.\nWhen Dashboards are project-scoped the active project (header, else General) is\nchecked first, then the warehouse must be visible there: the same 404 otherwise.",
-    "operationId": "metabase_database_get",
-    "parameters": [
-     {
-      "description": "UUID of the warehouse",
-      "in": "path",
-      "name": "db_uuid",
-      "required": true,
-      "schema": {
-       "description": "UUID of the warehouse",
-       "title": "DB UUID",
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/MetabaseDatabaseIdResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Get Metabase Database Id",
-    "tags": [
-     "dashboard"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay metabase-database get <db_uuid>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "metabase-database",
-     "project": "header",
-     "verb": "get"
-    }
-   }
-  },
-  "/api/dashboard/metabase/databases/{db_uuid}/usage": {
-   "get": {
-    "description": "Metabase questions and dashboards that use one warehouse (the delete impact).\n\n``GET /api/configstore/databases/{uuid}/impact`` includes it. Org-scoped. A warehouse never\nregistered in Metabase gets zeros with ``registered: false``; any Metabase failure is a 502,\nnever zeros. Links are relative to the Metabase site. ``cards`` / ``dashboards`` count every\ncollection, but once the org's Dashboards were ever served project-scoped, ``links`` name only\nitems in collections of projects the caller can see; the rest (including root and personal\nitems) are ``hidden_cards`` / ``hidden_dashboards``. From then on, a warehouse the caller cannot\nsee in any project reads as never registered. 503 when project access cannot be checked (fails\nclosed).",
-    "operationId": "metabase_database_usage",
-    "parameters": [
-     {
-      "description": "UUID of the warehouse",
-      "in": "path",
-      "name": "db_uuid",
-      "required": true,
-      "schema": {
-       "description": "UUID of the warehouse",
-       "title": "DB UUID",
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/MetabaseDatabaseUsageResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Get Metabase Database Usage",
-    "tags": [
-     "dashboard"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay metabase-database usage <db_uuid>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "metabase-database",
-     "verb": "usage"
-    }
-   }
-  },
-  "/api/dashboard/metabase/project": {
-   "get": {
-    "description": "Where the Dashboards launcher opens for the active project.\n\n``legacy``: not project-scoped (the launcher opens the database browser). ``scoped``:\nrequires ``X-Databay-Project-ID``; ensures the project's group and collection lazily\nand answers ``group_ready: false`` (200) while Metabase cannot finish it, so the\nlauncher shows \"being set up\" with a retry. 503 when project access cannot be checked\n(fails closed).",
-    "operationId": "metabase_status",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/MetabaseProjectResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Get Metabase Project",
-    "tags": [
-     "dashboard"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay metabase status",
-      "databay metabase status --project <project_id>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "metabase",
-     "project": "header",
-     "verb": "status"
-    }
-   }
-  },
-  "/api/dashboard/metabase/setup": {
-   "post": {
-    "description": "Idempotent Metabase group provisioning for the caller's org (or active project).\n\nNew users get their org's group at sign-up; this route is the explicit trigger.\nWhen the org's Dashboards are project-scoped it ensures the active project's group and\ncollection instead (General without the header).",
-    "operationId": "metabase_setup",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/MetabaseSetupResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Setup Metabase Group",
-    "tags": [
-     "dashboard"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay metabase setup",
-      "databay metabase setup --project <project_id>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "metabase",
-     "project": "header",
-     "verb": "setup"
-    }
-   }
-  },
-  "/api/dashboard/metabase/sync-schema/{db_name}": {
-   "post": {
-    "description": "Ask Metabase to re-read one of the org's databases; scoped, it must be visible to the caller.",
-    "operationId": "metabase_database_sync",
-    "parameters": [
-     {
-      "description": "The name of the database to sync.",
-      "in": "path",
-      "name": "db_name",
-      "required": true,
-      "schema": {
-       "description": "The name of the database to sync.",
-       "title": "Database Name",
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/MetabaseSyncSchemaResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Sync Metabase Db Schema",
-    "tags": [
-     "dashboard"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay metabase-database sync <db_name>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "metabase-database",
-     "verb": "sync"
     }
    }
   },

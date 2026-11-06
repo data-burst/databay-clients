@@ -9,7 +9,7 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
 ### Added
 
 - First release of the SDK and the `databay` command: sign in, projects, sources, pipes, warehouses,
-  SQL queries, dashboards and Metabase, generated from the Databay client contract.
+  SQL queries and dashboards, generated from the Databay client contract.
 - The agent skill, installed with `databay skill install`.
 - `databay org list` and `databay org switch <organization>`: choose the active organization, which the
   server stores and every token names; switching refreshes the token and clears the active project.
