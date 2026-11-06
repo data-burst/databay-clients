@@ -3,7 +3,7 @@ name: databay
 description: >-
   Drive a Databay server with the databay CLI: sign in, pick a project, add and check a
   database source, create pipes that replicate its tables into a warehouse, wait for them,
-  query the warehouse with SQL, build native dashboards, and set up Metabase. Use when the
+  query the warehouse with SQL, and build dashboards. Use when the
   user asks to move or sync data with Databay, create or fix a pipe, query a Databay
   warehouse, build a dashboard, or run any `databay` command.
 ---
@@ -153,39 +153,33 @@ Run the steps in this order. Each step's check must pass before the next.
    which may not be the pipe's. `sql` runs one read-only statement; it can also read
    `--file <path>`.
 
-## Dashboards: Metabase or native
+## Dashboards
 
-Databay has two kinds of dashboard you can build. When the user says "Metabase", they mean the
-Metabase site that Databay provisions; plain "dashboards" may mean either, so ask.
+Use the `dashboards`, `dashboards-card`, `dashboards-folder` and `dashboards-dataset` nouns. Create a
+dashboard on the warehouse that holds the table (for a pipe's table, its `sink_db_uuid`), add a card to
+it, then run it:
 
-- **Metabase**: the `metabase` and `metabase-database` nouns. `databay metabase status --output json`
-  says whether the project's Metabase group is ready; `databay metabase setup --output json`
-  provisions it.
-- **Native dashboards**: the `dashboards`, `dashboards-card`, `dashboards-folder` and
-  `dashboards-dataset` nouns. Create a dashboard on the warehouse that holds the table (for a
-  pipe's table, its `sink_db_uuid`), add a card to it, then run it:
+```
+databay dashboards create --name <name> --warehouse-id <sink_db_uuid> --output json
+databay dashboards-card create <board_id> --title <title> --revision <revision> --spec '{"spec_version": 1, "query": {"sql": "select count(*) as n from <dest_table_name>"}, "chart": {"type": "kpi", "y": ["n"]}}' --output json
+databay dashboards run <board_id> --output json
+```
 
-  ```
-  databay dashboards create --name <name> --warehouse-id <sink_db_uuid> --output json
-  databay dashboards-card create <board_id> --title <title> --revision <revision> --spec '{"spec_version": 1, "query": {"sql": "select count(*) as n from <dest_table_name>"}, "chart": {"type": "kpi", "y": ["n"]}}' --output json
-  databay dashboards run <board_id> --output json
-  ```
-
-  - **`run` exits 0 even when a card fails.** Check `error` on every entry of `cards`, and report
-    any that is set instead of saying the dashboard works.
-  - A card's SQL names a table of that warehouse without its database, or a dataset as `ds.<name>`
-    (`databay dashboards-dataset list --warehouse-id <sink_db_uuid> --output json` lists them).
-  - A create is safe to repeat only with the `--idempotency-key` it printed.
-  - Each change to a dashboard takes the `--revision` its last answer gave. `revision_conflict`
-    means it changed since: run `databay dashboards get <board_id> --output json`, check whether
-    your change is already there, and if not, send it again on the new revision.
-  - `feature_disabled` means native dashboards are off for this organization, and
-    `warehouse_not_queryable` that this warehouse cannot run cards. Tell the user the `hint`.
-  - `console_not_scoped` means no card can run until support or whoever runs the server turns on
-    project scoping for this organization's SQL console; an organization admin cannot, whatever
-    `message` says. Creating a dashboard still works, and you only learn this when a card runs.
-    Tell the user before they ask for it: the console and AI agent then act only in the active
-    project, and it cannot simply be turned back off.
+- **`run` exits 0 even when a card fails.** Check `error` on every entry of `cards`, and report
+  any that is set instead of saying the dashboard works.
+- A card's SQL names a table of that warehouse without its database, or a dataset as `ds.<name>`
+  (`databay dashboards-dataset list --warehouse-id <sink_db_uuid> --output json` lists them).
+- A create is safe to repeat only with the `--idempotency-key` it printed.
+- Each change to a dashboard takes the `--revision` its last answer gave. `revision_conflict`
+  means it changed since: run `databay dashboards get <board_id> --output json`, check whether
+  your change is already there, and if not, send it again on the new revision.
+- `feature_disabled` means native dashboards are off for this organization, and
+  `warehouse_not_queryable` that this warehouse cannot run cards. Tell the user the `hint`.
+- `console_not_scoped` means no card can run until support or whoever runs the server turns on
+  project scoping for this organization's SQL console; an organization admin cannot, whatever
+  `message` says. Creating a dashboard still works, and you only learn this when a card runs.
+  Tell the user before they ask for it: the console and AI agent then act only in the active
+  project, and it cannot simply be turned back off.
 
 The built-in dashboards that come with the product are only in the web app: no command reads
 them, so send the user there.
