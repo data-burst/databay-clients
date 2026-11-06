@@ -278,3 +278,25 @@ def test_a_schema_name_that_would_clash_with_another_class_is_a_generation_error
 
     with pytest.raises(generator.SpecError, match="Row-Output: this schema name cannot become the class name"):
         generator.python_schema_names({"components": {"schemas": {"Row-Output": {}, "RowOutput": {}}}})
+
+
+def test_a_body_property_that_can_only_be_null_becomes_no_option(monkeypatch):
+    generator = _load_generator(monkeypatch)
+    spec = generator.Spec(
+        document={
+            "components": {
+                "schemas": {
+                    "Apply": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {"note": {"type": "string"}, "legacy": {"type": "null"}},
+                    }
+                }
+            }
+        }
+    )
+    op = {"requestBody": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Apply"}}}}}
+
+    body = generator.body_of(spec, op, "POST /apply")
+
+    assert [field.name for field in body.fields] == ["note"]

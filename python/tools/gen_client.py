@@ -251,6 +251,11 @@ def make_param(spec: Spec, name: str, location: str, schema: dict[str, Any], req
     )
 
 
+def settable(spec: Spec, schema: dict[str, Any]) -> bool:
+    """Whether a body property can carry a value: one whose only type is ``null`` cannot, so it is no option."""
+    return spec.resolve(schema).get("type") != "null"
+
+
 def body_of(spec: Spec, op: dict[str, Any], where: str) -> Any:  # noqa: ANN401
     request = op.get("requestBody")
     if request is None:
@@ -276,7 +281,7 @@ def body_of(spec: Spec, op: dict[str, Any], where: str) -> Any:  # noqa: ANN401
     params = tuple(
         make_param(spec, name, "body", prop, name in required, where)
         for name, prop in properties.items()
-        if name not in held
+        if name not in held and settable(spec, prop)
     )
     if not held:
         return RT.operation.Body(schema=schema_name, fields=params)
@@ -297,7 +302,7 @@ def variants_of(spec: Spec, schema: dict[str, Any], where: str) -> tuple[str, tu
         params = tuple(
             make_param(spec, name, "body", prop, name in required, where)
             for name, prop in variant.get("properties", {}).items()
-            if name != discriminator
+            if name != discriminator and settable(spec, prop)
         )
         variants.append((key, variant_name, params))
     return discriminator, tuple(variants)
