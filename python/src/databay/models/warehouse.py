@@ -9,21 +9,6 @@ from databay.model_base import RequestModel, ResponseModel
 from databay.models.shared import PublicDBResponse
 
 
-class WarehouseImpactLink(ResponseModel):
-    id: int
-    name: str
-    type: str
-    url: str
-
-
-class WarehouseImpactMetabase(ResponseModel):
-    cards: int
-    dashboards: int
-    hidden_cards: int = 0
-    hidden_dashboards: int = 0
-    links: list[WarehouseImpactLink] | None = None
-
-
 class WarehouseImpactPipeline(ResponseModel):
     name: str
     pipe_uuid: str
@@ -31,9 +16,7 @@ class WarehouseImpactPipeline(ResponseModel):
 
 
 class WarehouseImpactResponse(ResponseModel):
-    available: bool
     hidden_pipeline_count: int = 0
-    metabase: WarehouseImpactMetabase | None = None
     pipelines: list[WarehouseImpactPipeline] | None = None
 
 

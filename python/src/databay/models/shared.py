@@ -97,7 +97,6 @@ class DBStatus(OpenStrEnum):
     READY = 'ready'
     FAILED = 'failed'
     DELETING = 'deleting'
-    DELETED = 'deleted'
 
 
 class DBType(OpenStrEnum):

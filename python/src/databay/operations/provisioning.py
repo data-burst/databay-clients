@@ -13,7 +13,7 @@ PROVISIONING_STATUS = Operation(
     method='get',
     path='/api/auth/me/provisioning-status',
     summary='Get Provisioning Status',
-    description='Report the user\'s workspace-provisioning progress.\n\nAggregates the user\'s provisioning attempts per kind. Poll it after sign-up until\n``ready``; ``ready=true`` means the user can use\nMetabase and their default ClickHouse DB. Each kind is ``"pending"`` (not run yet or\nretrying), ``"ready"``, or ``"failed"`` with ``errors[kind]`` set to the last error.',
+    description='Report the user\'s workspace-provisioning progress.\n\nAggregates the user\'s provisioning attempts per kind. Poll it after sign-up until\n``ready``; ``ready=true`` means the user\'s default ClickHouse DB exists. Each kind is ``"pending"`` (not run yet or\nretrying), ``"ready"``, or ``"failed"`` with ``errors[kind]`` set to the last error.',
     project=None,
     destructive=False,
     idempotent=False,

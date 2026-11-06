@@ -1574,30 +1574,6 @@
    "side_effects": "none",
    "max_retries": null
   },
-  "metabase_answer_invalid": {
-   "hint": "Retry; contact support if it keeps failing.",
-   "action": "retry",
-   "side_effects": "unknown",
-   "max_retries": 2
-  },
-  "metabase_database_not_found": {
-   "hint": "Pick a warehouse that has a dashboard database in this project.",
-   "action": "fix_and_retry",
-   "side_effects": "none",
-   "max_retries": null
-  },
-  "metabase_group_missing": {
-   "hint": "Contact support; the organization's dashboards are not set up yet.",
-   "action": "ask_human",
-   "side_effects": "none",
-   "max_retries": null
-  },
-  "metabase_unavailable": {
-   "hint": "Retry in a moment.",
-   "action": "retry",
-   "side_effects": "unknown",
-   "max_retries": 3
-  },
   "migration_refused": {
    "hint": "Fix each organization listed in refused, or leave it out, then run the move again.",
    "action": "fix_and_retry",
@@ -1928,6 +1904,60 @@
    "side_effects": "unknown",
    "max_retries": 3
   },
+  "password_code_attempts_exhausted": {
+   "hint": "Send a new code, then enter the one in the new email.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_code_expired": {
+   "hint": "Send a new code, then enter the one in the new email.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_code_invalid": {
+   "hint": "Check the code in the latest email and enter it again.",
+   "action": "fix_and_retry",
+   "side_effects": "partial",
+   "max_retries": null
+  },
+  "password_code_not_mailable": {
+   "hint": "Send a new code from the password dialog; this one was replaced or used.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_code_resend_too_soon": {
+   "hint": "Wait for the Retry-After interval, then send a new code.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_code_send_limit": {
+   "hint": "Wait for the Retry-After interval, then send a new code.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_email_missing": {
+   "hint": "Ask an admin to add an email address to your account.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "password_mail_unavailable": {
+   "hint": "Try again in a minute.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "password_policy_refused": {
+   "hint": "Choose a password that meets the rule the answer names.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "payg_not_allowed": {
    "hint": "Move the organization to a plan that allows overage, or keep within the limit.",
    "action": "fix_and_retry",
@@ -1975,6 +2005,12 @@
    "action": "retry",
    "side_effects": "none",
    "max_retries": 3
+  },
+  "pipe_not_failed": {
+   "hint": "Release a pipe only once it has failed; resync or pause a running one instead.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
   },
   "pipe_not_found": {
    "hint": "List the pipes and pick one you can see.",
@@ -2105,12 +2141,6 @@
   "principal_disabled": {
    "hint": "Ask a project admin to enable this login, then rotate it for a new password.",
    "action": "ask_human",
-   "side_effects": "none",
-   "max_retries": null
-  },
-  "profile_incomplete": {
-   "hint": "Add an email, a given name and a family name to the profile, then try again.",
-   "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
   },
@@ -2672,6 +2702,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "slot_release_failed": {
+   "hint": "Check that the source database is reachable, then release the pipe again.",
+   "action": "ask_human",
+   "side_effects": "partial",
+   "max_retries": null
+  },
   "source_check_run_active": {
    "hint": "Wait for the running check to finish, then read its result or check again.",
    "action": "retry",
@@ -2838,6 +2874,12 @@
    "hint": "Pick a table the source database has.",
    "action": "fix_and_retry",
    "side_effects": "none",
+   "max_retries": null
+  },
+  "source_teardown_failed": {
+   "hint": "Check the source's pipelines and its database, then delete the source again.",
+   "action": "ask_human",
+   "side_effects": "partial",
    "max_retries": null
   },
   "source_type_not_offered": {

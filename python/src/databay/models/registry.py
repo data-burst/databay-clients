@@ -10,6 +10,7 @@ from databay.model_base import ResponseModel
 
 class RegistryManifestResponse(ResponseModel):
     auth_providers: list[str]
+    code_sign_in: bool
     dlt_source_types: list[str]
     features: dict[str, bool]
     ga4_max_properties: int

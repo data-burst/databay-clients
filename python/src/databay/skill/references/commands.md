@@ -1237,7 +1237,7 @@ Usage: `databay dashboards-folder update FOLDER_ID [OPTIONS]`
 
 ### databay db create
 
-Register a database you run as a warehouse; its Metabase registration follows asynchronously.
+Register a database you run as a warehouse.
 
 Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
 
@@ -1783,142 +1783,6 @@ Usage: `databay meta-ads-source list [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
-## metabase
-
-### databay metabase setup
-
-Idempotent Metabase group provisioning for the caller's org (or active project).
-
-New users get their org's group at sign-up; this route is the explicit trigger.
-When the org's Dashboards are project-scoped it ensures the active project's group and
-collection instead (General without the header).
-
-Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
-
-```
-Examples:
-  databay metabase setup
-  databay metabase setup --project <project_id>
-```
-
-Usage: `databay metabase setup [OPTIONS]`
-
-| Argument or flag | Required | Description |
-|---|---|---|
-| `--project TEXT` |  | the project to act in (default: the active project) |
-| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
-| `--profile TEXT` |  | the profile to use (default: current_profile) |
-| `--verbose` |  | log each request on stderr, secrets redacted |
-| `--no-retry` |  | send each request once |
-
-### databay metabase status
-
-Where the Dashboards launcher opens for the active project.
-
-``legacy``: not project-scoped (the launcher opens the database browser). ``scoped``:
-requires ``X-Databay-Project-ID``; ensures the project's group and collection lazily
-and answers ``group_ready: false`` (200) while Metabase cannot finish it, so the
-launcher shows "being set up" with a retry. 503 when project access cannot be checked
-(fails closed).
-
-Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
-
-```
-Examples:
-  databay metabase status
-  databay metabase status --project <project_id>
-```
-
-Usage: `databay metabase status [OPTIONS]`
-
-| Argument or flag | Required | Description |
-|---|---|---|
-| `--project TEXT` |  | the project to act in (default: the active project) |
-| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
-| `--profile TEXT` |  | the profile to use (default: current_profile) |
-| `--verbose` |  | log each request on stderr, secrets redacted |
-| `--no-retry` |  | send each request once |
-
-## metabase-database
-
-### databay metabase-database get
-
-Resolve a warehouse's ``db_uuid`` to its Metabase ``database_id``.
-
-Scoped to the caller's organization. Use it to deep-link into Metabase's
-native-query editor.
-
-Returns 404 (not 403) when the warehouse is not registered in Metabase for the
-caller's organization, whether it is not registered yet or belongs to another
-organization: 404 hides existence either way.
-When Dashboards are project-scoped the active project (header, else General) is
-checked first, then the warehouse must be visible there: the same 404 otherwise.
-
-Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
-
-```
-Examples:
-  databay metabase-database get <db_uuid>
-```
-
-Usage: `databay metabase-database get DB_UUID [OPTIONS]`
-
-| Argument or flag | Required | Description |
-|---|---|---|
-| `DB_UUID` | yes | UUID of the warehouse |
-| `--project TEXT` |  | the project to act in (default: the active project) |
-| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
-| `--profile TEXT` |  | the profile to use (default: current_profile) |
-| `--verbose` |  | log each request on stderr, secrets redacted |
-| `--no-retry` |  | send each request once |
-
-### databay metabase-database sync
-
-Ask Metabase to re-read one of the org's databases; scoped, it must be visible to the caller.
-
-```
-Examples:
-  databay metabase-database sync <db_name>
-```
-
-Usage: `databay metabase-database sync DB_NAME [OPTIONS]`
-
-| Argument or flag | Required | Description |
-|---|---|---|
-| `DB_NAME` | yes | The name of the database to sync. |
-| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
-| `--profile TEXT` |  | the profile to use (default: current_profile) |
-| `--verbose` |  | log each request on stderr, secrets redacted |
-| `--no-retry` |  | send each request once |
-
-### databay metabase-database usage
-
-Metabase questions and dashboards that use one warehouse (the delete impact).
-
-``GET /api/configstore/databases/{uuid}/impact`` includes it. Org-scoped. A warehouse never
-registered in Metabase gets zeros with ``registered: false``; any Metabase failure is a 502,
-never zeros. Links are relative to the Metabase site. ``cards`` / ``dashboards`` count every
-collection, but once the org's Dashboards were ever served project-scoped, ``links`` name only
-items in collections of projects the caller can see; the rest (including root and personal
-items) are ``hidden_cards`` / ``hidden_dashboards``. From then on, a warehouse the caller cannot
-see in any project reads as never registered. 503 when project access cannot be checked (fails
-closed).
-
-```
-Examples:
-  databay metabase-database usage <db_uuid>
-```
-
-Usage: `databay metabase-database usage DB_UUID [OPTIONS]`
-
-| Argument or flag | Required | Description |
-|---|---|---|
-| `DB_UUID` | yes | UUID of the warehouse |
-| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
-| `--profile TEXT` |  | the profile to use (default: current_profile) |
-| `--verbose` |  | log each request on stderr, secrets redacted |
-| `--no-retry` |  | send each request once |
-
 ## nlq
 
 ### databay nlq ask
@@ -2082,9 +1946,10 @@ Usage: `databay org list [OPTIONS]`
 
 Add a person who has an account, or invite an address that has none (`status: invited`).
 
-An invited address joins when its owner signs in and accepts. A retry of an add with the same
-`Idempotency-Key` returns the first answer; on this route a key does not expire. A repeated invite
-answers `already_invited` with the same invitation.
+A person already in another organization is invited too, unless the server keeps one organization per
+person (then 409 `user_in_other_org`). An invited address joins when its owner signs in and accepts.
+A retry of an add with the same `Idempotency-Key` returns the first answer; on this route a key does not
+expire. A repeated invite answers `already_invited` with the same invitation.
 
 ```
 Examples:
@@ -3193,9 +3058,7 @@ Usage: `databay project-share revoke RESOURCE_TYPE RESOURCE_ID TARGET_PROJECT_ID
 
 Manual default-DB provisioning trigger.
 
-Ensures the org's default ClickHouse database exists; it is then registered with
-Metabase in the background. The response says ``metabase_registration: "pending"``
-because that registration is eventually consistent.
+Ensures the org's default ClickHouse database exists.
 
 ```
 Examples:
@@ -3218,8 +3081,7 @@ Usage: `databay provision ensure-defaults [OPTIONS]`
 Report the user's workspace-provisioning progress.
 
 Aggregates the user's provisioning attempts per kind. Poll it after sign-up until
-``ready``; ``ready=true`` means the user can use
-Metabase and their default ClickHouse DB. Each kind is ``"pending"`` (not run yet or
+``ready``; ``ready=true`` means the user's default ClickHouse DB exists. Each kind is ``"pending"`` (not run yet or
 retrying), ``"ready"``, or ``"failed"`` with ``errors[kind]`` set to the last error.
 
 ```
@@ -5145,7 +5007,7 @@ Get Warehouse
 
 Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
 
---wait polls warehouse_get until status is ready; it fails on failed, deleting, deleted.
+--wait polls warehouse_get until status is ready; it fails on failed, deleting.
 
 ```
 Examples:
@@ -5167,7 +5029,7 @@ Usage: `databay warehouse get DB_UUID [OPTIONS]`
 
 ### databay warehouse impact
 
-Report what a delete would break: pipelines, Metabase questions and dashboards.
+Report what a delete would break: the pipelines that write into the warehouse.
 
 Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
 
@@ -5238,7 +5100,7 @@ From ``failed``: 202 and a new attempt. From ``pending`` / ``provisioning``: 202
 
 Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
 
---wait polls warehouse_get until status is ready; it fails on failed, deleting, deleted.
+--wait polls warehouse_get until status is ready; it fails on failed, deleting.
 
 ```
 Examples:

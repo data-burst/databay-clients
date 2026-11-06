@@ -181,10 +181,6 @@ REGISTRY: dict[str, ErrorInfo] = {
     'member_not_api_key': ErrorInfo('Manage this member with the project member routes; only API keys are managed here.', 'fix_and_retry', 'none', None),
     'member_not_found': ErrorInfo("List the organization's members and pick one of them.", 'fix_and_retry', 'none', None),
     'member_not_in_organization': ErrorInfo('Invite them to the organization first.', 'do_first', 'none', None),
-    'metabase_answer_invalid': ErrorInfo('Retry; contact support if it keeps failing.', 'retry', 'unknown', 2),
-    'metabase_database_not_found': ErrorInfo('Pick a warehouse that has a dashboard database in this project.', 'fix_and_retry', 'none', None),
-    'metabase_group_missing': ErrorInfo("Contact support; the organization's dashboards are not set up yet.", 'ask_human', 'none', None),
-    'metabase_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'unknown', 3),
     'migration_refused': ErrorInfo('Fix each organization listed in refused, or leave it out, then run the move again.', 'fix_and_retry', 'none', None),
     'missing_feature_values': ErrorInfo('Set a value for each feature listed in problems.', 'fix_and_retry', 'none', None),
     'missing_meter_values': ErrorInfo('Set a value for each meter listed in problems.', 'fix_and_retry', 'none', None),
@@ -240,6 +236,15 @@ REGISTRY: dict[str, ErrorInfo] = {
     'owner_answer_invalid': ErrorInfo('Ask an engineer to check that the staff console and the service run the same release.', 'ask_human', 'unknown', None),
     'owner_answer_mismatch': ErrorInfo("Ask an engineer to compare this request with the service's own audit log.", 'ask_human', 'unknown', None),
     'owner_unavailable': ErrorInfo('Try again in a minute; an apply sent again with the same key never applies twice.', 'retry', 'unknown', 3),
+    'password_code_attempts_exhausted': ErrorInfo('Send a new code, then enter the one in the new email.', 'do_first', 'none', None),
+    'password_code_expired': ErrorInfo('Send a new code, then enter the one in the new email.', 'do_first', 'none', None),
+    'password_code_invalid': ErrorInfo('Check the code in the latest email and enter it again.', 'fix_and_retry', 'partial', None),
+    'password_code_not_mailable': ErrorInfo('Send a new code from the password dialog; this one was replaced or used.', 'do_first', 'none', None),
+    'password_code_resend_too_soon': ErrorInfo('Wait for the Retry-After interval, then send a new code.', 'do_first', 'none', None),
+    'password_code_send_limit': ErrorInfo('Wait for the Retry-After interval, then send a new code.', 'do_first', 'none', None),
+    'password_email_missing': ErrorInfo('Ask an admin to add an email address to your account.', 'ask_human', 'none', None),
+    'password_mail_unavailable': ErrorInfo('Try again in a minute.', 'retry', 'none', 3),
+    'password_policy_refused': ErrorInfo('Choose a password that meets the rule the answer names.', 'fix_and_retry', 'none', None),
     'payg_not_allowed': ErrorInfo('Move the organization to a plan that allows overage, or keep within the limit.', 'fix_and_retry', 'none', None),
     'permission_denied': ErrorInfo('Ask an admin for the role this action needs.', 'ask_human', 'none', None),
     'personal_login_dropping': ErrorInfo('Your previous login for this warehouse is still being removed; try again in a minute.', 'retry', 'none', 3),
@@ -248,6 +253,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'pipe_already_exists': ErrorInfo('Pick another destination table, or use the pipe named by existing_pipe_uuid.', 'fix_and_retry', 'none', None),
     'pipe_deleting': ErrorInfo('Create a new pipe if you still need one; this one is being deleted.', 'fix_and_retry', 'none', None),
     'pipe_lookup_failed': ErrorInfo('Retry; the delete waits until the pipelines using it are known.', 'retry', 'none', 3),
+    'pipe_not_failed': ErrorInfo('Release a pipe only once it has failed; resync or pause a running one instead.', 'fix_and_retry', 'none', None),
     'pipe_not_found': ErrorInfo('List the pipes and pick one you can see.', 'fix_and_retry', 'none', None),
     'pipe_not_ready': ErrorInfo('Wait until the pipe is active (retry it if it failed), then try again.', 'do_first', 'none', None),
     'pipe_not_retriable': ErrorInfo('Read current_status; only a failed pipe can be retried.', 'fix_and_retry', 'none', None),
@@ -270,7 +276,6 @@ REGISTRY: dict[str, ErrorInfo] = {
     'preview_mismatch': ErrorInfo('Apply the change exactly as previewed, or preview the new change first.', 'fix_and_retry', 'none', None),
     'preview_not_found': ErrorInfo('Preview the change again and apply the new preview.', 'fix_and_retry', 'none', None),
     'principal_disabled': ErrorInfo('Ask a project admin to enable this login, then rotate it for a new password.', 'ask_human', 'none', None),
-    'profile_incomplete': ErrorInfo('Add an email, a given name and a family name to the profile, then try again.', 'fix_and_retry', 'none', None),
     'project_admin_required': ErrorInfo('Ask a project admin to do this, or to make you a project admin.', 'ask_human', 'none', None),
     'project_conflict': ErrorInfo('Send one project: X-Databay-Project-ID must match the route and the body.', 'fix_and_retry', 'none', None),
     'project_forbidden': ErrorInfo('Pick another project or ask a project admin for access.', 'ask_human', 'none', None),
@@ -364,6 +369,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'sink_not_ready': ErrorInfo('Wait until the destination warehouse is ready (retry it if it failed), then create the pipe again.', 'do_first', 'none', None),
     'sink_provision_failed': ErrorInfo('Connect again; contact support if it keeps failing.', 'retry', 'unknown', 2),
     'sink_user_exists': ErrorInfo("Renew your warehouse user's password instead.", 'fix_and_retry', 'none', None),
+    'slot_release_failed': ErrorInfo('Check that the source database is reachable, then release the pipe again.', 'ask_human', 'partial', None),
     'source_check_run_active': ErrorInfo('Wait for the running check to finish, then read its result or check again.', 'retry', 'none', 3),
     'source_check_run_not_found': ErrorInfo('Check the source again to get a new result.', 'do_first', 'none', None),
     'source_check_unreachable': ErrorInfo('Retry once the source database can be reached.', 'retry', 'none', 3),
@@ -392,6 +398,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'source_replication_slots_exhausted': ErrorInfo('Have the database admin raise max_replication_slots, or delete a pipe you no longer need on that source.', 'ask_human', 'none', None),
     'source_setup_incomplete': ErrorInfo('Fix the setup checks in blocking_requirements on the source database, then check the source again.', 'ask_human', 'none', None),
     'source_table_not_found': ErrorInfo('Pick a table the source database has.', 'fix_and_retry', 'none', None),
+    'source_teardown_failed': ErrorInfo("Check the source's pipelines and its database, then delete the source again.", 'ask_human', 'partial', None),
     'source_type_not_offered': ErrorInfo('Pick a source type this deployment offers.', 'fix_and_retry', 'none', None),
     'source_uninstalled': ErrorInfo("Reinstall the source's app.", 'ask_human', 'none', None),
     'source_updating': ErrorInfo('Retry once the source reports connected.', 'retry', 'none', 5),
@@ -1146,22 +1153,6 @@ class MemberNotInOrganizationError(DatabayApiError):
     code = 'member_not_in_organization'
 
 
-class MetabaseAnswerInvalidError(DatabayApiError):
-    code = 'metabase_answer_invalid'
-
-
-class MetabaseDatabaseNotFoundError(DatabayApiError):
-    code = 'metabase_database_not_found'
-
-
-class MetabaseGroupMissingError(DatabayApiError):
-    code = 'metabase_group_missing'
-
-
-class MetabaseUnavailableError(DatabayApiError):
-    code = 'metabase_unavailable'
-
-
 class MigrationRefusedError(DatabayApiError):
     code = 'migration_refused'
 
@@ -1382,6 +1373,42 @@ class OwnerUnavailableError(DatabayApiError):
     code = 'owner_unavailable'
 
 
+class PasswordCodeAttemptsExhaustedError(DatabayApiError):
+    code = 'password_code_attempts_exhausted'
+
+
+class PasswordCodeExpiredError(DatabayApiError):
+    code = 'password_code_expired'
+
+
+class PasswordCodeInvalidError(DatabayApiError):
+    code = 'password_code_invalid'
+
+
+class PasswordCodeNotMailableError(DatabayApiError):
+    code = 'password_code_not_mailable'
+
+
+class PasswordCodeResendTooSoonError(DatabayApiError):
+    code = 'password_code_resend_too_soon'
+
+
+class PasswordCodeSendLimitError(DatabayApiError):
+    code = 'password_code_send_limit'
+
+
+class PasswordEmailMissingError(DatabayApiError):
+    code = 'password_email_missing'
+
+
+class PasswordMailUnavailableError(DatabayApiError):
+    code = 'password_mail_unavailable'
+
+
+class PasswordPolicyRefusedError(DatabayApiError):
+    code = 'password_policy_refused'
+
+
 class PaygNotAllowedError(DatabayApiError):
     code = 'payg_not_allowed'
 
@@ -1412,6 +1439,10 @@ class PipeDeletingError(DatabayApiError):
 
 class PipeLookupFailedError(DatabayApiError):
     code = 'pipe_lookup_failed'
+
+
+class PipeNotFailedError(DatabayApiError):
+    code = 'pipe_not_failed'
 
 
 class PipeNotFoundError(DatabayApiError):
@@ -1500,10 +1531,6 @@ class PreviewNotFoundError(DatabayApiError):
 
 class PrincipalDisabledError(DatabayApiError):
     code = 'principal_disabled'
-
-
-class ProfileIncompleteError(DatabayApiError):
-    code = 'profile_incomplete'
 
 
 class ProjectAdminRequiredError(DatabayApiError):
@@ -1878,6 +1905,10 @@ class SinkUserExistsError(DatabayApiError):
     code = 'sink_user_exists'
 
 
+class SlotReleaseFailedError(DatabayApiError):
+    code = 'slot_release_failed'
+
+
 class SourceCheckRunActiveError(DatabayApiError):
     code = 'source_check_run_active'
 
@@ -1988,6 +2019,10 @@ class SourceSetupIncompleteError(DatabayApiError):
 
 class SourceTableNotFoundError(DatabayApiError):
     code = 'source_table_not_found'
+
+
+class SourceTeardownFailedError(DatabayApiError):
+    code = 'source_teardown_failed'
 
 
 class SourceTypeNotOfferedError(DatabayApiError):
@@ -2370,10 +2405,6 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'member_not_api_key': MemberNotApiKeyError,
     'member_not_found': MemberNotFoundError,
     'member_not_in_organization': MemberNotInOrganizationError,
-    'metabase_answer_invalid': MetabaseAnswerInvalidError,
-    'metabase_database_not_found': MetabaseDatabaseNotFoundError,
-    'metabase_group_missing': MetabaseGroupMissingError,
-    'metabase_unavailable': MetabaseUnavailableError,
     'migration_refused': MigrationRefusedError,
     'missing_feature_values': MissingFeatureValuesError,
     'missing_meter_values': MissingMeterValuesError,
@@ -2429,6 +2460,15 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'owner_answer_invalid': OwnerAnswerInvalidError,
     'owner_answer_mismatch': OwnerAnswerMismatchError,
     'owner_unavailable': OwnerUnavailableError,
+    'password_code_attempts_exhausted': PasswordCodeAttemptsExhaustedError,
+    'password_code_expired': PasswordCodeExpiredError,
+    'password_code_invalid': PasswordCodeInvalidError,
+    'password_code_not_mailable': PasswordCodeNotMailableError,
+    'password_code_resend_too_soon': PasswordCodeResendTooSoonError,
+    'password_code_send_limit': PasswordCodeSendLimitError,
+    'password_email_missing': PasswordEmailMissingError,
+    'password_mail_unavailable': PasswordMailUnavailableError,
+    'password_policy_refused': PasswordPolicyRefusedError,
     'payg_not_allowed': PaygNotAllowedError,
     'permission_denied': PermissionDeniedError,
     'personal_login_dropping': PersonalLoginDroppingError,
@@ -2437,6 +2477,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'pipe_already_exists': PipeAlreadyExistsError,
     'pipe_deleting': PipeDeletingError,
     'pipe_lookup_failed': PipeLookupFailedError,
+    'pipe_not_failed': PipeNotFailedError,
     'pipe_not_found': PipeNotFoundError,
     'pipe_not_ready': PipeNotReadyError,
     'pipe_not_retriable': PipeNotRetriableError,
@@ -2459,7 +2500,6 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'preview_mismatch': PreviewMismatchError,
     'preview_not_found': PreviewNotFoundError,
     'principal_disabled': PrincipalDisabledError,
-    'profile_incomplete': ProfileIncompleteError,
     'project_admin_required': ProjectAdminRequiredError,
     'project_conflict': ProjectConflictError,
     'project_forbidden': ProjectForbiddenError,
@@ -2553,6 +2593,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'sink_not_ready': SinkNotReadyError,
     'sink_provision_failed': SinkProvisionFailedError,
     'sink_user_exists': SinkUserExistsError,
+    'slot_release_failed': SlotReleaseFailedError,
     'source_check_run_active': SourceCheckRunActiveError,
     'source_check_run_not_found': SourceCheckRunNotFoundError,
     'source_check_unreachable': SourceCheckUnreachableError,
@@ -2581,6 +2622,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'source_replication_slots_exhausted': SourceReplicationSlotsExhaustedError,
     'source_setup_incomplete': SourceSetupIncompleteError,
     'source_table_not_found': SourceTableNotFoundError,
+    'source_teardown_failed': SourceTeardownFailedError,
     'source_type_not_offered': SourceTypeNotOfferedError,
     'source_uninstalled': SourceUninstalledError,
     'source_updating': SourceUpdatingError,

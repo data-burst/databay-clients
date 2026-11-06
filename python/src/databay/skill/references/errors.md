@@ -250,10 +250,6 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `member_not_api_key` | 1 | fix_and_retry | none |  | Manage this member with the project member routes; only API keys are managed here. |
 | `member_not_found` | 1 | fix_and_retry | none |  | List the organization's members and pick one of them. |
 | `member_not_in_organization` | 1 | do_first | none |  | Invite them to the organization first. |
-| `metabase_answer_invalid` | 6 | retry | unknown | 2 | Retry; contact support if it keeps failing. |
-| `metabase_database_not_found` | 1 | fix_and_retry | none |  | Pick a warehouse that has a dashboard database in this project. |
-| `metabase_group_missing` | 1 | ask_human | none |  | Contact support; the organization's dashboards are not set up yet. |
-| `metabase_unavailable` | 6 | retry | unknown | 3 | Retry in a moment. |
 | `migration_refused` | 1 | fix_and_retry | none |  | Fix each organization listed in refused, or leave it out, then run the move again. |
 | `missing_feature_values` | 1 | fix_and_retry | none |  | Set a value for each feature listed in problems. |
 | `missing_meter_values` | 1 | fix_and_retry | none |  | Set a value for each meter listed in problems. |
@@ -309,6 +305,15 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `owner_answer_invalid` | 1 | ask_human | unknown |  | Ask an engineer to check that the staff console and the service run the same release. |
 | `owner_answer_mismatch` | 1 | ask_human | unknown |  | Ask an engineer to compare this request with the service's own audit log. |
 | `owner_unavailable` | 6 | retry | unknown | 3 | Try again in a minute; an apply sent again with the same key never applies twice. |
+| `password_code_attempts_exhausted` | 1 | do_first | none |  | Send a new code, then enter the one in the new email. |
+| `password_code_expired` | 1 | do_first | none |  | Send a new code, then enter the one in the new email. |
+| `password_code_invalid` | 1 | fix_and_retry | partial |  | Check the code in the latest email and enter it again. |
+| `password_code_not_mailable` | 1 | do_first | none |  | Send a new code from the password dialog; this one was replaced or used. |
+| `password_code_resend_too_soon` | 1 | do_first | none |  | Wait for the Retry-After interval, then send a new code. |
+| `password_code_send_limit` | 1 | do_first | none |  | Wait for the Retry-After interval, then send a new code. |
+| `password_email_missing` | 1 | ask_human | none |  | Ask an admin to add an email address to your account. |
+| `password_mail_unavailable` | 6 | retry | none | 3 | Try again in a minute. |
+| `password_policy_refused` | 1 | fix_and_retry | none |  | Choose a password that meets the rule the answer names. |
 | `payg_not_allowed` | 1 | fix_and_retry | none |  | Move the organization to a plan that allows overage, or keep within the limit. |
 | `permission_denied` | 1 | ask_human | none |  | Ask an admin for the role this action needs. |
 | `personal_login_dropping` | 6 | retry | none | 3 | Your previous login for this warehouse is still being removed; try again in a minute. |
@@ -317,6 +322,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `pipe_already_exists` | 1 | fix_and_retry | none |  | Pick another destination table, or use the pipe named by existing_pipe_uuid. |
 | `pipe_deleting` | 1 | fix_and_retry | none |  | Create a new pipe if you still need one; this one is being deleted. |
 | `pipe_lookup_failed` | 6 | retry | none | 3 | Retry; the delete waits until the pipelines using it are known. |
+| `pipe_not_failed` | 1 | fix_and_retry | none |  | Release a pipe only once it has failed; resync or pause a running one instead. |
 | `pipe_not_found` | 1 | fix_and_retry | none |  | List the pipes and pick one you can see. |
 | `pipe_not_ready` | 1 | do_first | none |  | Wait until the pipe is active (retry it if it failed), then try again. |
 | `pipe_not_retriable` | 1 | fix_and_retry | none |  | Read current_status; only a failed pipe can be retried. |
@@ -339,7 +345,6 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `preview_mismatch` | 1 | fix_and_retry | none |  | Apply the change exactly as previewed, or preview the new change first. |
 | `preview_not_found` | 1 | fix_and_retry | none |  | Preview the change again and apply the new preview. |
 | `principal_disabled` | 1 | ask_human | none |  | Ask a project admin to enable this login, then rotate it for a new password. |
-| `profile_incomplete` | 1 | fix_and_retry | none |  | Add an email, a given name and a family name to the profile, then try again. |
 | `project_admin_required` | 1 | ask_human | none |  | Ask a project admin to do this, or to make you a project admin. |
 | `project_conflict` | 2 | fix_and_retry | none |  | Send one project: X-Databay-Project-ID must match the route and the body. |
 | `project_forbidden` | 1 | ask_human | none |  | Pick another project or ask a project admin for access. |
@@ -433,6 +438,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `sink_not_ready` | 1 | do_first | none |  | Wait until the destination warehouse is ready (retry it if it failed), then create the pipe again. |
 | `sink_provision_failed` | 6 | retry | unknown | 2 | Connect again; contact support if it keeps failing. |
 | `sink_user_exists` | 1 | fix_and_retry | none |  | Renew your warehouse user's password instead. |
+| `slot_release_failed` | 1 | ask_human | partial |  | Check that the source database is reachable, then release the pipe again. |
 | `source_check_run_active` | 6 | retry | none | 3 | Wait for the running check to finish, then read its result or check again. |
 | `source_check_run_not_found` | 1 | do_first | none |  | Check the source again to get a new result. |
 | `source_check_unreachable` | 6 | retry | none | 3 | Retry once the source database can be reached. |
@@ -461,6 +467,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `source_replication_slots_exhausted` | 1 | ask_human | none |  | Have the database admin raise max_replication_slots, or delete a pipe you no longer need on that source. |
 | `source_setup_incomplete` | 1 | ask_human | none |  | Fix the setup checks in blocking_requirements on the source database, then check the source again. |
 | `source_table_not_found` | 1 | fix_and_retry | none |  | Pick a table the source database has. |
+| `source_teardown_failed` | 1 | ask_human | partial |  | Check the source's pipelines and its database, then delete the source again. |
 | `source_type_not_offered` | 1 | fix_and_retry | none |  | Pick a source type this deployment offers. |
 | `source_uninstalled` | 1 | ask_human | none |  | Reinstall the source's app. |
 | `source_updating` | 6 | retry | none | 5 | Retry once the source reports connected. |

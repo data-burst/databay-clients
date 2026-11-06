@@ -8,6 +8,11 @@ from __future__ import annotations
 from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
 
 
+class MyOrganizationOutKind(OpenStrEnum):
+    PERSONAL = 'personal'
+    COMPANY = 'company'
+
+
 class MyOrganizationOutRole(OpenStrEnum):
     READER = 'reader'
     EDITOR = 'editor'
@@ -22,6 +27,8 @@ class MyOrganizationOut(ResponseModel):
     display_name: str
     enabled: bool
     is_active: bool
+    kind: MyOrganizationOutKind | None
+    member_count: int | None
     organization: str
     role: MyOrganizationOutRole | None
 
