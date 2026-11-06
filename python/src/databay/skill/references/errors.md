@@ -228,6 +228,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `invalid_spec` | 1 | fix_and_retry | none |  | Fix the card named by key as reason says. |
 | `invalid_tenant_identifier` | 1 | ask_human | none |  | Contact support; the organization's name cannot be mapped to a warehouse database. |
 | `invalid_version` | 1 | fix_and_retry | none |  | Fix the problems listed, then try again. |
+| `invitation_already_open` | 1 | fix_and_retry | none |  | Invite them with the open invitation's role and language, or ask an org admin to revoke it. |
 | `invitation_email_mismatch` | 1 | do_first | none |  | Sign in with the email address the invitation was sent to. |
 | `invitation_inviter_not_admin` | 1 | ask_human | partial |  | Ask an admin of the organization for a new invitation. |
 | `invitation_link_unavailable` | 1 | ask_human | none |  | Ask the server's operator to set the public app URL and secret key. |
@@ -245,11 +246,13 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `managed_warehouse_sink_locked` | 1 | fix_and_retry | none |  | Send the request again without sink_db_uuid. |
 | `manifest_stale` | 1 | do_first | none |  | Run the delete preview again and confirm the new manifest. |
 | `mask_columns_not_selected` | 1 | fix_and_retry | none |  | Mask only columns the selection includes, or add the columns listed in columns to the selection. |
+| `member_access_unchanged` | 1 | fix_and_retry | none |  | Reload the member's status; the change you asked for is already in place. |
 | `member_is_api_key` | 1 | fix_and_retry | none |  | Manage it with the API key routes (databay api-key), or revoke the key. |
 | `member_lookup_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `member_not_api_key` | 1 | fix_and_retry | none |  | Manage this member with the project member routes; only API keys are managed here. |
 | `member_not_found` | 1 | fix_and_retry | none |  | List the organization's members and pick one of them. |
 | `member_not_in_organization` | 1 | do_first | none |  | Invite them to the organization first. |
+| `member_role_unchanged` | 1 | fix_and_retry | none |  | Pick a role the member does not hold yet. |
 | `migration_refused` | 1 | fix_and_retry | none |  | Fix each organization listed in refused, or leave it out, then run the move again. |
 | `missing_feature_values` | 1 | fix_and_retry | none |  | Set a value for each feature listed in problems. |
 | `missing_meter_values` | 1 | fix_and_retry | none |  | Set a value for each meter listed in problems. |
@@ -387,6 +390,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `reporting_currency_required` | 1 | fix_and_retry | none |  | Set a reporting currency. |
 | `request_invalid` | 1 | fix_and_retry | none |  | Fix the fields the answer names, then send the request again. |
 | `requires_support` | 1 | ask_human | none |  | Contact Databay support to accept this check. |
+| `reset_mail_unavailable` | 1 | ask_human | none |  | Ask an operator to set the realm's mail server, then reset the password again. |
 | `resource_not_found` | 1 | fix_and_retry | none |  | Check the resource id; it is not in your organization. |
 | `resource_not_shared` | 1 | do_first | none |  | Share it into the project from the project that manages it. |
 | `resource_not_visible` | 1 | fix_and_retry | none |  | Check the id and the active project; the resource does not exist or is not visible to you. |
@@ -432,7 +436,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `shopify_source_undeletable` | 1 | ask_human | none |  | Uninstall the app from Shopify to remove this source. |
 | `shopify_store_not_found` | 1 | fix_and_retry | none |  | Check the store's address, then try again. |
 | `sibling_being_removed` | 6 | retry | none | 3 | Retry in a few minutes; another account of this type is still being removed. |
-| `sink_column_type_required` | 1 | fix_and_retry | none |  | Send sink_column_type for the added column. |
+| `sink_column_type_required` | 1 | fix_and_retry | none |  | Retry without sink_column_type; the warehouse picks the column type. |
 | `sink_in_use` | 1 | do_first | none |  | Delete the pipelines listed in pipes first. |
 | `sink_not_found` | 1 | fix_and_retry | none |  | List the warehouses and pick one you can see. |
 | `sink_not_ready` | 1 | do_first | none |  | Wait until the destination warehouse is ready (retry it if it failed), then create the pipe again. |

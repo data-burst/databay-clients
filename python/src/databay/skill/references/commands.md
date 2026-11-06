@@ -3162,7 +3162,6 @@ Removes or overwrites state: asks on a terminal, and needs --yes when output is 
 ```
 Examples:
   databay schema-change apply <event_uuid> --yes
-  databay schema-change apply <event_uuid> --sink-column-type 'Nullable(String)' --yes
 ```
 
 Usage: `databay schema-change apply EVENT_UUID [OPTIONS]`
@@ -3170,7 +3169,6 @@ Usage: `databay schema-change apply EVENT_UUID [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `EVENT_UUID` | yes | UUID of the schema change event to apply |
-| `--sink-column-type STRING` |  | Recommended column type to apply on sink |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--yes` |  | confirm: this removes or overwrites state |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |

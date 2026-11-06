@@ -159,6 +159,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'invalid_spec': ErrorInfo('Fix the card named by key as reason says.', 'fix_and_retry', 'none', None),
     'invalid_tenant_identifier': ErrorInfo("Contact support; the organization's name cannot be mapped to a warehouse database.", 'ask_human', 'none', None),
     'invalid_version': ErrorInfo('Fix the problems listed, then try again.', 'fix_and_retry', 'none', None),
+    'invitation_already_open': ErrorInfo("Invite them with the open invitation's role and language, or ask an org admin to revoke it.", 'fix_and_retry', 'none', None),
     'invitation_email_mismatch': ErrorInfo('Sign in with the email address the invitation was sent to.', 'do_first', 'none', None),
     'invitation_inviter_not_admin': ErrorInfo('Ask an admin of the organization for a new invitation.', 'ask_human', 'partial', None),
     'invitation_link_unavailable': ErrorInfo("Ask the server's operator to set the public app URL and secret key.", 'ask_human', 'none', None),
@@ -176,11 +177,13 @@ REGISTRY: dict[str, ErrorInfo] = {
     'managed_warehouse_sink_locked': ErrorInfo('Send the request again without sink_db_uuid.', 'fix_and_retry', 'none', None),
     'manifest_stale': ErrorInfo('Run the delete preview again and confirm the new manifest.', 'do_first', 'none', None),
     'mask_columns_not_selected': ErrorInfo('Mask only columns the selection includes, or add the columns listed in columns to the selection.', 'fix_and_retry', 'none', None),
+    'member_access_unchanged': ErrorInfo("Reload the member's status; the change you asked for is already in place.", 'fix_and_retry', 'none', None),
     'member_is_api_key': ErrorInfo('Manage it with the API key routes (databay api-key), or revoke the key.', 'fix_and_retry', 'none', None),
     'member_lookup_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'member_not_api_key': ErrorInfo('Manage this member with the project member routes; only API keys are managed here.', 'fix_and_retry', 'none', None),
     'member_not_found': ErrorInfo("List the organization's members and pick one of them.", 'fix_and_retry', 'none', None),
     'member_not_in_organization': ErrorInfo('Invite them to the organization first.', 'do_first', 'none', None),
+    'member_role_unchanged': ErrorInfo('Pick a role the member does not hold yet.', 'fix_and_retry', 'none', None),
     'migration_refused': ErrorInfo('Fix each organization listed in refused, or leave it out, then run the move again.', 'fix_and_retry', 'none', None),
     'missing_feature_values': ErrorInfo('Set a value for each feature listed in problems.', 'fix_and_retry', 'none', None),
     'missing_meter_values': ErrorInfo('Set a value for each meter listed in problems.', 'fix_and_retry', 'none', None),
@@ -318,6 +321,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'reporting_currency_required': ErrorInfo('Set a reporting currency.', 'fix_and_retry', 'none', None),
     'request_invalid': ErrorInfo('Fix the fields the answer names, then send the request again.', 'fix_and_retry', 'none', None),
     'requires_support': ErrorInfo('Contact Databay support to accept this check.', 'ask_human', 'none', None),
+    'reset_mail_unavailable': ErrorInfo("Ask an operator to set the realm's mail server, then reset the password again.", 'ask_human', 'none', None),
     'resource_not_found': ErrorInfo('Check the resource id; it is not in your organization.', 'fix_and_retry', 'none', None),
     'resource_not_shared': ErrorInfo('Share it into the project from the project that manages it.', 'do_first', 'none', None),
     'resource_not_visible': ErrorInfo('Check the id and the active project; the resource does not exist or is not visible to you.', 'fix_and_retry', 'none', None),
@@ -363,7 +367,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'shopify_source_undeletable': ErrorInfo('Uninstall the app from Shopify to remove this source.', 'ask_human', 'none', None),
     'shopify_store_not_found': ErrorInfo("Check the store's address, then try again.", 'fix_and_retry', 'none', None),
     'sibling_being_removed': ErrorInfo('Retry in a few minutes; another account of this type is still being removed.', 'retry', 'none', 3),
-    'sink_column_type_required': ErrorInfo('Send sink_column_type for the added column.', 'fix_and_retry', 'none', None),
+    'sink_column_type_required': ErrorInfo('Retry without sink_column_type; the warehouse picks the column type.', 'fix_and_retry', 'none', None),
     'sink_in_use': ErrorInfo('Delete the pipelines listed in pipes first.', 'do_first', 'none', None),
     'sink_not_found': ErrorInfo('List the warehouses and pick one you can see.', 'fix_and_retry', 'none', None),
     'sink_not_ready': ErrorInfo('Wait until the destination warehouse is ready (retry it if it failed), then create the pipe again.', 'do_first', 'none', None),
@@ -1065,6 +1069,10 @@ class InvalidVersionError(DatabayApiError):
     code = 'invalid_version'
 
 
+class InvitationAlreadyOpenError(DatabayApiError):
+    code = 'invitation_already_open'
+
+
 class InvitationEmailMismatchError(DatabayApiError):
     code = 'invitation_email_mismatch'
 
@@ -1133,6 +1141,10 @@ class MaskColumnsNotSelectedError(DatabayApiError):
     code = 'mask_columns_not_selected'
 
 
+class MemberAccessUnchangedError(DatabayApiError):
+    code = 'member_access_unchanged'
+
+
 class MemberIsApiKeyError(DatabayApiError):
     code = 'member_is_api_key'
 
@@ -1151,6 +1163,10 @@ class MemberNotFoundError(DatabayApiError):
 
 class MemberNotInOrganizationError(DatabayApiError):
     code = 'member_not_in_organization'
+
+
+class MemberRoleUnchangedError(DatabayApiError):
+    code = 'member_role_unchanged'
 
 
 class MigrationRefusedError(DatabayApiError):
@@ -1699,6 +1715,10 @@ class RequestInvalidError(DatabayApiError):
 
 class RequiresSupportError(DatabayApiError):
     code = 'requires_support'
+
+
+class ResetMailUnavailableError(DatabayApiError):
+    code = 'reset_mail_unavailable'
 
 
 class ResourceNotFoundError(DatabayApiError):
@@ -2383,6 +2403,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'invalid_spec': InvalidSpecError,
     'invalid_tenant_identifier': InvalidTenantIdentifierError,
     'invalid_version': InvalidVersionError,
+    'invitation_already_open': InvitationAlreadyOpenError,
     'invitation_email_mismatch': InvitationEmailMismatchError,
     'invitation_inviter_not_admin': InvitationInviterNotAdminError,
     'invitation_link_unavailable': InvitationLinkUnavailableError,
@@ -2400,11 +2421,13 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'managed_warehouse_sink_locked': ManagedWarehouseSinkLockedError,
     'manifest_stale': ManifestStaleError,
     'mask_columns_not_selected': MaskColumnsNotSelectedError,
+    'member_access_unchanged': MemberAccessUnchangedError,
     'member_is_api_key': MemberIsApiKeyError,
     'member_lookup_unavailable': MemberLookupUnavailableError,
     'member_not_api_key': MemberNotApiKeyError,
     'member_not_found': MemberNotFoundError,
     'member_not_in_organization': MemberNotInOrganizationError,
+    'member_role_unchanged': MemberRoleUnchangedError,
     'migration_refused': MigrationRefusedError,
     'missing_feature_values': MissingFeatureValuesError,
     'missing_meter_values': MissingMeterValuesError,
@@ -2542,6 +2565,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'reporting_currency_required': ReportingCurrencyRequiredError,
     'request_invalid': RequestInvalidError,
     'requires_support': RequiresSupportError,
+    'reset_mail_unavailable': ResetMailUnavailableError,
     'resource_not_found': ResourceNotFoundError,
     'resource_not_shared': ResourceNotSharedError,
     'resource_not_visible': ResourceNotVisibleError,
