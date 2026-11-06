@@ -17,7 +17,6 @@ class ChangeEventOperation(OpenStrEnum):
 
 
 class ApplyChangeInfo(RequestModel):
-    sink_column_type: str | None = None
 
 
 class SchemaChangeEventResponse(ResponseModel):

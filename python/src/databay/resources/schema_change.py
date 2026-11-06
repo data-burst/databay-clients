@@ -20,10 +20,9 @@ class SchemaChangeResource(Resource):
         self,
         *,
         event_uuid: str,
-        sink_column_type: str | None | Unset = UNSET,
     ) -> None:
         """Apply Schema Change Event. ``databay schema-change apply``."""
-        return self._call(_ops.SCHEMA_CHANGE_APPLY, {'event_uuid': event_uuid, 'sink_column_type': sink_column_type})
+        return self._call(_ops.SCHEMA_CHANGE_APPLY, {'event_uuid': event_uuid})
 
     def ignore(
         self,

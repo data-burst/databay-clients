@@ -1442,6 +1442,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "invitation_already_open": {
+   "hint": "Invite them with the open invitation's role and language, or ask an org admin to revoke it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "invitation_email_mismatch": {
    "hint": "Sign in with the email address the invitation was sent to.",
    "action": "do_first",
@@ -1544,6 +1550,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "member_access_unchanged": {
+   "hint": "Reload the member's status; the change you asked for is already in place.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "member_is_api_key": {
    "hint": "Manage it with the API key routes (databay api-key), or revoke the key.",
    "action": "fix_and_retry",
@@ -1571,6 +1583,12 @@
   "member_not_in_organization": {
    "hint": "Invite them to the organization first.",
    "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "member_role_unchanged": {
+   "hint": "Pick a role the member does not hold yet.",
+   "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
   },
@@ -2396,6 +2414,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "reset_mail_unavailable": {
+   "hint": "Ask an operator to set the realm's mail server, then reset the password again.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "resource_not_found": {
    "hint": "Check the resource id; it is not in your organization.",
    "action": "fix_and_retry",
@@ -2667,7 +2691,7 @@
    "max_retries": 3
   },
   "sink_column_type_required": {
-   "hint": "Send sink_column_type for the added column.",
+   "hint": "Retry without sink_column_type; the warehouse picks the column type.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null

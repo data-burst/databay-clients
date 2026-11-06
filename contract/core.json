@@ -1488,20 +1488,9 @@
     "type": "object"
    },
    "ApplyChangeInfo": {
-    "properties": {
-     "sink_column_type": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "description": "Recommended column type to apply on sink",
-      "title": "Sink Column Type"
-     }
-    },
+    "additionalProperties": false,
+    "description": "The apply body carries nothing: a removal needs no input, and the warehouse type is never the caller's.",
+    "properties": {},
     "title": "ApplyChangeInfo",
     "type": "object"
    },
@@ -30599,8 +30588,7 @@
         "$ref": "#/components/schemas/ApplyChangeInfo"
        }
       }
-     },
-     "required": true
+     }
     },
     "responses": {
      "204": {
@@ -30632,8 +30620,7 @@
      "columns": [],
      "destructive": true,
      "examples": [
-      "databay schema-change apply <event_uuid> --yes",
-      "databay schema-change apply <event_uuid> --sink-column-type 'Nullable(String)' --yes"
+      "databay schema-change apply <event_uuid> --yes"
      ],
      "idempotent": false,
      "kind": "exposed",

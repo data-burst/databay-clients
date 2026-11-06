@@ -29,23 +29,12 @@ SCHEMA_CHANGE_APPLY = Operation(
     ),
     body=Body(
         schema='ApplyChangeInfo',
-        fields=(
-            Param(
-                name='sink_column_type',
-                location='body',
-                kind='string',
-                required=False,
-                description='Recommended column type to apply on sink',
-                nullable=True,
-            ),
-        ),
     ),
     response=Response(
         kind='empty',
     ),
     examples=(
         'databay schema-change apply <event_uuid> --yes',
-        "databay schema-change apply <event_uuid> --sink-column-type 'Nullable(String)' --yes",
     ),
 )
 
