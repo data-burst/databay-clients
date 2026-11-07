@@ -214,7 +214,15 @@ RETRYING = {"status": "retrying"}
 
 def _create_answer() -> httpx.Response:
     return answer(
-        200, {"uuid": PIPE, "status": "pending", "source_id": "s1", "sink_db_uuid": "d1", "preflight_skipped": []}
+        200,
+        {
+            "uuid": PIPE,
+            "status": "pending",
+            "source_id": "s1",
+            "sink_db_uuid": "d1",
+            "backend": "ingest",
+            "preflight_skipped": [],
+        },
     )
 
 
