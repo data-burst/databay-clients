@@ -49,9 +49,11 @@ if TYPE_CHECKING:
     from databay.resources.pipe_backfill_run import PipeBackfillRunResource
     from databay.resources.pipe_config_option import PipeConfigOptionResource
     from databay.resources.pipe_destination import PipeDestinationResource
+    from databay.resources.pipe_leftover import PipeLeftoverResource
     from databay.resources.pipe_sink_type import PipeSinkTypeResource
     from databay.resources.pipe_source_type import PipeSourceTypeResource
     from databay.resources.pipe_status_bucket import PipeStatusBucketResource
+    from databay.resources.pipe_stuck_delete import PipeStuckDeleteResource
     from databay.resources.plan import PlanResource
     from databay.resources.project import ProjectResource
     from databay.resources.project_budget import ProjectBudgetResource
@@ -330,6 +332,12 @@ class Api:
         return PipeDestinationResource(self._session)
 
     @cached_property
+    def pipe_leftover(self) -> PipeLeftoverResource:
+        from databay.resources.pipe_leftover import PipeLeftoverResource
+
+        return PipeLeftoverResource(self._session)
+
+    @cached_property
     def pipe_sink_type(self) -> PipeSinkTypeResource:
         from databay.resources.pipe_sink_type import PipeSinkTypeResource
 
@@ -346,6 +354,12 @@ class Api:
         from databay.resources.pipe_status_bucket import PipeStatusBucketResource
 
         return PipeStatusBucketResource(self._session)
+
+    @cached_property
+    def pipe_stuck_delete(self) -> PipeStuckDeleteResource:
+        from databay.resources.pipe_stuck_delete import PipeStuckDeleteResource
+
+        return PipeStuckDeleteResource(self._session)
 
     @cached_property
     def plan(self) -> PlanResource:

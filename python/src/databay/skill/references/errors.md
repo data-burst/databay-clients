@@ -193,6 +193,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `entitlements_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `exists` | 1 | fix_and_retry | none |  | Renew the connected account's credentials instead. |
 | `external_plan` | 1 | ask_human | none |  | Change the plan in the Shopify app; this meter takes no override. |
+| `external_warehouses_unsupported` | 1 | ask_human | none |  | Use the managed warehouse; pipelines land there without a destination to register. |
 | `extra_is_primary` | 1 | fix_and_retry | none |  | Leave the primary property out of the extra properties. |
 | `feature_not_rollout` | 1 | fix_and_retry | none |  | Pick a rollout feature; only those can be set per organization. |
 | `folder_cycle` | 1 | fix_and_retry | none |  | Move the folder somewhere outside itself. |
@@ -241,6 +242,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `job_not_found` | 1 | fix_and_retry | none |  | List the transformations and pick one you can see. |
 | `keyless_selection_needs_key` | 1 | fix_and_retry | none |  | Name a primary_key for the selection on this keyless table. |
 | `last_admin` | 1 | do_first | none |  | Make another member an admin first. |
+| `leftover_check_unavailable` | 6 | retry | none | 3 | Check that the database is reachable, then check again. |
+| `leftover_not_found` | 1 | fix_and_retry | none |  | Reload the list; this leftover is already resolved or is not in your project. |
+| `leftover_source_gone` | 1 | ask_human | none |  | Drop it on the database yourself with the SQL shown, then dismiss it. |
 | `login_validity_invalid` | 1 | fix_and_retry | none |  | Pick an expiry date in the future and within the allowed number of days. |
 | `logout_failed` | 6 | retry | unknown | 3 | Retry signing out. |
 | `managed_warehouse_sink_locked` | 1 | fix_and_retry | none |  | Send the request again without sink_db_uuid. |
@@ -297,6 +301,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `org_create_limit` | 1 | ask_human | none |  | The limit for new organizations is reached; ask an admin of an existing one to add you. |
 | `org_create_single_org` | 1 | ask_human | none |  | Contact support to create another organization. |
 | `org_disabled` | 1 | ask_human | none |  | This organization is disabled; pick another one or contact support. |
+| `org_domain_claimed` | 1 | ask_human | partial |  | Ask an admin of the organization that holds your email domain to invite you. |
 | `org_key_conflict` | 6 | retry | none | 1 | Send the request again. |
 | `org_not_found` | 1 | ask_human | none |  | Sign in again; if this persists, contact support. |
 | `org_not_member` | 1 | fix_and_retry | none |  | Pick one of the organizations you belong to. |
@@ -323,6 +328,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `personal_login_exists` | 1 | fix_and_retry | none |  | Rotate your existing login for this warehouse to get a new password. |
 | `personal_logins_disabled` | 1 | ask_human | none |  | Ask a project admin to turn on personal logins for this project. |
 | `pipe_already_exists` | 1 | fix_and_retry | none |  | Pick another destination table, or use the pipe named by existing_pipe_uuid. |
+| `pipe_busy` | 6 | retry | none | 3 | Another change to this pipe is running; retry in a few seconds. |
 | `pipe_deleting` | 1 | fix_and_retry | none |  | Create a new pipe if you still need one; this one is being deleted. |
 | `pipe_lookup_failed` | 6 | retry | none | 3 | Retry; the delete waits until the pipelines using it are known. |
 | `pipe_not_failed` | 1 | fix_and_retry | none |  | Release a pipe only once it has failed; resync or pause a running one instead. |
@@ -516,7 +522,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `warehouse_not_queryable` | 1 | fix_and_retry | none |  | Pick a warehouse Databay manages on your organization's analytics server; only those can be queried. |
 | `warehouse_not_visible` | 1 | fix_and_retry | none |  | Pick a warehouse from this project's list. |
 | `warehouse_required` | 1 | fix_and_retry | none |  | Name one of the project's warehouses. |
+| `warehouse_setup_invalid` | 1 | ask_human | none |  | Ask your Databay administrator to fix the warehouse settings; retrying will not help. |
 | `warehouse_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
+| `warehouses_not_ready` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `webhook_body_invalid` | 1 | fix_and_retry | none |  | Send the webhook with every required field. |
 | `webhook_forbidden` | 1 | fix_and_retry | none |  | Send alerts from this project instead. |
 | `webhook_replay_unavailable` | 1 | fix_and_retry | none |  | Send a new Idempotency-Key to create the webhook again. |
@@ -532,6 +540,9 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 |---|---|---|---|---|
 | `attach_timed_out` | retry | none | 2 | Retry the pipe; if it times out again, check the reader's state on the pipe. |
 | `attach_unsupported_source` | fix_and_retry | none |  | Create the pipe without reader_id; it then gets a reader of its own. |
+| `cdc_capture_instance_missing` | ask_human | none |  | Enable CDC on the table again, then resync the pipe. |
+| `cdc_capture_stopped` | ask_human | none |  | Start SQL Server Agent and the CDC capture job on the source; the pipe then catches up. |
+| `cdc_capture_stopped_azure` | ask_human | none |  | Check in Azure that the database isn't paused; the pipe catches up once capture runs. |
 | `cdc_column_missing` | fix_and_retry | unknown |  | Add the column back and restart the pipe, or create a new pipe without it. |
 | `cdc_ddl_unparseable` | ask_human | partial |  | Contact support with the error reference and the source's sql_mode. |
 | `cdc_engine_config_invalid` | fix_and_retry | unknown |  | Set the source's SSL mode to require, disable, verify-ca or verify-full, then restart the pipe. |
@@ -567,6 +578,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `cdc_source_stream_invalid` | ask_human | partial |  | Contact support with the error reference; the pipe stays stopped. |
 | `cdc_source_table_missing` | fix_and_retry | unknown |  | Restore the table or grant the source user SELECT on it, then restart the pipe. |
 | `cdc_source_type_unsupported` | fix_and_retry | unknown |  | Create a new pipe that leaves the column out, or ask support to replicate unknown types as text. |
+| `cdc_table_key_mismatch` | fix_and_retry | unknown |  | Create a new pipe keyed by the table's primary key, or have the admin re-enable CDC on the pipe's key. |
 | `cdc_table_key_missing` | fix_and_retry | unknown |  | Add a primary key to the table and restart the pipe, or create a new pipe with a replication key. |
 | `changes_expired` | do_first | partial |  | Resync the pipe (a rebuild from the snapshot source) to copy the table again. |
 | `column_type_unsupported` | fix_and_retry | unknown |  | Create a new pipe that leaves the column out, or cast it to text in a view. |
@@ -599,6 +611,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `signal_table_denied` | ask_human | unknown |  | Ask the database administrator to grant the source user CREATE on that schema, then retry the pipe. |
 | `source_auth_failed` | fix_and_retry | unknown |  | Update the source's username and password, then retry the pipe. |
 | `source_binlog_status_unreadable` | ask_human | none |  | Ask the database administrator to grant REPLICATION CLIENT to Databay's user, then restart the pipe. |
+| `source_cdc_cleanup_passed` | ask_human | none |  | Raise the source's CDC cleanup retention, then resync the pipe to copy the table again. |
 | `source_database_dropped` | do_first | partial |  | Once the database is back, resync the pipe (a rebuild from the snapshot source) to copy it again. |
 | `source_host_changed_live_pipe` | do_first | partial |  | Delete and re-create the pipe to stream from the new host. |
 | `source_host_not_allowed` | fix_and_retry | unknown |  | Point the source at your database's own public or private address, then retry the pipe. |

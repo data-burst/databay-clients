@@ -49,9 +49,10 @@ class PipeResource(Resource):
         self,
         *,
         pipe_uuid: str,
+        drop_destination: bool | Unset = UNSET,
     ) -> PipeDeleteAccepted:
         """Delete Pipe. ``databay pipe delete``."""
-        return self._call(_ops.PIPE_DELETE, {'pipe_uuid': pipe_uuid})
+        return self._call(_ops.PIPE_DELETE, {'pipe_uuid': pipe_uuid, 'drop_destination': drop_destination})
 
     def get(
         self,

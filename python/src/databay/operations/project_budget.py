@@ -87,7 +87,6 @@ PROJECT_BUDGET_SET = Operation(
                     'sources_db',
                     'sources_saas',
                     'warehouses_managed',
-                    'warehouses_external',
                     'projects',
                     'seats_editor',
                     'api_keys',
