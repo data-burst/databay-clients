@@ -66,7 +66,9 @@ instead of guessing a flag.
    databay project use <project_id> --output json
    ```
 
-   `--project <project_id>` on one command overrides it for that command only.
+   `--project <project_id>` on a command that acts in a project overrides it for that command
+   only. A command that names a resource by its id (`pipe get`, `pipe status`, `pipe wait`) finds
+   the project from the resource and takes no `--project`.
 
 3. If `status` reports `skill_outdated`, an installed copy of this skill is from another CLI
    version: tell the user, and offer the `next` command its `skill_outdated` event names.
