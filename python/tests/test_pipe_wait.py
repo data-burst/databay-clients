@@ -37,6 +37,7 @@ def _pipe(freshness: str | None = "behind", health: str | None = "healthy", **ex
             "uuid": PIPE,
             "source_id": "s1",
             "sink_db_uuid": SINK,
+            "backend": "ingest",
             "dest_table_name": "orders",
             "project_id": "proj-active",
             "status": "active",

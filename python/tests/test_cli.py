@@ -385,7 +385,14 @@ def test_csv_keeps_a_long_value_whole(cli, server, monkeypatch):
     assert run.stdout.splitlines()[1] == f"postgres,{long_name},static_credentials"
 
 
-PIPE_CREATED = {"uuid": PIPE, "status": "pending", "source_id": "s1", "sink_db_uuid": "d1", "preflight_skipped": []}
+PIPE_CREATED = {
+    "uuid": PIPE,
+    "status": "pending",
+    "source_id": "s1",
+    "sink_db_uuid": "d1",
+    "backend": "ingest",
+    "preflight_skipped": [],
+}
 
 
 def _pipe_file(tmp_path, project: str) -> str:
