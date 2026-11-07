@@ -124,6 +124,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'entitlements_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'exists': ErrorInfo("Renew the connected account's credentials instead.", 'fix_and_retry', 'none', None),
     'external_plan': ErrorInfo('Change the plan in the Shopify app; this meter takes no override.', 'ask_human', 'none', None),
+    'external_warehouses_unsupported': ErrorInfo('Use the managed warehouse; pipelines land there without a destination to register.', 'ask_human', 'none', None),
     'extra_is_primary': ErrorInfo('Leave the primary property out of the extra properties.', 'fix_and_retry', 'none', None),
     'feature_not_rollout': ErrorInfo('Pick a rollout feature; only those can be set per organization.', 'fix_and_retry', 'none', None),
     'folder_cycle': ErrorInfo('Move the folder somewhere outside itself.', 'fix_and_retry', 'none', None),
@@ -172,6 +173,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'job_not_found': ErrorInfo('List the transformations and pick one you can see.', 'fix_and_retry', 'none', None),
     'keyless_selection_needs_key': ErrorInfo('Name a primary_key for the selection on this keyless table.', 'fix_and_retry', 'none', None),
     'last_admin': ErrorInfo('Make another member an admin first.', 'do_first', 'none', None),
+    'leftover_check_unavailable': ErrorInfo('Check that the database is reachable, then check again.', 'retry', 'none', 3),
+    'leftover_not_found': ErrorInfo('Reload the list; this leftover is already resolved or is not in your project.', 'fix_and_retry', 'none', None),
+    'leftover_source_gone': ErrorInfo('Drop it on the database yourself with the SQL shown, then dismiss it.', 'ask_human', 'none', None),
     'login_validity_invalid': ErrorInfo('Pick an expiry date in the future and within the allowed number of days.', 'fix_and_retry', 'none', None),
     'logout_failed': ErrorInfo('Retry signing out.', 'retry', 'unknown', 3),
     'managed_warehouse_sink_locked': ErrorInfo('Send the request again without sink_db_uuid.', 'fix_and_retry', 'none', None),
@@ -228,6 +232,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'org_create_limit': ErrorInfo('The limit for new organizations is reached; ask an admin of an existing one to add you.', 'ask_human', 'none', None),
     'org_create_single_org': ErrorInfo('Contact support to create another organization.', 'ask_human', 'none', None),
     'org_disabled': ErrorInfo('This organization is disabled; pick another one or contact support.', 'ask_human', 'none', None),
+    'org_domain_claimed': ErrorInfo('Ask an admin of the organization that holds your email domain to invite you.', 'ask_human', 'partial', None),
     'org_key_conflict': ErrorInfo('Send the request again.', 'retry', 'none', 1),
     'org_not_found': ErrorInfo('Sign in again; if this persists, contact support.', 'ask_human', 'none', None),
     'org_not_member': ErrorInfo('Pick one of the organizations you belong to.', 'fix_and_retry', 'none', None),
@@ -254,6 +259,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'personal_login_exists': ErrorInfo('Rotate your existing login for this warehouse to get a new password.', 'fix_and_retry', 'none', None),
     'personal_logins_disabled': ErrorInfo('Ask a project admin to turn on personal logins for this project.', 'ask_human', 'none', None),
     'pipe_already_exists': ErrorInfo('Pick another destination table, or use the pipe named by existing_pipe_uuid.', 'fix_and_retry', 'none', None),
+    'pipe_busy': ErrorInfo('Another change to this pipe is running; retry in a few seconds.', 'retry', 'none', 3),
     'pipe_deleting': ErrorInfo('Create a new pipe if you still need one; this one is being deleted.', 'fix_and_retry', 'none', None),
     'pipe_lookup_failed': ErrorInfo('Retry; the delete waits until the pipelines using it are known.', 'retry', 'none', 3),
     'pipe_not_failed': ErrorInfo('Release a pipe only once it has failed; resync or pause a running one instead.', 'fix_and_retry', 'none', None),
@@ -447,7 +453,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'warehouse_not_queryable': ErrorInfo("Pick a warehouse Databay manages on your organization's analytics server; only those can be queried.", 'fix_and_retry', 'none', None),
     'warehouse_not_visible': ErrorInfo("Pick a warehouse from this project's list.", 'fix_and_retry', 'none', None),
     'warehouse_required': ErrorInfo("Name one of the project's warehouses.", 'fix_and_retry', 'none', None),
+    'warehouse_setup_invalid': ErrorInfo('Ask your Databay administrator to fix the warehouse settings; retrying will not help.', 'ask_human', 'none', None),
     'warehouse_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
+    'warehouses_not_ready': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'webhook_body_invalid': ErrorInfo('Send the webhook with every required field.', 'fix_and_retry', 'none', None),
     'webhook_forbidden': ErrorInfo('Send alerts from this project instead.', 'fix_and_retry', 'none', None),
     'webhook_replay_unavailable': ErrorInfo('Send a new Idempotency-Key to create the webhook again.', 'fix_and_retry', 'none', None),
@@ -929,6 +937,10 @@ class ExternalPlanError(DatabayApiError):
     code = 'external_plan'
 
 
+class ExternalWarehousesUnsupportedError(DatabayApiError):
+    code = 'external_warehouses_unsupported'
+
+
 class ExtraIsPrimaryError(DatabayApiError):
     code = 'extra_is_primary'
 
@@ -1119,6 +1131,18 @@ class KeylessSelectionNeedsKeyError(DatabayApiError):
 
 class LastAdminError(DatabayApiError):
     code = 'last_admin'
+
+
+class LeftoverCheckUnavailableError(DatabayApiError):
+    code = 'leftover_check_unavailable'
+
+
+class LeftoverNotFoundError(DatabayApiError):
+    code = 'leftover_not_found'
+
+
+class LeftoverSourceGoneError(DatabayApiError):
+    code = 'leftover_source_gone'
 
 
 class LoginValidityInvalidError(DatabayApiError):
@@ -1345,6 +1369,10 @@ class OrgDisabledError(DatabayApiError):
     code = 'org_disabled'
 
 
+class OrgDomainClaimedError(DatabayApiError):
+    code = 'org_domain_claimed'
+
+
 class OrgKeyConflictError(DatabayApiError):
     code = 'org_key_conflict'
 
@@ -1447,6 +1475,10 @@ class PersonalLoginsDisabledError(DatabayApiError):
 
 class PipeAlreadyExistsError(DatabayApiError):
     code = 'pipe_already_exists'
+
+
+class PipeBusyError(DatabayApiError):
+    code = 'pipe_busy'
 
 
 class PipeDeletingError(DatabayApiError):
@@ -2221,8 +2253,16 @@ class WarehouseRequiredError(DatabayApiError):
     code = 'warehouse_required'
 
 
+class WarehouseSetupInvalidError(DatabayApiError):
+    code = 'warehouse_setup_invalid'
+
+
 class WarehouseUnavailableError(DatabayApiError):
     code = 'warehouse_unavailable'
+
+
+class WarehousesNotReadyError(DatabayApiError):
+    code = 'warehouses_not_ready'
 
 
 class WebhookBodyInvalidError(DatabayApiError):
@@ -2368,6 +2408,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'entitlements_unavailable': EntitlementsUnavailableError,
     'exists': ExistsError,
     'external_plan': ExternalPlanError,
+    'external_warehouses_unsupported': ExternalWarehousesUnsupportedError,
     'extra_is_primary': ExtraIsPrimaryError,
     'feature_not_rollout': FeatureNotRolloutError,
     'folder_cycle': FolderCycleError,
@@ -2416,6 +2457,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'job_not_found': JobNotFoundError,
     'keyless_selection_needs_key': KeylessSelectionNeedsKeyError,
     'last_admin': LastAdminError,
+    'leftover_check_unavailable': LeftoverCheckUnavailableError,
+    'leftover_not_found': LeftoverNotFoundError,
+    'leftover_source_gone': LeftoverSourceGoneError,
     'login_validity_invalid': LoginValidityInvalidError,
     'logout_failed': LogoutFailedError,
     'managed_warehouse_sink_locked': ManagedWarehouseSinkLockedError,
@@ -2472,6 +2516,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'org_create_limit': OrgCreateLimitError,
     'org_create_single_org': OrgCreateSingleOrgError,
     'org_disabled': OrgDisabledError,
+    'org_domain_claimed': OrgDomainClaimedError,
     'org_key_conflict': OrgKeyConflictError,
     'org_not_found': OrgNotFoundError,
     'org_not_member': OrgNotMemberError,
@@ -2498,6 +2543,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'personal_login_exists': PersonalLoginExistsError,
     'personal_logins_disabled': PersonalLoginsDisabledError,
     'pipe_already_exists': PipeAlreadyExistsError,
+    'pipe_busy': PipeBusyError,
     'pipe_deleting': PipeDeletingError,
     'pipe_lookup_failed': PipeLookupFailedError,
     'pipe_not_failed': PipeNotFailedError,
@@ -2691,7 +2737,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'warehouse_not_queryable': WarehouseNotQueryableError,
     'warehouse_not_visible': WarehouseNotVisibleError,
     'warehouse_required': WarehouseRequiredError,
+    'warehouse_setup_invalid': WarehouseSetupInvalidError,
     'warehouse_unavailable': WarehouseUnavailableError,
+    'warehouses_not_ready': WarehousesNotReadyError,
     'webhook_body_invalid': WebhookBodyInvalidError,
     'webhook_forbidden': WebhookForbiddenError,
     'webhook_replay_unavailable': WebhookReplayUnavailableError,

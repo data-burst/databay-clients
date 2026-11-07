@@ -4783,6 +4783,21 @@
      "source_type": {
       "$ref": "#/components/schemas/SourceType"
      },
+     "ssl_modes": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "the ssl_mode values an edit may set for this source's type; None for a type with no ssl_mode",
+      "title": "Ssl Modes"
+     },
      "status": {
       "$ref": "#/components/schemas/SourceStatus"
      },
@@ -7328,6 +7343,28 @@
     "title": "LayoutItem",
     "type": "object"
    },
+   "LeftoverKind": {
+    "enum": [
+     "replication_slot",
+     "publication",
+     "destination_table",
+     "shadow_table"
+    ],
+    "title": "LeftoverKind",
+    "type": "string"
+   },
+   "LeftoverReason": {
+    "enum": [
+     "source_gone",
+     "source_auth_failed",
+     "retries_exhausted",
+     "not_owned",
+     "in_use",
+     "table_kept"
+    ],
+    "title": "LeftoverReason",
+    "type": "string"
+   },
    "LinkedInPagesConnectedConfig": {
     "description": "Decrypted config blob for a LinkedIn Pages (organic page analytics) source.\n\n``access_token`` is a LinkedIn member token (~60 days) with ``rw_organization_admin``,\nminted by databay's platform LinkedIn app or pasted on the manual path; the member must\nbe an ADMINISTRATOR of the Page. No refresh token is kept: on expiry the user reconnects\nor renews the token. ``organization_id`` is the numeric Page id (``urn:li:organization:<id>``),\nmirrored as the ConnectedSource ``external_ref``.",
     "properties": {
@@ -7939,7 +7976,6 @@
      "sources_db",
      "sources_saas",
      "warehouses_managed",
-     "warehouses_external",
      "projects",
      "seats_editor",
      "api_keys",
@@ -9461,6 +9497,11 @@
    "PipeDeleteAccepted": {
     "description": "202 from ``DELETE /pipe/{uuid}``: the pipe is DELETING; teardown runs in the background.",
     "properties": {
+     "drop_destination": {
+      "description": "Whether the teardown drops the pipe's warehouse table; a retried delete repeats the first choice",
+      "title": "drop destination",
+      "type": "boolean"
+     },
      "pipe_uuid": {
       "title": "Pipe Uuid",
       "type": "string"
@@ -9473,7 +9514,8 @@
     },
     "required": [
      "status",
-     "pipe_uuid"
+     "pipe_uuid",
+     "drop_destination"
     ],
     "title": "PipeDeleteAccepted",
     "type": "object"
@@ -9727,6 +9769,156 @@
     ],
     "title": "PipeHealth",
     "type": "string"
+   },
+   "PipeLeftoverList": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PipeLeftoverOut"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "PipeLeftoverList",
+    "type": "object"
+   },
+   "PipeLeftoverOut": {
+    "description": "One object a deleted pipe left in its source database or warehouse, not yet resolved.",
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "created at",
+      "type": "string"
+     },
+     "drop_sql": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The statement that removes it: on the source database for a slot or publication, on the warehouse for a shadow table. Null for a destination table, which only its owner may drop.",
+      "title": "drop sql"
+     },
+     "id": {
+      "title": "leftover id",
+      "type": "string"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/LeftoverKind",
+      "title": "kind"
+     },
+     "object_name": {
+      "description": "A slot or publication name, or a table as 'database.table'",
+      "title": "object name",
+      "type": "string"
+     },
+     "pipe_uuid": {
+      "description": "The deleted pipe",
+      "title": "pipe uuid",
+      "type": "string"
+     },
+     "project_id": {
+      "title": "project id",
+      "type": "string"
+     },
+     "reason": {
+      "$ref": "#/components/schemas/LeftoverReason",
+      "title": "reason"
+     },
+     "sink_db_uuid": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "sink db uuid"
+     },
+     "source_host": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "source host"
+     },
+     "source_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "source id"
+     },
+     "source_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The source's name when the pipe was deleted; null when it was already gone",
+      "title": "source name"
+     },
+     "table": {
+      "description": "The deleted pipe's source table, as 'schema.table'",
+      "title": "table",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "pipe_uuid",
+     "project_id",
+     "source_id",
+     "source_name",
+     "source_host",
+     "sink_db_uuid",
+     "table",
+     "kind",
+     "object_name",
+     "reason",
+     "drop_sql",
+     "created_at"
+    ],
+    "title": "PipeLeftoverOut",
+    "type": "object"
+   },
+   "PipeLeftoverResult": {
+    "description": "The leftover after Check again or Dismiss; ``resolved`` says whether it is cleared.",
+    "properties": {
+     "leftover": {
+      "$ref": "#/components/schemas/PipeLeftoverOut"
+     },
+     "resolved": {
+      "description": "True when it is gone, a live pipe uses the table again, or it was dismissed",
+      "title": "resolved",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "leftover",
+     "resolved"
+    ],
+    "title": "PipeLeftoverResult",
+    "type": "object"
    },
    "PipeMaskFieldV2": {
     "description": "One column the user chose to mask at pipe-create time.\n\n``mask_type`` maps the two UI choices onto the masking transform: *Hash* \u2192 ``sha256``\n(one-way, irreversible) and *Encrypt* \u2192 ``reversible`` (AES, needs the pipe's shared\n``mask_secret``). ``md5`` is accepted for parity but the UI does not offer it.\nA masked column is forced to ``String`` in the ClickHouse table because the transform\nrewrites its value to text: a hash is lowercase hex and an encrypted value is Base64.",
@@ -10308,6 +10500,11 @@
       "description": "The state the pipe's subscription starts in once the pipe is provisioned: snapshotting when its reader has not loaded a table yet (its first start copies every table), else attaching. Null without a reader.",
       "title": "attach state"
      },
+     "backend": {
+      "description": "The engine that runs the pipe: 'ingest' (databases and most apps) or 'dlt' (some SaaS sources)",
+      "title": "engine",
+      "type": "string"
+     },
      "columns_count": {
       "anyOf": [
        {
@@ -10645,6 +10842,7 @@
      "uuid",
      "source_id",
      "sink_db_uuid",
+     "backend",
      "preflight_skipped"
     ],
     "title": "PipeV2CreateResponse",
@@ -10664,6 +10862,11 @@
       ],
       "description": "Where the pipe's subscription to its reader stands. Null for a pipe that runs its own engine, and until a new pipe on a reader is provisioned.",
       "title": "attach state"
+     },
+     "backend": {
+      "description": "The engine that runs the pipe: 'ingest' (databases and most apps) or 'dlt' (some SaaS sources)",
+      "title": "engine",
+      "type": "string"
      },
      "columns": {
       "anyOf": [
@@ -11028,7 +11231,8 @@
     "required": [
      "uuid",
      "source_id",
-     "sink_db_uuid"
+     "sink_db_uuid",
+     "backend"
     ],
     "title": "PipeV2DetailResponse",
     "type": "object"
@@ -11096,6 +11300,11 @@
       ],
       "description": "Where the pipe's subscription to its reader stands. Null for a pipe that runs its own engine, and until a new pipe on a reader is provisioned.",
       "title": "attach state"
+     },
+     "backend": {
+      "description": "The engine that runs the pipe: 'ingest' (databases and most apps) or 'dlt' (some SaaS sources)",
+      "title": "engine",
+      "type": "string"
      },
      "columns_count": {
       "anyOf": [
@@ -11425,7 +11634,8 @@
     "required": [
      "uuid",
      "source_id",
-     "sink_db_uuid"
+     "sink_db_uuid",
+     "backend"
     ],
     "title": "PipeV2Response",
     "type": "object"
@@ -15517,6 +15727,94 @@
     "title": "StreamView",
     "type": "object"
    },
+   "StuckDeleteList": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/StuckDeleteOut"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "StuckDeleteList",
+    "type": "object"
+   },
+   "StuckDeleteOut": {
+    "description": "A deleted pipe whose cleanup has not finished; ``DELETE /pipe/{uuid}`` sends it to cleanup again.",
+    "properties": {
+     "deleted_at": {
+      "description": "When the delete started",
+      "format": "date-time",
+      "title": "deleted at",
+      "type": "string"
+     },
+     "dest_table_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "destination table name"
+     },
+     "pipe_uuid": {
+      "title": "pipe uuid",
+      "type": "string"
+     },
+     "project_id": {
+      "title": "project id",
+      "type": "string"
+     },
+     "schema_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "schema name"
+     },
+     "sink_db_uuid": {
+      "title": "sink db uuid",
+      "type": "string"
+     },
+     "source_id": {
+      "title": "source id",
+      "type": "string"
+     },
+     "table_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "table name"
+     }
+    },
+    "required": [
+     "pipe_uuid",
+     "project_id",
+     "source_id",
+     "sink_db_uuid",
+     "schema_name",
+     "table_name",
+     "dest_table_name",
+     "deleted_at"
+    ],
+    "title": "StuckDeleteOut",
+    "type": "object"
+   },
    "SwitchActiveOrgRequest": {
     "properties": {
      "organization": {
@@ -19175,6 +19473,284 @@
     }
    }
   },
+  "/api/cdc/pipe-leftovers": {
+   "get": {
+    "description": "List what deleted pipes left in their source databases and warehouses, unresolved, oldest first.\n\nA replication slot left on a database keeps its write-ahead log until it is dropped; ``drop_sql``\nsays how.",
+    "operationId": "pipe_leftover_list",
+    "parameters": [
+     {
+      "description": "Only leftovers of pipes in this project.",
+      "in": "query",
+      "name": "project_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only leftovers of pipes in this project.",
+       "title": "Project Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PipeLeftoverList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Leftovers",
+    "tags": [
+     "pipe"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay pipe-leftover list"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "pipe-leftover",
+     "project": "query:project_id",
+     "verb": "list"
+    }
+   }
+  },
+  "/api/cdc/pipe-leftovers/{leftover_id}/check": {
+   "post": {
+    "description": "Ask the source database or warehouse whether the leftover is still there; it is cleared when it is not.\n\n409 ``leftover_source_gone`` when databay no longer has the source (dismiss it instead), 503\n``leftover_check_unavailable`` when the database or warehouse could not be reached.",
+    "operationId": "pipe_leftover_check",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "leftover_id",
+      "required": true,
+      "schema": {
+       "title": "leftover id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PipeLeftoverResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Check Leftover",
+    "tags": [
+     "pipe"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay pipe-leftover check <leftover_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "pipe-leftover",
+     "verb": "check"
+    }
+   }
+  },
+  "/api/cdc/pipe-leftovers/{leftover_id}/dismiss": {
+   "post": {
+    "description": "Clear a leftover by hand, once it was dropped or is meant to stay; who dismissed it is recorded.",
+    "operationId": "pipe_leftover_dismiss",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "leftover_id",
+      "required": true,
+      "schema": {
+       "title": "leftover id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PipeLeftoverResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Dismiss Leftover",
+    "tags": [
+     "pipe"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay pipe-leftover dismiss <leftover_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "pipe-leftover",
+     "verb": "dismiss"
+    }
+   }
+  },
+  "/api/cdc/pipe-stuck-deletes": {
+   "get": {
+    "description": "List deleted pipes whose cleanup has not finished well after the delete (``CDC_STUCK_DELETE_AFTER_SECONDS``).\n\n``DELETE /pipe/{pipe_uuid}`` sends one to cleanup again, with its first delete's choice.",
+    "operationId": "pipe_stuck_delete_list",
+    "parameters": [
+     {
+      "description": "Only pipes in this project.",
+      "in": "query",
+      "name": "project_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only pipes in this project.",
+       "title": "Project Id"
+      }
+     },
+     {
+      "description": "Only pipes of this source.",
+      "in": "query",
+      "name": "source_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only pipes of this source.",
+       "title": "Source Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StuckDeleteList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Stuck Deletes",
+    "tags": [
+     "pipe"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay pipe-stuck-delete list --source-id <source_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "pipe-stuck-delete",
+     "project": "query:project_id",
+     "verb": "list"
+    }
+   }
+  },
   "/api/cdc/pipe/config-options": {
    "get": {
     "description": "Which create-time controls the wizard should render for this source.\n\nSchedule and sync mode only apply to scheduled-batch pipes; on a streaming pipe\nthey are ignored, so the wizard hides them. The answer is resolved against the\nengine a new pipe would get on this deployment. Static capability facts, no\norganization data.",
@@ -19752,7 +20328,7 @@
   },
   "/api/cdc/pipe/{pipe_uuid}": {
    "delete": {
-    "description": "Delete a pipe asynchronously.\n\nMarks the pipe DELETING and returns 202; its connections, row and dependent\nresources are cleaned up in the background. 404 if the pipe does not exist,\n409 if it is already being deleted.",
+    "description": "Delete a pipe asynchronously.\n\nMarks the pipe DELETING and returns 202; its connections, row and dependent\nresources are cleaned up in the background, and its warehouse table too with\n``drop_destination``. A deleted pipe whose cleanup never finished is sent to cleanup\nagain (202), with the first delete's choice. 404 if the pipe does not exist or is\nalready cleaned up, 409 if it is being deleted.",
     "operationId": "pipe_delete",
     "parameters": [
      {
@@ -19762,6 +20338,18 @@
       "schema": {
        "title": "pipe uuid",
        "type": "string"
+      }
+     },
+     {
+      "description": "Also drop the pipe's warehouse table (and a SaaS pipe's sync state). Off by default: the table stays with the data already landed. A table another pipe writes to, or one databay did not create for this pipe, is kept and reported.",
+      "in": "query",
+      "name": "drop_destination",
+      "required": false,
+      "schema": {
+       "default": false,
+       "description": "Also drop the pipe's warehouse table (and a SaaS pipe's sync state). Off by default: the table stays with the data already landed. A table another pipe writes to, or one databay did not create for this pipe, is kept and reported.",
+       "title": "Drop Destination",
+       "type": "boolean"
       }
      }
     ],
@@ -19803,7 +20391,8 @@
      "columns": [],
      "destructive": true,
      "examples": [
-      "databay pipe delete <pipe_uuid> --yes"
+      "databay pipe delete <pipe_uuid> --yes",
+      "databay pipe delete <pipe_uuid> --yes --drop-destination"
      ],
      "idempotent": false,
      "kind": "exposed",

@@ -66,6 +66,7 @@ class MovePipeline(RequestModel):
 
 
 class PipeDeleteAccepted(ResponseModel):
+    drop_destination: bool
     pipe_uuid: str
     status: Literal['deleting']
 
@@ -180,6 +181,7 @@ class PipeV2Create(RequestModel):
 class PipeV2CreateResponse(ResponseModel):
     attach_mode: AttachMode | None = None
     attach_state: AttachState | None = None
+    backend: str
     columns_count: int | None = None
     created_at: datetime | None = None
     cron_expression: str | None = None
@@ -215,6 +217,7 @@ class PipeV2CreateResponse(ResponseModel):
 
 class PipeV2DetailResponse(ResponseModel):
     attach_state: AttachState | None = None
+    backend: str
     columns: list[str] | None = None
     columns_count: int | None = None
     created_at: datetime | None = None

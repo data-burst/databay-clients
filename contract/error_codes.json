@@ -12,6 +12,24 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "cdc_capture_instance_missing": {
+   "hint": "Enable CDC on the table again, then resync the pipe.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "cdc_capture_stopped": {
+   "hint": "Start SQL Server Agent and the CDC capture job on the source; the pipe then catches up.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "cdc_capture_stopped_azure": {
+   "hint": "Check in Azure that the database isn't paused; the pipe catches up once capture runs.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "cdc_column_missing": {
    "hint": "Add the column back and restart the pipe, or create a new pipe without it.",
    "action": "fix_and_retry",
@@ -222,6 +240,12 @@
    "side_effects": "unknown",
    "max_retries": null
   },
+  "cdc_table_key_mismatch": {
+   "hint": "Create a new pipe keyed by the table's primary key, or have the admin re-enable CDC on the pipe's key.",
+   "action": "fix_and_retry",
+   "side_effects": "unknown",
+   "max_retries": null
+  },
   "cdc_table_key_missing": {
    "hint": "Add a primary key to the table and restart the pipe, or create a new pipe with a replication key.",
    "action": "fix_and_retry",
@@ -410,6 +434,12 @@
   },
   "source_binlog_status_unreadable": {
    "hint": "Ask the database administrator to grant REPLICATION CLIENT to Databay's user, then restart the pipe.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "source_cdc_cleanup_passed": {
+   "hint": "Raise the source's CDC cleanup retention, then resync the pipe to copy the table again.",
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
@@ -1232,6 +1262,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "external_warehouses_unsupported": {
+   "hint": "Use the managed warehouse; pipelines land there without a destination to register.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "extra_is_primary": {
    "hint": "Leave the primary property out of the extra properties.",
    "action": "fix_and_retry",
@@ -1517,6 +1553,24 @@
   "last_admin": {
    "hint": "Make another member an admin first.",
    "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "leftover_check_unavailable": {
+   "hint": "Check that the database is reachable, then check again.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "leftover_not_found": {
+   "hint": "Reload the list; this leftover is already resolved or is not in your project.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "leftover_source_gone": {
+   "hint": "Drop it on the database yourself with the SQL shown, then dismiss it.",
+   "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1856,6 +1910,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "org_domain_claimed": {
+   "hint": "Ask an admin of the organization that holds your email domain to invite you.",
+   "action": "ask_human",
+   "side_effects": "partial",
+   "max_retries": null
+  },
   "org_key_conflict": {
    "hint": "Send the request again.",
    "action": "retry",
@@ -2011,6 +2071,12 @@
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
+  },
+  "pipe_busy": {
+   "hint": "Another change to this pipe is running; retry in a few seconds.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
   },
   "pipe_deleting": {
    "hint": "Create a new pipe if you still need one; this one is being deleted.",
@@ -3170,7 +3236,19 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "warehouse_setup_invalid": {
+   "hint": "Ask your Databay administrator to fix the warehouse settings; retrying will not help.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "warehouse_unavailable": {
+   "hint": "Retry after the Retry-After interval.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "warehouses_not_ready": {
    "hint": "Retry after the Retry-After interval.",
    "action": "retry",
    "side_effects": "none",

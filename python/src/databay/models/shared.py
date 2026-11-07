@@ -126,7 +126,6 @@ class Meter(OpenStrEnum):
     SOURCES_DB = 'sources_db'
     SOURCES_SAAS = 'sources_saas'
     WAREHOUSES_MANAGED = 'warehouses_managed'
-    WAREHOUSES_EXTERNAL = 'warehouses_external'
     PROJECTS = 'projects'
     SEATS_EDITOR = 'seats_editor'
     API_KEYS = 'api_keys'
@@ -662,6 +661,7 @@ class PipeMaskFieldV2(ResponseModel):
 
 class PipeV2Response(ResponseModel):
     attach_state: AttachState | None = None
+    backend: str
     columns_count: int | None = None
     created_at: datetime | None = None
     cron_expression: str | None = None

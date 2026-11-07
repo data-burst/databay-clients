@@ -214,7 +214,7 @@ PIPE_DELETE = Operation(
     method='delete',
     path='/api/cdc/pipe/{pipe_uuid}',
     summary='Delete Pipe',
-    description='Delete a pipe asynchronously.\n\nMarks the pipe DELETING and returns 202; its connections, row and dependent\nresources are cleaned up in the background. 404 if the pipe does not exist,\n409 if it is already being deleted.',
+    description="Delete a pipe asynchronously.\n\nMarks the pipe DELETING and returns 202; its connections, row and dependent\nresources are cleaned up in the background, and its warehouse table too with\n``drop_destination``. A deleted pipe whose cleanup never finished is sent to cleanup\nagain (202), with the first delete's choice. 404 if the pipe does not exist or is\nalready cleaned up, 409 if it is being deleted.",
     project=None,
     destructive=True,
     idempotent=False,
@@ -227,6 +227,13 @@ PIPE_DELETE = Operation(
             required=True,
             description='pipe uuid',
         ),
+        Param(
+            name='drop_destination',
+            location='query',
+            kind='boolean',
+            required=False,
+            description="Also drop the pipe's warehouse table (and a SaaS pipe's sync state). Off by default: the table stays with the data already landed. A table another pipe writes to, or one databay did not create for this pipe, is kept and reported.",
+        ),
     ),
     body=None,
     response=Response(
@@ -236,6 +243,7 @@ PIPE_DELETE = Operation(
     ),
     examples=(
         'databay pipe delete <pipe_uuid> --yes',
+        'databay pipe delete <pipe_uuid> --yes --drop-destination',
     ),
 )
 

@@ -2123,14 +2123,17 @@ Usage: `databay pipe create [OPTIONS]`
 Delete a pipe asynchronously.
 
 Marks the pipe DELETING and returns 202; its connections, row and dependent
-resources are cleaned up in the background. 404 if the pipe does not exist,
-409 if it is already being deleted.
+resources are cleaned up in the background, and its warehouse table too with
+``drop_destination``. A deleted pipe whose cleanup never finished is sent to cleanup
+again (202), with the first delete's choice. 404 if the pipe does not exist or is
+already cleaned up, 409 if it is being deleted.
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
 ```
 Examples:
   databay pipe delete <pipe_uuid> --yes
+  databay pipe delete <pipe_uuid> --yes --drop-destination
 ```
 
 Usage: `databay pipe delete PIPE_UUID [OPTIONS]`
@@ -2138,6 +2141,7 @@ Usage: `databay pipe delete PIPE_UUID [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `PIPE_UUID` | yes | pipe uuid |
+| `--drop-destination` / `--no-drop-destination` |  | Also drop the pipe's warehouse table (and a SaaS pipe's sync state). Off by default: the table stays with the data already landed. A table another pipe writes to, or one databay did not create for this pipe, is kept and reported. |
 | `--yes` |  | confirm: this removes or overwrites state |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -2555,6 +2559,74 @@ Usage: `databay pipe-destination preview [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+## pipe-leftover
+
+### databay pipe-leftover check
+
+Ask the source database or warehouse whether the leftover is still there; it is cleared when it is not.
+
+409 ``leftover_source_gone`` when databay no longer has the source (dismiss it instead), 503
+``leftover_check_unavailable`` when the database or warehouse could not be reached.
+
+```
+Examples:
+  databay pipe-leftover check <leftover_id>
+```
+
+Usage: `databay pipe-leftover check LEFTOVER_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `LEFTOVER_ID` | yes | leftover id |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay pipe-leftover dismiss
+
+Clear a leftover by hand, once it was dropped or is meant to stay; who dismissed it is recorded.
+
+```
+Examples:
+  databay pipe-leftover dismiss <leftover_id>
+```
+
+Usage: `databay pipe-leftover dismiss LEFTOVER_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `LEFTOVER_ID` | yes | leftover id |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay pipe-leftover list
+
+List what deleted pipes left in their source databases and warehouses, unresolved, oldest first.
+
+A replication slot left on a database keeps its write-ahead log until it is dropped; ``drop_sql``
+says how.
+
+Acts in a project, sent as query project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay pipe-leftover list
+```
+
+Usage: `databay pipe-leftover list [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--project-id STRING` |  | Only leftovers of pipes in this project. |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ## pipe-sink-type
 
 ### databay pipe-sink-type list
@@ -2612,6 +2684,33 @@ Usage: `databay pipe-status-bucket list [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+## pipe-stuck-delete
+
+### databay pipe-stuck-delete list
+
+List deleted pipes whose cleanup has not finished well after the delete (``CDC_STUCK_DELETE_AFTER_SECONDS``).
+
+``DELETE /pipe/{pipe_uuid}`` sends one to cleanup again, with its first delete's choice.
+
+Acts in a project, sent as query project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay pipe-stuck-delete list --source-id <source_id>
+```
+
+Usage: `databay pipe-stuck-delete list [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--project-id STRING` |  | Only pipes in this project. |
+| `--source-id STRING` |  | Only pipes of this source. |
+| `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -2848,7 +2947,7 @@ Usage: `databay project-budget set [PROJECT_ID] [OPTIONS]`
 | `PROJECT_ID` |  | Project Id |
 | `--confirm-pause` / `--no-confirm-pause` |  | Save a flow budget below this period's usage anyway. |
 | `--limit INTEGER` |  | The budget; null removes it. |
-| `--meter STRING` | yes | One of: pipes, sources_db, sources_saas, warehouses_managed, warehouses_external, projects, seats_editor, api_keys, ssbi_jobs, rows_landed, snapshot_rows, saas_sync_runs, max_backfill_days, max_streams_per_source, console_ch_queries, console_ch_errors, console_ch_read_rows, console_ch_execution_time, notebook_ch_queries, notebook_ch_errors, notebook_ch_read_rows, notebook_ch_execution_time, warehouse_cpu_seconds, warehouse_read_bytes, warehouse_principals, warehouse_login_ch_queries, warehouse_login_ch_errors, warehouse_login_ch_read_rows, warehouse_login_ch_execution_time. |
+| `--meter STRING` | yes | One of: pipes, sources_db, sources_saas, warehouses_managed, projects, seats_editor, api_keys, ssbi_jobs, rows_landed, snapshot_rows, saas_sync_runs, max_backfill_days, max_streams_per_source, console_ch_queries, console_ch_errors, console_ch_read_rows, console_ch_execution_time, notebook_ch_queries, notebook_ch_errors, notebook_ch_read_rows, notebook_ch_execution_time, warehouse_cpu_seconds, warehouse_read_bytes, warehouse_principals, warehouse_login_ch_queries, warehouse_login_ch_errors, warehouse_login_ch_read_rows, warehouse_login_ch_execution_time. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |

@@ -215,6 +215,7 @@ class ConnectedSourceDetailResponse(ResponseModel):
     secrets_set: dict[str, bool] | None = None
     snapshot_strategy: str | None = None
     source_type: SourceType
+    ssl_modes: list[str] | None = None
     status: SourceStatus
     updated_at: datetime | None = None
     uuid: str
