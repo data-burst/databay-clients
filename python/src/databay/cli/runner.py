@@ -50,12 +50,18 @@ def _parse_json(flag: str, text: str) -> Any:  # noqa: ANN401
         raise _usage(f"{flag} takes JSON: {exc}") from None
 
 
+#: A flag with choices reads its value as text (``click.Choice``): an integer or number enum sends a number.
+_NUMBERS: dict[str | None, type] = {"integer": int, "number": float}
+
+
 def _convert(param: Param, flag: str, value: Any) -> Any:  # noqa: ANN401
     if param.kind == "json":
         return _parse_json(flag, value)
     if param.kind == "list":
-        return list(value)
-    return value
+        cast = _NUMBERS.get(param.item_kind)
+        return [cast(v) for v in value] if cast else list(value)
+    cast = _NUMBERS.get(param.kind)
+    return cast(value) if cast else value
 
 
 class Stdin:

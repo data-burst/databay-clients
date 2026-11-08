@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import json
 import os
@@ -15,7 +16,12 @@ import httpx
 import pytest
 from conftest import PROJECT, SERVER, TOKEN, answer
 
+from databay.cli.build import click_parameter
+from databay.cli.flags import command_flags
 from databay.cli.main import main
+from databay.cli.runner import call_values
+from databay.operation import Body, Param
+from databay.operations.dashboards import DASHBOARDS_UPDATE
 
 PIPE = "11111111-2222-3333-4444-555555555555"
 
@@ -601,3 +607,21 @@ def test_a_terminal_sees_next_once_when_the_error_repeats_it():
     )
 
     assert stderr.getvalue().count("next: databay pipe status p --wait") == 1
+
+
+def test_an_integer_enum_flag_sends_a_json_number():
+    op = dataclasses.replace(
+        DASHBOARDS_UPDATE,
+        body=Body(
+            schema="BoardPatch",
+            fields=(Param("refresh_interval_s", "body", "integer", required=False, choices=("60", "300")),),
+        ),
+    )
+    flags = command_flags(op)
+    flag = next(f for f in flags if f.dest == "refresh_interval_s")
+    values = {f.dest: None for f in flags} | {"board_id": "b1"}
+    values["refresh_interval_s"] = click_parameter(flag).type.convert("60", None, None)
+
+    call = call_values(op, None, flags, values)
+
+    assert call.body == {"refresh_interval_s": 60}

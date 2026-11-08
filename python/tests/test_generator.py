@@ -111,6 +111,32 @@ def test_a_field_colliding_with_the_off_flag_of_a_boolean_is_a_generation_error(
     assert "'no-allow-incomplete'" in done.stderr
 
 
+def _with_enum_field(schema: dict[str, Any]) -> Callable[[dict[str, Any]], None]:
+    def add(source_create: dict[str, Any]) -> None:
+        source_create["properties"]["poll_every_s"] = {"anyOf": [schema, {"type": "null"}]}
+
+    return add
+
+
+def test_an_integer_enum_field_is_a_plain_int(monkeypatch, tmp_path):
+    generator = _load_generator(monkeypatch)
+    spec = _spec_with_source_create(tmp_path, _with_enum_field({"type": "integer", "enum": [60, 300]}))
+
+    files = generator.generate(Path(spec), REGISTRY)
+
+    models = next(text for path, text in files.items() if path.parent.name == "models" and path.stem == "source")
+    assert "poll_every_s: int | None = None" in models
+
+
+def test_a_number_enum_field_is_refused(tmp_path):
+    spec = _spec_with_source_create(tmp_path, _with_enum_field({"type": "number", "enum": [0.5, 1.5]}))
+
+    done = _generate("--check", "--spec", spec)
+
+    assert done.returncode != 0
+    assert "poll_every_s: a non-string enum is not handled" in done.stderr
+
+
 def test_a_body_with_two_discriminated_properties_is_refused(tmp_path):
     def add(source_create: dict[str, Any]) -> None:
         source_create["properties"]["other_config"] = source_create["properties"]["config"]

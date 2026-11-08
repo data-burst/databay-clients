@@ -426,6 +426,10 @@ class TypeWriter:
 
     def inline_enum(self, schema: dict[str, Any], owner: str, prop: str) -> str:
         values = tuple(str(v) for v in schema["enum"])
+        is_int_enum = schema.get("type") == "integer" and all(type(v) is int for v in schema["enum"])
+        # A plain int, so a value the server adds later still validates, as an open string enum does.
+        if is_int_enum:
+            return "int"
         if any(not isinstance(v, str) for v in schema["enum"]):
             raise SpecError(f"{owner}.{prop}: a non-string enum is not handled")
         name = f"{owner}{pascal(prop)}"
