@@ -2288,7 +2288,7 @@
       "title": "Description"
      },
      "filters": {
-      "description": "Board filters (date_range, select); 422 invalid_filters when they do not fit.",
+      "description": "Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit.",
       "items": {
        "additionalProperties": true,
        "type": "object"
@@ -2316,18 +2316,10 @@
       "minLength": 1,
       "title": "Name",
       "type": "string"
-     },
-     "warehouse_id": {
-      "description": "The warehouse of the project every card reads.",
-      "maxLength": 36,
-      "minLength": 1,
-      "title": "Warehouse Id",
-      "type": "string"
      }
     },
     "required": [
-     "name",
-     "warehouse_id"
+     "name"
     ],
     "title": "BoardCreate",
     "type": "object"
@@ -2368,7 +2360,7 @@
     "type": "object"
    },
    "BoardOut": {
-    "description": "A board with its cards.\n\nA field of ``filters``, ``layout`` or a ``spec`` that the stored board leaves out stays out of\nthe answer instead of showing its default.",
+    "description": "A board with its filters, its cards and where each sits.\n\nA field of ``filters`` or a card's ``spec`` that is stored without it stays out of the answer\ninstead of showing its default.",
     "properties": {
      "cards": {
       "items": {
@@ -2402,7 +2394,8 @@
        "discriminator": {
         "mapping": {
          "date_range": "#/components/schemas/DateRangeFilter",
-         "select": "#/components/schemas/SelectFilter"
+         "select": "#/components/schemas/SelectFilter",
+         "warehouse": "#/components/schemas/WarehouseFilter"
         },
         "propertyName": "type"
        },
@@ -2412,6 +2405,9 @@
         },
         {
          "$ref": "#/components/schemas/SelectFilter"
+        },
+        {
+         "$ref": "#/components/schemas/WarehouseFilter"
         }
        ]
       },
@@ -2433,20 +2429,39 @@
       "title": "Id",
       "type": "string"
      },
-     "layout": {
-      "items": {
-       "$ref": "#/components/schemas/LayoutItem"
-      },
-      "title": "Layout",
-      "type": "array"
-     },
      "name": {
       "title": "Name",
       "type": "string"
      },
+     "placements": {
+      "items": {
+       "$ref": "#/components/schemas/LayoutItem"
+      },
+      "title": "Placements",
+      "type": "array"
+     },
      "project_id": {
       "title": "Project Id",
       "type": "string"
+     },
+     "refresh_interval_s": {
+      "anyOf": [
+       {
+        "enum": [
+         60,
+         300,
+         900,
+         1800,
+         3600
+        ],
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The dashboard's default auto-refresh interval in seconds; null is off.",
+      "title": "Refresh Interval S"
      },
      "revision": {
       "title": "Revision",
@@ -2470,25 +2485,21 @@
      "updated_by": {
       "title": "Updated By",
       "type": "string"
-     },
-     "warehouse_id": {
-      "title": "Warehouse Id",
-      "type": "string"
      }
     },
     "required": [
      "id",
      "project_id",
      "folder_id",
-     "warehouse_id",
      "name",
      "description",
      "revision",
      "source_builtin",
+     "refresh_interval_s",
      "updated_by",
      "updated_at",
      "filters",
-     "layout",
+     "placements",
      "cards",
      "created_by",
      "created_at"
@@ -2498,7 +2509,7 @@
    },
    "BoardPatch": {
     "additionalProperties": false,
-    "description": "Rename and/or move. A ``folder_id`` sent as null moves the board to the root; absent leaves it.",
+    "description": "Rename, move and/or set the auto-refresh default; a field left out stays as it is.\n\nA ``folder_id`` sent as null moves the board to the root; a ``refresh_interval_s`` sent as null turns\nthe default off.",
     "properties": {
      "folder_id": {
       "anyOf": [
@@ -2527,6 +2538,25 @@
       ],
       "title": "Name"
      },
+     "refresh_interval_s": {
+      "anyOf": [
+       {
+        "enum": [
+         60,
+         300,
+         900,
+         1800,
+         3600
+        ],
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The dashboard's default auto-refresh interval in seconds; null is off.",
+      "title": "Refresh Interval S"
+     },
      "revision": {
       "description": "The board revision this change was made on.",
       "minimum": 1.0,
@@ -2542,16 +2572,8 @@
    },
    "BoardPut": {
     "additionalProperties": false,
-    "description": "The whole board: cards missing from ``cards`` are removed.",
+    "description": "The board's own state: details, filters and placements.\n\nA card missing from ``placements`` is taken off the board, never deleted; card content\nchanges through ``PATCH /cards/{card_id}``.",
     "properties": {
-     "cards": {
-      "items": {
-       "$ref": "#/components/schemas/CardIn"
-      },
-      "maxItems": 100,
-      "title": "Cards",
-      "type": "array"
-     },
      "description": {
       "anyOf": [
        {
@@ -2565,7 +2587,7 @@
       "title": "Description"
      },
      "filters": {
-      "description": "Board filters (date_range, select); 422 invalid_filters when they do not fit.",
+      "description": "Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit.",
       "items": {
        "additionalProperties": true,
        "type": "object"
@@ -2588,45 +2610,55 @@
       "description": "The folder it sits in; absent or null for the project's root.",
       "title": "Folder Id"
      },
-     "layout": {
-      "description": "One {key, x, y, w, h} per card in 24-column / 40px-row units; 422 invalid_layout when it does not fit.",
-      "items": {
-       "additionalProperties": true,
-       "type": "object"
-      },
-      "maxItems": 100,
-      "title": "Layout",
-      "type": "array"
-     },
      "name": {
       "maxLength": 200,
       "minLength": 1,
       "title": "Name",
       "type": "string"
      },
+     "placements": {
+      "description": "One {card_id, x, y, w, h} per card on the dashboard, in 24-column / 40px-row units; 422 invalid_layout when it does not fit.",
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "maxItems": 100,
+      "title": "Placements",
+      "type": "array"
+     },
      "revision": {
       "description": "The board revision this change was made on.",
       "minimum": 1.0,
       "title": "Revision",
       "type": "integer"
-     },
-     "warehouse_id": {
-      "description": "The warehouse of the project every card reads.",
-      "maxLength": 36,
-      "minLength": 1,
-      "title": "Warehouse Id",
-      "type": "string"
      }
     },
     "required": [
      "revision",
      "name",
-     "warehouse_id",
      "filters",
-     "layout",
-     "cards"
+     "placements"
     ],
     "title": "BoardPut",
+    "type": "object"
+   },
+   "BoardRef": {
+    "description": "A board a card sits on.",
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name"
+    ],
+    "title": "BoardRef",
     "type": "object"
    },
    "BoardRunResponse": {
@@ -2686,6 +2718,25 @@
       "title": "Project Id",
       "type": "string"
      },
+     "refresh_interval_s": {
+      "anyOf": [
+       {
+        "enum": [
+         60,
+         300,
+         900,
+         1800,
+         3600
+        ],
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The dashboard's default auto-refresh interval in seconds; null is off.",
+      "title": "Refresh Interval S"
+     },
      "revision": {
       "title": "Revision",
       "type": "integer"
@@ -2708,21 +2759,17 @@
      "updated_by": {
       "title": "Updated By",
       "type": "string"
-     },
-     "warehouse_id": {
-      "title": "Warehouse Id",
-      "type": "string"
      }
     },
     "required": [
      "id",
      "project_id",
      "folder_id",
-     "warehouse_id",
      "name",
      "description",
      "revision",
      "source_builtin",
+     "refresh_interval_s",
      "updated_by",
      "updated_at"
     ],
@@ -2983,26 +3030,21 @@
    },
    "CardCreate": {
     "additionalProperties": false,
-    "description": "A new card, placed below the others; ``key`` absent makes one from the title.",
+    "description": "A new card of the project; with ``board_id``, also placed below that board's other cards.",
     "properties": {
-     "key": {
+     "board_id": {
       "anyOf": [
        {
-        "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$",
+        "maxLength": 36,
+        "minLength": 1,
         "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "description": "The card's key on this dashboard; absent makes one from the title.",
-      "title": "Key"
-     },
-     "revision": {
-      "description": "The board revision this change was made on.",
-      "minimum": 1.0,
-      "title": "Revision",
-      "type": "integer"
+      "description": "A board of the project to place the new card on.",
+      "title": "Board Id"
      },
      "spec": {
       "additionalProperties": true,
@@ -3015,11 +3057,18 @@
       "minLength": 1,
       "title": "Title",
       "type": "string"
+     },
+     "warehouse_id": {
+      "description": "The warehouse of the project the card's query runs in.",
+      "maxLength": 36,
+      "minLength": 1,
+      "title": "Warehouse Id",
+      "type": "string"
      }
     },
     "required": [
-     "revision",
      "title",
+     "warehouse_id",
      "spec"
     ],
     "title": "CardCreate",
@@ -3076,40 +3125,63 @@
     "title": "CardFailure",
     "type": "object"
    },
-   "CardIn": {
-    "additionalProperties": false,
+   "CardList": {
+    "description": "One page of the project's cards, the most recently changed first.",
     "properties": {
-     "key": {
-      "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$",
-      "title": "Key",
-      "type": "string"
+     "cards": {
+      "items": {
+       "$ref": "#/components/schemas/CardOut"
+      },
+      "title": "Cards",
+      "type": "array"
      },
-     "spec": {
-      "additionalProperties": true,
-      "description": "A card spec: {spec_version: 1, query: {sql, ...}, chart: {type, ...}}; 422 invalid_spec when it does not fit.",
-      "title": "Spec",
-      "type": "object"
-     },
-     "title": {
-      "maxLength": 200,
-      "minLength": 1,
-      "title": "Title",
-      "type": "string"
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Opaque; send it as ?cursor= with the same q and placement for the next page. Null on the last one.",
+      "title": "Next Cursor"
      }
     },
     "required": [
-     "key",
-     "title",
-     "spec"
+     "cards",
+     "next_cursor"
     ],
-    "title": "CardIn",
+    "title": "CardList",
     "type": "object"
    },
    "CardOut": {
+    "description": "A card of the project: its query and chart, the warehouse it runs in, and the boards it sits on.\n\nA field of ``spec`` that the stored card leaves out stays out of the answer instead of showing its default.",
     "properties": {
-     "key": {
-      "title": "Key",
+     "boards": {
+      "description": "The project's boards the card sits on, by name.",
+      "items": {
+       "$ref": "#/components/schemas/BoardRef"
+      },
+      "title": "Boards",
+      "type": "array"
+     },
+     "created_by": {
+      "title": "Created By",
       "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "project_id": {
+      "title": "Project Id",
+      "type": "string"
+     },
+     "revision": {
+      "description": "The card revision a change to it sends.",
+      "title": "Revision",
+      "type": "integer"
      },
      "spec": {
       "$ref": "#/components/schemas/CardSpec"
@@ -3126,12 +3198,21 @@
      "updated_by": {
       "title": "Updated By",
       "type": "string"
+     },
+     "warehouse_id": {
+      "title": "Warehouse Id",
+      "type": "string"
      }
     },
     "required": [
-     "key",
+     "id",
+     "project_id",
+     "warehouse_id",
      "title",
      "spec",
+     "revision",
+     "boards",
+     "created_by",
      "updated_by",
      "updated_at"
     ],
@@ -3140,6 +3221,10 @@
    },
    "CardOutcome": {
     "properties": {
+     "card_id": {
+      "title": "Card Id",
+      "type": "string"
+     },
      "error": {
       "anyOf": [
        {
@@ -3150,10 +3235,6 @@
        }
       ]
      },
-     "key": {
-      "title": "Key",
-      "type": "string"
-     },
      "result": {
       "anyOf": [
        {
@@ -3163,18 +3244,51 @@
         "type": "null"
        }
       ]
+     },
+     "warehouse_id": {
+      "description": "The warehouse the card ran in, or would have.",
+      "title": "Warehouse Id",
+      "type": "string"
      }
     },
     "required": [
-     "key"
+     "card_id",
+     "warehouse_id"
     ],
     "title": "CardOutcome",
     "type": "object"
    },
    "CardParam": {
     "additionalProperties": false,
-    "description": "A bound ``{name:Type}`` parameter: read from a board filter (``<filter>`` or ``<filter>.start|end``) or fixed.",
+    "description": "A bound ``{name:Type}`` parameter: read from a board filter (``<filter>`` or ``<filter>.start|end``) or fixed.\n\nA parameter that reads a filter declares ``default``, used on a board without that filter and\nfor a card on no board: a date range preset for ``<filter>.start|end``, a list of values for a\nselect ``<filter>``.",
     "properties": {
+     "default": {
+      "anyOf": [
+       {
+        "enum": [
+         "last_7_days",
+         "last_30_days",
+         "last_90_days",
+         "last_365_days",
+         "this_month",
+         "last_month",
+         "this_year"
+        ],
+        "type": "string"
+       },
+       {
+        "items": {
+         "maxLength": 200,
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default"
+     },
      "from_filter": {
       "anyOf": [
        {
@@ -3212,9 +3326,10 @@
    },
    "CardPatch": {
     "additionalProperties": false,
+    "description": "Change a card everywhere it sits; a changed chart type grows each placement that became too small.",
     "properties": {
      "revision": {
-      "description": "The board revision this change was made on.",
+      "description": "The card revision this change was made on.",
       "minimum": 1.0,
       "title": "Revision",
       "type": "integer"
@@ -3244,6 +3359,20 @@
        }
       ],
       "title": "Title"
+     },
+     "warehouse_id": {
+      "anyOf": [
+       {
+        "maxLength": 36,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The warehouse of the project the card's query runs in.",
+      "title": "Warehouse Id"
      }
     },
     "required": [
@@ -3252,12 +3381,21 @@
     "title": "CardPatch",
     "type": "object"
    },
+   "CardPlacement": {
+    "description": "Which of the project's cards a card list answers.",
+    "enum": [
+     "any",
+     "unplaced"
+    ],
+    "title": "CardPlacement",
+    "type": "string"
+   },
    "CardPreviewRequest": {
     "additionalProperties": false,
     "description": "An unsaved card on a warehouse of the project, with the board's filters as they stand in the editor.",
     "properties": {
      "board_filters": {
-      "description": "Board filters (date_range, select); 422 invalid_filters when they do not fit.",
+      "description": "Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit.",
       "items": {
        "additionalProperties": true,
        "type": "object"
@@ -3346,6 +3484,30 @@
       "title": "Cached",
       "type": "boolean"
      },
+     "card_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The card that ran; null for a preview of an unsaved card.",
+      "title": "Card Id"
+     },
+     "card_revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The card revision this answer ran (a newer one means the card changed); null for a preview.",
+      "title": "Card Revision"
+     },
      "column_types": {
       "description": "ClickHouse type names, in column order",
       "items": {
@@ -3365,10 +3527,6 @@
       "title": "Elapsed Ms",
       "type": "integer"
      },
-     "key": {
-      "title": "Key",
-      "type": "string"
-     },
      "row_count": {
       "title": "Row Count",
       "type": "integer"
@@ -3381,10 +3539,17 @@
       },
       "title": "Rows",
       "type": "array"
+     },
+     "warehouse_id": {
+      "description": "The warehouse the card ran in: the dashboard's warehouse filter value, else the card's own.",
+      "title": "Warehouse Id",
+      "type": "string"
      }
     },
     "required": [
-     "key",
+     "card_id",
+     "card_revision",
+     "warehouse_id",
      "columns",
      "column_types",
      "rows",
@@ -6527,7 +6692,7 @@
     "type": "object"
    },
    "FolderTree": {
-    "description": "Every folder (flat, by ``parent_id``) and board of one project.",
+    "description": "Every folder (flat, by ``parent_id``) and board of one project, and how many cards it has.",
     "properties": {
      "boards": {
       "items": {
@@ -6535,6 +6700,11 @@
       },
       "title": "Boards",
       "type": "array"
+     },
+     "card_count": {
+      "description": "The project's cards, on a board or on none.",
+      "title": "Card Count",
+      "type": "integer"
      },
      "folders": {
       "items": {
@@ -6551,7 +6721,8 @@
     "required": [
      "project_id",
      "folders",
-     "boards"
+     "boards",
+     "card_count"
     ],
     "title": "FolderTree",
     "type": "object"
@@ -6812,6 +6983,60 @@
     ],
     "title": "HolderKind",
     "type": "string"
+   },
+   "HomePinBatch": {
+    "additionalProperties": false,
+    "description": "Pin several cards of the project to its Overview at once; all are placed, or none is.",
+    "properties": {
+     "card_ids": {
+      "description": "The cards to pin, 1 to 50, each named once.",
+      "items": {
+       "maxLength": 36,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Card Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "card_ids"
+    ],
+    "title": "HomePinBatch",
+    "type": "object"
+   },
+   "HomePinBatchOut": {
+    "description": "The Overview board after a batch pin, and what happened to each named card.",
+    "properties": {
+     "already_placed": {
+      "description": "The named cards already on the Overview, left as they were.",
+      "items": {
+       "type": "string"
+      },
+      "title": "Already Placed",
+      "type": "array"
+     },
+     "board": {
+      "$ref": "#/components/schemas/BoardOut"
+     },
+     "placed": {
+      "description": "The cards this pin placed, in the order they were named.",
+      "items": {
+       "type": "string"
+      },
+      "title": "Placed",
+      "type": "array"
+     }
+    },
+    "required": [
+     "board",
+     "placed",
+     "already_placed"
+    ],
+    "title": "HomePinBatchOut",
+    "type": "object"
    },
    "HomeTransferRequest": {
     "properties": {
@@ -7306,16 +7531,18 @@
    },
    "LayoutItem": {
     "additionalProperties": false,
+    "description": "Where one card sits on a board, in grid units.",
     "properties": {
+     "card_id": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Card Id",
+      "type": "string"
+     },
      "h": {
       "minimum": 1.0,
       "title": "H",
       "type": "integer"
-     },
-     "key": {
-      "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$",
-      "title": "Key",
-      "type": "string"
      },
      "w": {
       "minimum": 1.0,
@@ -7334,7 +7561,7 @@
      }
     },
     "required": [
-     "key",
+     "card_id",
      "x",
      "y",
      "w",
@@ -10238,6 +10465,134 @@
     "title": "PipeRollupPeer",
     "type": "object"
    },
+   "PipeSchemaChange": {
+    "description": "One change of the pipe that is not done yet.",
+    "properties": {
+     "column": {
+      "description": "The source column",
+      "title": "Column",
+      "type": "string"
+     },
+     "detected_at": {
+      "description": "When the change was detected (UTC)",
+      "format": "date-time",
+      "title": "Detected At",
+      "type": "string"
+     },
+     "new_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The column's type after the change; null for a removed column",
+      "title": "New Type"
+     },
+     "operation": {
+      "$ref": "#/components/schemas/ChangeEventOperation"
+     },
+     "previous_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The column's type before the change; null for an added column",
+      "title": "Previous Type"
+     }
+    },
+    "required": [
+     "column",
+     "operation",
+     "previous_type",
+     "new_type",
+     "detected_at"
+    ],
+    "title": "PipeSchemaChange",
+    "type": "object"
+   },
+   "PipeSchemaState": {
+    "description": "A pipe's schema-change state, worked out from its pending changes and its table's rebuilds.",
+    "properties": {
+     "changes": {
+      "items": {
+       "$ref": "#/components/schemas/PipeSchemaChange"
+      },
+      "title": "Changes",
+      "type": "array"
+     },
+     "display": {
+      "enum": [
+       "stopped",
+       "rebuilding",
+       "finishing",
+       "failed",
+       "other_rebuild",
+       "needs_decision",
+       "waiting",
+       "unavailable"
+      ],
+      "title": "Display",
+      "type": "string"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SchemaStateError"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Set exactly when display is unavailable"
+     },
+     "held_backup": {
+      "description": "The stopped pipe's table still holds a backup copy from an earlier rebuild; rebuilding drops it",
+      "title": "Held Backup",
+      "type": "boolean"
+     },
+     "next_step": {
+      "enum": [
+       "rebuild_table",
+       "keep_or_remove",
+       "add_or_skip",
+       "none"
+      ],
+      "title": "Next Step",
+      "type": "string"
+     },
+     "pipe_uuid": {
+      "title": "Pipe Uuid",
+      "type": "string"
+     },
+     "state": {
+      "enum": [
+       "stopped",
+       "needs_decision",
+       "waiting",
+       "done"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "pipe_uuid",
+     "state",
+     "display",
+     "next_step",
+     "changes",
+     "held_backup"
+    ],
+    "title": "PipeSchemaState",
+    "type": "object"
+   },
    "PipeSortKey": {
     "description": "Columns ``GET /pipe`` will order by.\n\nSource and sink names cannot be sorted on; filter by their ids instead.\n\n``LAG`` orders on ``last_change_at`` alone, while ``lag_seconds`` also depends on the\npipe's cadence. ``SEVERITY`` (ascending) puts failed pipes first, then not landing,\nthen paused, then the rest, by destination table; behind and stale are not part of\nthe order, so a late pipe that still lands sorts with the healthy ones.",
     "enum": [
@@ -11841,6 +12196,23 @@
     "title": "PipelineMoved",
     "type": "object"
    },
+   "PlacementCreate": {
+    "additionalProperties": false,
+    "description": "Place an existing card of the board's project below the board's other cards.",
+    "properties": {
+     "card_id": {
+      "maxLength": 36,
+      "minLength": 1,
+      "title": "Card Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "card_id"
+    ],
+    "title": "PlacementCreate",
+    "type": "object"
+   },
    "PlanNoticeView": {
     "description": "A move between plan versions, shown to the org's admins until a week after it applies.",
     "properties": {
@@ -12720,6 +13092,50 @@
      "pipelines"
     ],
     "title": "ProjectGraphOut",
+    "type": "object"
+   },
+   "ProjectHomeOut": {
+    "description": "The board the project's Overview page shows.",
+    "properties": {
+     "dashboard_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The Overview's board; null when the project has none yet.",
+      "title": "Dashboard Id"
+     },
+     "project_id": {
+      "title": "Project Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "project_id",
+     "dashboard_id"
+    ],
+    "title": "ProjectHomeOut",
+    "type": "object"
+   },
+   "ProjectHomeSet": {
+    "additionalProperties": false,
+    "description": "Make a board of the project its Overview (\"Set as Overview\").",
+    "properties": {
+     "dashboard_id": {
+      "maxLength": 36,
+      "minLength": 1,
+      "title": "Dashboard Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "dashboard_id"
+    ],
+    "title": "ProjectHomeSet",
     "type": "object"
    },
    "ProjectPeopleOut": {
@@ -14455,6 +14871,30 @@
      "version_count"
     ],
     "title": "SchemaHistorySummaryEntry",
+    "type": "object"
+   },
+   "SchemaStateError": {
+    "description": "Why the state is ``unavailable``: the ``code`` to branch on and a message to show.",
+    "properties": {
+     "code": {
+      "enum": [
+       "schema_state_unavailable",
+       "schema_state_stuck_finishing",
+       "schema_state_unknown_combination"
+      ],
+      "title": "Code",
+      "type": "string"
+     },
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "detail"
+    ],
+    "title": "SchemaStateError",
     "type": "object"
    },
    "SchemaTableOut": {
@@ -17110,6 +17550,42 @@
     ],
     "title": "WarehouseErrorCode",
     "type": "string"
+   },
+   "WarehouseFilter": {
+    "additionalProperties": false,
+    "description": "The warehouse every card on the board runs in, in place of each card's own; at most one per board.\n\n``default`` is the id of a warehouse of the board's project; a viewer may pick another of its\nwarehouses. No card variable reads it.",
+    "properties": {
+     "default": {
+      "maxLength": 36,
+      "minLength": 1,
+      "title": "Default",
+      "type": "string"
+     },
+     "key": {
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,62}$",
+      "title": "Key",
+      "type": "string"
+     },
+     "label": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Label",
+      "type": "string"
+     },
+     "type": {
+      "const": "warehouse",
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "type",
+     "label",
+     "default"
+    ],
+    "title": "WarehouseFilter",
+    "type": "object"
    },
    "WarehouseImpactPipeline": {
     "description": "A pipeline that writes into the warehouse (only pipelines the caller can see).",
@@ -20786,7 +21262,7 @@
   },
   "/api/cdc/pipe/{pipe_uuid}/rebuild": {
    "post": {
-    "description": "Rebuild an ingest pipe's table from ``source``; one rebuild runs per pipe at a time.\n\n202 with the rebuild id. Repeating a request with the same ``Idempotency-Key`` returns the\nsame rebuild. 409 ``rebuild_in_progress`` while another is open, 409 ``quota_reached`` for a\n``snapshot`` of a pipe a quota pause covers; 422 for a source the pipe cannot serve (a batch\npipe has no snapshot).",
+    "description": "Rebuild an ingest pipe's table from ``source``; one rebuild runs per pipe at a time.\n\n202 with the rebuild id. Repeating a request with the same ``Idempotency-Key`` returns the\nsame rebuild. A ``retype`` rebuild ends a held ``retype`` rebuild and drops its backup table.\n409 ``rebuild_in_progress`` while another is open, 409 ``quota_reached`` for a\n``snapshot`` of a pipe a quota pause covers; 422 for a source the pipe cannot serve (a batch\npipe has no snapshot).",
     "operationId": "pipe_rebuild",
     "parameters": [
      {
@@ -29435,7 +29911,7 @@
   },
   "/api/insights/boards/{board_id}": {
    "delete": {
-    "description": "Delete a dashboard and its cards.",
+    "description": "Delete a dashboard; its cards stay in the project. The project's Overview is 409 ``home_board_not_deletable``.",
     "operationId": "dashboards_delete",
     "parameters": [
      {
@@ -29498,7 +29974,7 @@
     }
    },
    "get": {
-    "description": "Return a dashboard with its filters, layout and cards; ``revision`` is what a change to it sends.",
+    "description": "Return a dashboard with its filters, cards and placements; ``revision`` is what a change to it sends.",
     "operationId": "dashboards_get",
     "parameters": [
      {
@@ -29624,7 +30100,7 @@
     }
    },
    "put": {
-    "description": "Save the whole board: details, filters, cards and layout. Cards missing from ``cards`` are removed.",
+    "description": "Save the dashboard's details, filters and placements; a card left out is taken off it, never deleted.",
     "operationId": "dashboards_replace",
     "parameters": [
      {
@@ -29674,7 +30150,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Save a whole dashboard",
+    "summary": "Save a dashboard's details, filters and placements",
     "tags": [
      "insights-boards"
     ],
@@ -29692,100 +30168,10 @@
     }
    }
   },
-  "/api/insights/boards/{board_id}/cards": {
+  "/api/insights/boards/{board_id}/cards/{card_id}/run": {
    "post": {
-    "description": "Add a card under the dashboard's others and answer with the whole dashboard.",
-    "operationId": "dashboards_card_create",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "board_id",
-      "required": true,
-      "schema": {
-       "title": "Board Id",
-       "type": "string"
-      }
-     },
-     {
-      "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
-      "in": "header",
-      "name": "Idempotency-Key",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "maxLength": 100,
-         "minLength": 1,
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
-       "title": "Idempotency-Key"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/CardCreate"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/BoardOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Add a card",
-    "tags": [
-     "insights-boards"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay dashboards-card create <board_id> --file <card_json_file>"
-     ],
-     "idempotent": true,
-     "kind": "exposed",
-     "noun": "dashboards-card",
-     "verb": "create"
-    }
-   }
-  },
-  "/api/insights/boards/{board_id}/cards/{key}": {
-   "delete": {
-    "description": "Remove a card and answer with the whole dashboard.",
-    "operationId": "dashboards_card_delete",
+    "description": "Run one card that sits on the dashboard for the viewer, with the dashboard's filters.",
+    "operationId": "dashboards_placement_run",
     "parameters": [
      {
       "in": "path",
@@ -29798,168 +30184,10 @@
      },
      {
       "in": "path",
-      "name": "key",
+      "name": "card_id",
       "required": true,
       "schema": {
-       "title": "Key",
-       "type": "string"
-      }
-     },
-     {
-      "description": "The board revision this change was made on.",
-      "in": "query",
-      "name": "revision",
-      "required": true,
-      "schema": {
-       "description": "The board revision this change was made on.",
-       "minimum": 1,
-       "title": "Revision",
-       "type": "integer"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/BoardOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Remove a card",
-    "tags": [
-     "insights-boards"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": true,
-     "examples": [
-      "databay dashboards-card delete <board_id> <key> --revision <revision> --yes"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "dashboards-card",
-     "verb": "delete"
-    }
-   },
-   "patch": {
-    "description": "Change a card's title or spec and answer with the whole dashboard.",
-    "operationId": "dashboards_card_update",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "board_id",
-      "required": true,
-      "schema": {
-       "title": "Board Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "path",
-      "name": "key",
-      "required": true,
-      "schema": {
-       "title": "Key",
-       "type": "string"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/CardPatch"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/BoardOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Change a card",
-    "tags": [
-     "insights-boards"
-    ],
-    "x-databay-client": {
-     "agent_shape": "direct",
-     "columns": [],
-     "destructive": false,
-     "examples": [
-      "databay dashboards-card update <board_id> <key> --revision <revision> --title <title>"
-     ],
-     "idempotent": false,
-     "kind": "exposed",
-     "noun": "dashboards-card",
-     "verb": "update"
-    }
-   }
-  },
-  "/api/insights/boards/{board_id}/cards/{key}/run": {
-   "post": {
-    "description": "Run one card for the viewer, as their console reader in the board's project.",
-    "operationId": "dashboards_card_run",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "board_id",
-      "required": true,
-      "schema": {
-       "title": "Board Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "path",
-      "name": "key",
-      "required": true,
-      "schema": {
-       "title": "Key",
+       "title": "Card Id",
        "type": "string"
       }
      }
@@ -30001,7 +30229,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Run one card",
+    "summary": "Run one card of a dashboard",
     "tags": [
      "insights-boards"
     ],
@@ -30010,11 +30238,11 @@
      "columns": [],
      "destructive": false,
      "examples": [
-      "databay dashboards-card run <board_id> <key>"
+      "databay dashboards-placement run <board_id> <card_id>"
      ],
      "idempotent": false,
      "kind": "exposed",
-     "noun": "dashboards-card",
+     "noun": "dashboards-placement",
      "verb": "run"
     }
    }
@@ -30109,9 +30337,168 @@
     }
    }
   },
+  "/api/insights/boards/{board_id}/placements": {
+   "post": {
+    "description": "Place an existing card of the dashboard's project below its other cards; 409 when it is already there.",
+    "operationId": "dashboards_placement_create",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "board_id",
+      "required": true,
+      "schema": {
+       "title": "Board Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+       "title": "Idempotency-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlacementCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Place a card on a dashboard",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-placement create <board_id> --card-id <card_id>"
+     ],
+     "idempotent": true,
+     "kind": "exposed",
+     "noun": "dashboards-placement",
+     "verb": "create"
+    }
+   }
+  },
+  "/api/insights/boards/{board_id}/placements/{card_id}": {
+   "delete": {
+    "description": "Take a card off the dashboard; the card stays in the project and on its other dashboards.",
+    "operationId": "dashboards_placement_delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "board_id",
+      "required": true,
+      "schema": {
+       "title": "Board Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "card_id",
+      "required": true,
+      "schema": {
+       "title": "Card Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Take a card off a dashboard",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-placement delete <board_id> <card_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-placement",
+     "verb": "delete"
+    }
+   }
+  },
   "/api/insights/boards/{board_id}/run": {
    "post": {
-    "description": "Run every card for the viewer: each card's rows or its error, at most four at a time.",
+    "description": "Run every card for the viewer with the dashboard's filters: each card's rows or its error, four at a time.",
     "operationId": "dashboards_run",
     "parameters": [
      {
@@ -30175,6 +30562,267 @@
      "idempotent": false,
      "kind": "exposed",
      "noun": "dashboards",
+     "verb": "run"
+    }
+   }
+  },
+  "/api/insights/cards/{card_id}": {
+   "delete": {
+    "description": "Delete a card and take it off every dashboard it sits on.",
+    "operationId": "dashboards_card_delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "card_id",
+      "required": true,
+      "schema": {
+       "title": "Card Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "The card revision this change was made on.",
+      "in": "query",
+      "name": "revision",
+      "required": true,
+      "schema": {
+       "description": "The card revision this change was made on.",
+       "minimum": 1,
+       "title": "Revision",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Delete a card",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": true,
+     "examples": [
+      "databay dashboards-card delete <card_id> --revision <revision> --yes"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-card",
+     "verb": "delete"
+    }
+   },
+   "get": {
+    "description": "Return a card with the dashboards it sits on; ``revision`` is what a change to it sends.",
+    "operationId": "dashboards_card_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "card_id",
+      "required": true,
+      "schema": {
+       "title": "Card Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Read a card",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-card get <card_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-card",
+     "verb": "get"
+    }
+   },
+   "patch": {
+    "description": "Change a card's title, query, chart or warehouse, everywhere it sits.",
+    "operationId": "dashboards_card_update",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "card_id",
+      "required": true,
+      "schema": {
+       "title": "Card Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CardPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Change a card",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-card update <card_id> --revision <revision> --title <title>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-card",
+     "verb": "update"
+    }
+   }
+  },
+  "/api/insights/cards/{card_id}/run": {
+   "post": {
+    "description": "Run a card for the viewer with its variables' defaults, outside any dashboard.",
+    "operationId": "dashboards_card_run",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "card_id",
+      "required": true,
+      "schema": {
+       "title": "Card Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CardRunRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CardResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Run a card on its own",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-card run <card_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-card",
      "verb": "run"
     }
    }
@@ -30302,7 +30950,7 @@
   },
   "/api/insights/projects/{project_id}/boards": {
    "post": {
-    "description": "Create an empty dashboard reading one of the project's warehouses.",
+    "description": "Create an empty dashboard in the project.",
     "operationId": "dashboards_create",
     "parameters": [
      {
@@ -30383,11 +31031,236 @@
      "columns": [],
      "destructive": false,
      "examples": [
-      "databay dashboards create --name <name> --warehouse-id <warehouse_id>"
+      "databay dashboards create --name <name>"
      ],
      "idempotent": true,
      "kind": "exposed",
      "noun": "dashboards",
+     "project": "path:project_id",
+     "verb": "create"
+    }
+   }
+  },
+  "/api/insights/projects/{project_id}/cards": {
+   "get": {
+    "description": "List one page of the project's cards, the most recently changed first, each with the dashboards it sits on.\n\n``next_cursor`` pages on with the same ``q`` and ``placement``; another list's cursor is 422 ``request_invalid``.",
+    "operationId": "dashboards_card_list",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "How many cards to answer, from 1 to 100; 20 when left out.",
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 20,
+       "description": "How many cards to answer, from 1 to 100; 20 when left out.",
+       "maximum": 100,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "description": "Keep the cards whose title holds this text, in any case.",
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 200,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Keep the cards whose title holds this text, in any case.",
+       "title": "Q"
+      }
+     },
+     {
+      "description": "any: every card (when left out); unplaced: only the cards on no dashboard.",
+      "in": "query",
+      "name": "placement",
+      "required": false,
+      "schema": {
+       "$ref": "#/components/schemas/CardPlacement",
+       "default": "any",
+       "description": "any: every card (when left out); unplaced: only the cards on no dashboard."
+      }
+     },
+     {
+      "description": "The next_cursor of the page before, sent with the same q and placement.",
+      "in": "query",
+      "name": "cursor",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 512,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "The next_cursor of the page before, sent with the same q and placement.",
+       "title": "Cursor"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CardList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List the project's cards",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [
+      "id",
+      "title",
+      "warehouse_id",
+      "updated_at"
+     ],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-card list --limit 20",
+      "databay dashboards-card list --q revenue --placement unplaced"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-card",
+     "project": "path:project_id",
+     "verb": "list"
+    }
+   },
+   "post": {
+    "description": "Add a card to the project; with ``board_id``, also place it below that dashboard's other cards.",
+    "operationId": "dashboards_card_create",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+       "title": "Idempotency-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CardCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Add a card",
+    "tags": [
+     "insights-cards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-card create --file <card_json_file>"
+     ],
+     "idempotent": true,
+     "kind": "exposed",
+     "noun": "dashboards-card",
      "project": "path:project_id",
      "verb": "create"
     }
@@ -30696,6 +31569,326 @@
     }
    }
   },
+  "/api/insights/projects/{project_id}/home": {
+   "get": {
+    "description": "Answer the dashboard the project's Overview shows; ``dashboard_id`` is null until someone pins or sets one.",
+    "operationId": "dashboards_home_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProjectHomeOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Read which dashboard is the project's Overview",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-home get"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-home",
+     "project": "path:project_id",
+     "verb": "get"
+    }
+   },
+   "put": {
+    "description": "Make a dashboard of the project its Overview for everyone in it, replacing the one it showed.",
+    "operationId": "dashboards_home_set",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProjectHomeSet"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProjectHomeOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Make a dashboard the project's Overview",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": true,
+     "examples": [
+      "databay dashboards-home set --dashboard-id <board_id> --yes"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "dashboards-home",
+     "project": "path:project_id",
+     "verb": "set"
+    }
+   }
+  },
+  "/api/insights/projects/{project_id}/home/placements": {
+   "post": {
+    "description": "Place a card of the project on its Overview dashboard and answer that dashboard.\n\nThe project's first pin creates an ordinary dashboard named \"Overview\" and makes it the Overview;\na card already there is 409 ``card_already_on_board``.",
+    "operationId": "dashboards_home_pin",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+       "title": "Idempotency-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlacementCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Pin a card to the project's Overview",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-home pin --card-id <card_id>"
+     ],
+     "idempotent": true,
+     "kind": "exposed",
+     "noun": "dashboards-home",
+     "project": "path:project_id",
+     "verb": "pin"
+    }
+   }
+  },
+  "/api/insights/projects/{project_id}/home/placements/batch": {
+   "post": {
+    "description": "Place 1 to 50 cards of the project on its Overview dashboard in one go, and answer that dashboard.\n\nThe first pin creates the Overview dashboard as a single pin does. A card already there is left as\nit is and listed in ``already_placed``. When any card cannot be placed (``card_not_found``,\n``filter_type_conflict``, ``invalid_layout`` at 100 cards) the whole batch is refused and nothing changes.",
+    "operationId": "dashboards_home_pin_many",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "On a create, repeating a request with the same key within 24 hours returns the first answer and creates nothing, and the same key with a different request is a 409 `idempotency_key_reused`. Any other route says what the key does in its own description.",
+       "title": "Idempotency-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HomePinBatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HomePinBatchOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Pin several cards to the project's Overview",
+    "tags": [
+     "insights-boards"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay dashboards-home pin-many --file <card_ids_json_file>"
+     ],
+     "idempotent": true,
+     "kind": "exposed",
+     "noun": "dashboards-home",
+     "project": "path:project_id",
+     "verb": "pin-many"
+    }
+   }
+  },
   "/api/nlq/ask": {
    "post": {
     "operationId": "nlq_ask",
@@ -30896,6 +32089,23 @@
        "title": "Pipe UUID",
        "type": "string"
       }
+     },
+     {
+      "description": "Only events in these statuses; repeat the parameter for several. Defaults to `detected`.",
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "default": [
+        "detected"
+       ],
+       "description": "Only events in these statuses; repeat the parameter for several. Defaults to `detected`.",
+       "items": {
+        "$ref": "#/components/schemas/ChangeEventStatus"
+       },
+       "title": "Status",
+       "type": "array"
+      }
      }
     ],
     "responses": {
@@ -30939,7 +32149,8 @@
      "columns": [],
      "destructive": false,
      "examples": [
-      "databay schema-change pending <pipe_uuid>"
+      "databay schema-change pending <pipe_uuid>",
+      "databay schema-change pending <pipe_uuid> --status applied --status ignored"
      ],
      "idempotent": false,
      "kind": "exposed",
@@ -31151,6 +32362,126 @@
      "kind": "exposed",
      "noun": "schema-version",
      "verb": "list"
+    }
+   }
+  },
+  "/api/schema-evolution/pipes/state": {
+   "get": {
+    "description": "Each pipe with a schema change that is not done, worst first (stopped, then needs_decision).",
+    "operationId": "schema_change_state",
+    "parameters": [
+     {
+      "description": "Only this pipe.",
+      "in": "query",
+      "name": "pipe_uuid",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only this pipe.",
+       "title": "Pipe Uuid"
+      }
+     },
+     {
+      "description": "Only pipes in this state.",
+      "in": "query",
+      "name": "state",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "stopped",
+          "needs_decision",
+          "waiting",
+          "done"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only pipes in this state.",
+       "title": "State"
+      }
+     },
+     {
+      "description": "Only pipes in this project.",
+      "in": "header",
+      "name": "X-Databay-Project-ID",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Only pipes in this project.",
+       "title": "X-Databay-Project-Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/PipeSchemaState"
+         },
+         "title": "Response Schema Change State",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     },
+     "503": {
+      "description": "`schema_state_unavailable`: every pipe to answer needed a rebuild status that could not be checked"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Pipe Schema States",
+    "tags": [
+     "schema-change"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay schema-change state",
+      "databay schema-change state --pipe-uuid <pipe_uuid> --state stopped"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "schema-change",
+     "project": "header",
+     "verb": "state"
     }
    }
   },

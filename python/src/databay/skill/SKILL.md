@@ -157,13 +157,14 @@ Run the steps in this order. Each step's check must pass before the next.
 
 ## Dashboards
 
-Use the `dashboards`, `dashboards-card`, `dashboards-folder` and `dashboards-dataset` nouns. Create a
-dashboard on the warehouse that holds the table (for a pipe's table, its `sink_db_uuid`), add a card to
-it, then run it:
+Use the `dashboards`, `dashboards-card`, `dashboards-placement`, `dashboards-folder` and
+`dashboards-dataset` nouns. A card belongs to the project and runs in a warehouse of it (for a pipe's
+table, its `sink_db_uuid`); a dashboard shows the cards placed on it. Create a dashboard, create a card
+placed on it, then run it:
 
 ```
-databay dashboards create --name <name> --warehouse-id <sink_db_uuid> --output json
-databay dashboards-card create <board_id> --title <title> --revision <revision> --spec '{"spec_version": 1, "query": {"sql": "select count(*) as n from <dest_table_name>"}, "chart": {"type": "kpi", "y": ["n"]}}' --output json
+databay dashboards create --name <name> --output json
+databay dashboards-card create --board-id <board_id> --warehouse-id <sink_db_uuid> --title <title> --spec '{"spec_version": 1, "query": {"sql": "select count(*) as n from <dest_table_name>"}, "chart": {"type": "kpi", "y": ["n"]}}' --output json
 databay dashboards run <board_id> --output json
 ```
 
@@ -172,9 +173,10 @@ databay dashboards run <board_id> --output json
 - A card's SQL names a table of that warehouse without its database, or a dataset as `ds.<name>`
   (`databay dashboards-dataset list --warehouse-id <sink_db_uuid> --output json` lists them).
 - A create is safe to repeat only with the `--idempotency-key` it printed.
-- Each change to a dashboard takes the `--revision` its last answer gave. `revision_conflict`
-  means it changed since: run `databay dashboards get <board_id> --output json`, check whether
-  your change is already there, and if not, send it again on the new revision.
+- Each change to a dashboard or a card takes the `--revision` its last answer gave. `revision_conflict`
+  means it changed since: run `databay dashboards get <board_id> --output json` (or
+  `databay dashboards-card get <card_id> --output json`), check whether your change is already
+  there, and if not, send it again on the new revision.
 - `feature_disabled` means native dashboards are off for this organization, and
   `warehouse_not_queryable` that this warehouse cannot run cards. Tell the user the `hint`.
 - `console_not_scoped` means no card can run until support or whoever runs the server turns on

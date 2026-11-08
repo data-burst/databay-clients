@@ -16,3 +16,8 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
 - `databay login --org <organization>`; without it, a person in several organizations with none active
   is asked on a terminal, and gets `org_choice_required` when the CLI cannot ask.
 - `databay status` reports `needs_org_choice`.
+- `databay schema-change state [--pipe-uuid] [--state]`: each pipe with an unfinished schema change,
+  worst first; `databay schema-change pending --status` picks the event statuses to list.
+- Dashboards follow the server's cards model: a card belongs to the project (`dashboards-card`), is put
+  on dashboards with `dashboards-placement`, and a dashboard takes `--refresh-interval-s`;
+  `dashboards-home` reads or sets the project's Overview dashboard and pins cards to it.

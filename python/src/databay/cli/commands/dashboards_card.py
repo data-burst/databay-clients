@@ -11,6 +11,8 @@ group = noun_group(
     (
         _ops.DASHBOARDS_CARD_CREATE,
         _ops.DASHBOARDS_CARD_DELETE,
+        _ops.DASHBOARDS_CARD_GET,
+        _ops.DASHBOARDS_CARD_LIST,
         _ops.DASHBOARDS_CARD_PREVIEW,
         _ops.DASHBOARDS_CARD_RUN,
         _ops.DASHBOARDS_CARD_UPDATE,

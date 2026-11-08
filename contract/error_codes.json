@@ -848,8 +848,8 @@
    "side_effects": "none",
    "max_retries": null
   },
-  "card_key_taken": {
-   "hint": "Pick another card key.",
+  "card_already_on_board": {
+   "hint": "The card is already on this dashboard; nothing to add.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -857,6 +857,12 @@
   "card_not_found": {
    "hint": "Pick a card key the dashboard has.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "card_revision_conflict": {
+   "hint": "Reload the card to get its current revision, reapply your change, then save again.",
+   "action": "do_first",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1274,8 +1280,20 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "feature_not_in_plan": {
+   "hint": "Ask an organization admin to move to a plan that includes this feature.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "feature_not_rollout": {
    "hint": "Pick a rollout feature; only those can be set per organization.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "filter_type_conflict": {
+   "hint": "Rename the filter, keep its kind, or take the card off this dashboard.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -1339,6 +1357,12 @@
    "action": "retry",
    "side_effects": "none",
    "max_retries": 3
+  },
+  "home_board_not_deletable": {
+   "hint": "Set another dashboard as the project's Overview, then delete this one.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
   },
   "home_conflict": {
    "hint": "Share the resource into the project instead; it already has a home project.",
@@ -2534,6 +2558,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "row_count_unavailable": {
+   "hint": "Try again in a moment; until the warehouse answers, the count is unknown.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 2
+  },
   "row_filter_invalid": {
    "hint": "Fix the filter condition the error names so its column exists and its value fits the column type.",
    "action": "fix_and_retry",
@@ -2593,6 +2623,24 @@
    "action": "retry",
    "side_effects": "unknown",
    "max_retries": 2
+  },
+  "schema_state_stuck_finishing": {
+   "hint": "Contact support with the pipe's id; its rebuild finished but the change did not clear.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "schema_state_unavailable": {
+   "hint": "Retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "schema_state_unknown_combination": {
+   "hint": "Contact support with the pipe's id and the request id.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
   },
   "schema_version_contention": {
    "hint": "Retry; another apply on the pipe is in progress.",

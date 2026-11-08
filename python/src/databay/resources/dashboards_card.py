@@ -11,7 +11,8 @@ from databay.operations import dashboards_card as _ops
 from databay.resource import Resource, UNSET, Unset
 
 if TYPE_CHECKING:
-    from databay.models.shared import BoardOut, CardResult
+    from databay.models.dashboards_card import CardList
+    from databay.models.shared import CardOut, CardResult
 
 
 class DashboardsCardResource(Resource):
@@ -19,25 +20,46 @@ class DashboardsCardResource(Resource):
     def create(
         self,
         *,
-        board_id: str,
-        revision: int,
         spec: Any,
         title: str,
-        key: str | None | Unset = UNSET,
+        warehouse_id: str,
+        project_id: str | Unset = UNSET,
+        board_id: str | None | Unset = UNSET,
+        project: str | None = None,
         idempotency_key: str | None = None,
-    ) -> BoardOut:
+    ) -> CardOut:
         """Add a card. ``databay dashboards-card create``."""
-        return self._call(_ops.DASHBOARDS_CARD_CREATE, {'board_id': board_id, 'key': key, 'revision': revision, 'spec': spec, 'title': title}, idempotency_key=idempotency_key)
+        return self._call(_ops.DASHBOARDS_CARD_CREATE, {'project_id': project_id, 'board_id': board_id, 'spec': spec, 'title': title, 'warehouse_id': warehouse_id}, project=project, idempotency_key=idempotency_key)
 
     def delete(
         self,
         *,
-        board_id: str,
-        key: str,
+        card_id: str,
         revision: int,
-    ) -> BoardOut:
-        """Remove a card. ``databay dashboards-card delete``."""
-        return self._call(_ops.DASHBOARDS_CARD_DELETE, {'board_id': board_id, 'key': key, 'revision': revision})
+    ) -> None:
+        """Delete a card. ``databay dashboards-card delete``."""
+        return self._call(_ops.DASHBOARDS_CARD_DELETE, {'card_id': card_id, 'revision': revision})
+
+    def get(
+        self,
+        *,
+        card_id: str,
+    ) -> CardOut:
+        """Read a card. ``databay dashboards-card get``."""
+        return self._call(_ops.DASHBOARDS_CARD_GET, {'card_id': card_id})
+
+    def list(
+        self,
+        *,
+        project_id: str | Unset = UNSET,
+        limit: int | Unset = UNSET,
+        q: str | Unset = UNSET,
+        placement: str | Unset = UNSET,
+        cursor: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> CardList:
+        """List the project's cards. ``databay dashboards-card list``."""
+        return self._call(_ops.DASHBOARDS_CARD_LIST, {'project_id': project_id, 'limit': limit, 'q': q, 'placement': placement, 'cursor': cursor}, project=project)
 
     def preview(
         self,
@@ -55,22 +77,21 @@ class DashboardsCardResource(Resource):
     def run(
         self,
         *,
-        board_id: str,
-        key: str,
+        card_id: str,
         filters: Any | Unset = UNSET,
         refresh: bool | Unset = UNSET,
     ) -> CardResult:
-        """Run one card. ``databay dashboards-card run``."""
-        return self._call(_ops.DASHBOARDS_CARD_RUN, {'board_id': board_id, 'key': key, 'filters': filters, 'refresh': refresh})
+        """Run a card on its own. ``databay dashboards-card run``."""
+        return self._call(_ops.DASHBOARDS_CARD_RUN, {'card_id': card_id, 'filters': filters, 'refresh': refresh})
 
     def update(
         self,
         *,
-        board_id: str,
-        key: str,
+        card_id: str,
         revision: int,
         spec: Any | None | Unset = UNSET,
         title: str | None | Unset = UNSET,
-    ) -> BoardOut:
+        warehouse_id: str | None | Unset = UNSET,
+    ) -> CardOut:
         """Change a card. ``databay dashboards-card update``."""
-        return self._call(_ops.DASHBOARDS_CARD_UPDATE, {'board_id': board_id, 'key': key, 'revision': revision, 'spec': spec, 'title': title})
+        return self._call(_ops.DASHBOARDS_CARD_UPDATE, {'card_id': card_id, 'revision': revision, 'spec': spec, 'title': title, 'warehouse_id': warehouse_id})

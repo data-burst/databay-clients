@@ -16,7 +16,62 @@ class ChangeEventOperation(OpenStrEnum):
     RETYPE = 'retype'
 
 
+class SchemaStateErrorCode(OpenStrEnum):
+    SCHEMA_STATE_UNAVAILABLE = 'schema_state_unavailable'
+    SCHEMA_STATE_STUCK_FINISHING = 'schema_state_stuck_finishing'
+    SCHEMA_STATE_UNKNOWN_COMBINATION = 'schema_state_unknown_combination'
+
+
+class PipeSchemaStateDisplay(OpenStrEnum):
+    STOPPED = 'stopped'
+    REBUILDING = 'rebuilding'
+    FINISHING = 'finishing'
+    FAILED = 'failed'
+    OTHER_REBUILD = 'other_rebuild'
+    NEEDS_DECISION = 'needs_decision'
+    WAITING = 'waiting'
+    UNAVAILABLE = 'unavailable'
+
+
+class PipeSchemaStateNextStep(OpenStrEnum):
+    REBUILD_TABLE = 'rebuild_table'
+    KEEP_OR_REMOVE = 'keep_or_remove'
+    ADD_OR_SKIP = 'add_or_skip'
+    NONE = 'none'
+
+
+class PipeSchemaStateState(OpenStrEnum):
+    STOPPED = 'stopped'
+    NEEDS_DECISION = 'needs_decision'
+    WAITING = 'waiting'
+    DONE = 'done'
+
+
 class ApplyChangeInfo(RequestModel):
+    pass
+
+
+class PipeSchemaChange(ResponseModel):
+    column: str
+    detected_at: datetime
+    new_type: str | None
+    operation: ChangeEventOperation
+    previous_type: str | None
+
+
+class SchemaStateError(ResponseModel):
+    code: SchemaStateErrorCode
+    detail: str
+
+
+class PipeSchemaState(ResponseModel):
+    changes: list[PipeSchemaChange]
+    display: PipeSchemaStateDisplay
+    error: SchemaStateError | None = None
+    held_backup: bool
+    next_step: PipeSchemaStateNextStep
+    pipe_uuid: str
+    state: PipeSchemaStateState
 
 
 class SchemaChangeEventResponse(ResponseModel):
@@ -34,6 +89,9 @@ class SchemaChangeEventResponse(ResponseModel):
 
 
 SchemaChangePendingResponse = list[SchemaChangeEventResponse]
+
+
+SchemaChangeStateResponse = list[PipeSchemaState]
 
 
 SchemaChangeListResponse = list[SchemaChangeEventResponse]

@@ -7,20 +7,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from databay.model_base import RequestModel
+from databay.model_base import RequestModel, ResponseModel
+from databay.models.shared import CardOut
 
 
 class CardCreate(RequestModel):
-    key: str | None = None
-    revision: int
+    board_id: str | None = None
     spec: dict[str, Any]
     title: str
+    warehouse_id: str
+
+
+class CardList(ResponseModel):
+    cards: list[CardOut]
+    next_cursor: str | None
 
 
 class CardPatch(RequestModel):
     revision: int
     spec: dict[str, Any] | None = None
     title: str | None = None
+    warehouse_id: str | None = None
 
 
 class CardPreviewRequest(RequestModel):

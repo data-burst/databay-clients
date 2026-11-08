@@ -55,8 +55,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'board_not_found': ErrorInfo('List the dashboards and pick one you can see.', 'fix_and_retry', 'none', None),
     'budget_below_usage': ErrorInfo('Confirm to pause the project, or set a budget at or above current.', 'fix_and_retry', 'none', None),
     'builtin_not_found': ErrorInfo('Pick a built-in dashboard from the list.', 'fix_and_retry', 'none', None),
-    'card_key_taken': ErrorInfo('Pick another card key.', 'fix_and_retry', 'none', None),
+    'card_already_on_board': ErrorInfo('The card is already on this dashboard; nothing to add.', 'fix_and_retry', 'none', None),
     'card_not_found': ErrorInfo('Pick a card key the dashboard has.', 'fix_and_retry', 'none', None),
+    'card_revision_conflict': ErrorInfo('Reload the card to get its current revision, reapply your change, then save again.', 'do_first', 'none', None),
     'catalogue_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
     'change_event_not_found': ErrorInfo("List the pipe's schema changes and pick one you can see.", 'fix_and_retry', 'none', None),
     'clickhouse_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
@@ -126,7 +127,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'external_plan': ErrorInfo('Change the plan in the Shopify app; this meter takes no override.', 'ask_human', 'none', None),
     'external_warehouses_unsupported': ErrorInfo('Use the managed warehouse; pipelines land there without a destination to register.', 'ask_human', 'none', None),
     'extra_is_primary': ErrorInfo('Leave the primary property out of the extra properties.', 'fix_and_retry', 'none', None),
+    'feature_not_in_plan': ErrorInfo('Ask an organization admin to move to a plan that includes this feature.', 'ask_human', 'none', None),
     'feature_not_rollout': ErrorInfo('Pick a rollout feature; only those can be set per organization.', 'fix_and_retry', 'none', None),
+    'filter_type_conflict': ErrorInfo('Rename the filter, keep its kind, or take the card off this dashboard.', 'fix_and_retry', 'none', None),
     'folder_cycle': ErrorInfo('Move the folder somewhere outside itself.', 'fix_and_retry', 'none', None),
     'folder_name_taken': ErrorInfo('Pick another folder name.', 'fix_and_retry', 'none', None),
     'folder_not_empty': ErrorInfo("Move or delete the folder's folders and dashboards first.", 'do_first', 'none', None),
@@ -137,6 +140,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'fx_rate_missing': ErrorInfo('Pick a range or a reporting currency that has exchange rates.', 'fix_and_retry', 'none', None),
     'fx_rate_unavailable': ErrorInfo('Pick a reporting currency that has exchange rates for the currencies listed.', 'fix_and_retry', 'none', None),
     'fx_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
+    'home_board_not_deletable': ErrorInfo("Set another dashboard as the project's Overview, then delete this one.", 'do_first', 'none', None),
     'home_conflict': ErrorInfo('Share the resource into the project instead; it already has a home project.', 'fix_and_retry', 'none', None),
     'host_not_allowed': ErrorInfo("Use your database's own address, a public hostname or a private address in your network.", 'fix_and_retry', 'none', None),
     'idempotency_key_required': ErrorInfo('Send the apply again with an Idempotency-Key header.', 'fix_and_retry', 'none', None),
@@ -336,6 +340,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'retry_cooldown': ErrorInfo('Wait retry_after_s, then retry the warehouse.', 'retry', 'none', 1),
     'revision_conflict': ErrorInfo('Reload the dashboard to get the current revision, reapply your change, then save again.', 'do_first', 'none', None),
     'rollout_off_cli_only': ErrorInfo('Ask an operator to change it with the operator CLI.', 'ask_human', 'none', None),
+    'row_count_unavailable': ErrorInfo('Try again in a moment; until the warehouse answers, the count is unknown.', 'retry', 'none', 2),
     'row_filter_invalid': ErrorInfo('Fix the filter condition the error names so its column exists and its value fits the column type.', 'fix_and_retry', 'none', None),
     'rule_column_unknown': ErrorInfo('Pick columns the table has.', 'fix_and_retry', 'none', None),
     'rule_duplicate_table': ErrorInfo('Name each table once per warehouse in an access role.', 'fix_and_retry', 'none', None),
@@ -346,6 +351,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'rule_warehouse_not_visible': ErrorInfo('Share the warehouse with this project first, or pick one it can see.', 'do_first', 'none', None),
     'schema_change_unsupported': ErrorInfo("Change the destination table yourself, or rebuild the pipe's table; it cannot be applied for you.", 'ask_human', 'none', None),
     'schema_query_failed': ErrorInfo('Retry; contact support if the change still cannot be written.', 'retry', 'unknown', 2),
+    'schema_state_stuck_finishing': ErrorInfo("Contact support with the pipe's id; its rebuild finished but the change did not clear.", 'ask_human', 'none', None),
+    'schema_state_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'none', 3),
+    'schema_state_unknown_combination': ErrorInfo("Contact support with the pipe's id and the request id.", 'ask_human', 'none', None),
     'schema_version_contention': ErrorInfo('Retry; another apply on the pipe is in progress.', 'retry', 'none', 3),
     'schema_version_not_found': ErrorInfo("List the pipe's schema history and pick a version it has.", 'fix_and_retry', 'none', None),
     'secret_key_missing': ErrorInfo("Ask your administrator to finish this server's setup.", 'ask_human', 'none', None),
@@ -661,12 +669,16 @@ class BuiltinNotFoundError(DatabayApiError):
     code = 'builtin_not_found'
 
 
-class CardKeyTakenError(DatabayApiError):
-    code = 'card_key_taken'
+class CardAlreadyOnBoardError(DatabayApiError):
+    code = 'card_already_on_board'
 
 
 class CardNotFoundError(DatabayApiError):
     code = 'card_not_found'
+
+
+class CardRevisionConflictError(DatabayApiError):
+    code = 'card_revision_conflict'
 
 
 class CatalogueUnavailableError(DatabayApiError):
@@ -945,8 +957,16 @@ class ExtraIsPrimaryError(DatabayApiError):
     code = 'extra_is_primary'
 
 
+class FeatureNotInPlanError(DatabayApiError):
+    code = 'feature_not_in_plan'
+
+
 class FeatureNotRolloutError(DatabayApiError):
     code = 'feature_not_rollout'
+
+
+class FilterTypeConflictError(DatabayApiError):
+    code = 'filter_type_conflict'
 
 
 class FolderCycleError(DatabayApiError):
@@ -987,6 +1007,10 @@ class FxRateUnavailableError(DatabayApiError):
 
 class FxUnavailableError(DatabayApiError):
     code = 'fx_unavailable'
+
+
+class HomeBoardNotDeletableError(DatabayApiError):
+    code = 'home_board_not_deletable'
 
 
 class HomeConflictError(DatabayApiError):
@@ -1785,6 +1809,10 @@ class RolloutOffCliOnlyError(DatabayApiError):
     code = 'rollout_off_cli_only'
 
 
+class RowCountUnavailableError(DatabayApiError):
+    code = 'row_count_unavailable'
+
+
 class RowFilterInvalidError(DatabayApiError):
     code = 'row_filter_invalid'
 
@@ -1823,6 +1851,18 @@ class SchemaChangeUnsupportedError(DatabayApiError):
 
 class SchemaQueryFailedError(DatabayApiError):
     code = 'schema_query_failed'
+
+
+class SchemaStateStuckFinishingError(DatabayApiError):
+    code = 'schema_state_stuck_finishing'
+
+
+class SchemaStateUnavailableError(DatabayApiError):
+    code = 'schema_state_unavailable'
+
+
+class SchemaStateUnknownCombinationError(DatabayApiError):
+    code = 'schema_state_unknown_combination'
 
 
 class SchemaVersionContentionError(DatabayApiError):
@@ -2339,8 +2379,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'board_not_found': BoardNotFoundError,
     'budget_below_usage': BudgetBelowUsageError,
     'builtin_not_found': BuiltinNotFoundError,
-    'card_key_taken': CardKeyTakenError,
+    'card_already_on_board': CardAlreadyOnBoardError,
     'card_not_found': CardNotFoundError,
+    'card_revision_conflict': CardRevisionConflictError,
     'catalogue_unavailable': CatalogueUnavailableError,
     'change_event_not_found': ChangeEventNotFoundError,
     'clickhouse_unavailable': ClickhouseUnavailableError,
@@ -2410,7 +2451,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'external_plan': ExternalPlanError,
     'external_warehouses_unsupported': ExternalWarehousesUnsupportedError,
     'extra_is_primary': ExtraIsPrimaryError,
+    'feature_not_in_plan': FeatureNotInPlanError,
     'feature_not_rollout': FeatureNotRolloutError,
+    'filter_type_conflict': FilterTypeConflictError,
     'folder_cycle': FolderCycleError,
     'folder_name_taken': FolderNameTakenError,
     'folder_not_empty': FolderNotEmptyError,
@@ -2421,6 +2464,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'fx_rate_missing': FxRateMissingError,
     'fx_rate_unavailable': FxRateUnavailableError,
     'fx_unavailable': FxUnavailableError,
+    'home_board_not_deletable': HomeBoardNotDeletableError,
     'home_conflict': HomeConflictError,
     'host_not_allowed': HostNotAllowedError,
     'idempotency_key_required': IdempotencyKeyRequiredError,
@@ -2620,6 +2664,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'retry_cooldown': RetryCooldownError,
     'revision_conflict': RevisionConflictError,
     'rollout_off_cli_only': RolloutOffCliOnlyError,
+    'row_count_unavailable': RowCountUnavailableError,
     'row_filter_invalid': RowFilterInvalidError,
     'rule_column_unknown': RuleColumnUnknownError,
     'rule_duplicate_table': RuleDuplicateTableError,
@@ -2630,6 +2675,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'rule_warehouse_not_visible': RuleWarehouseNotVisibleError,
     'schema_change_unsupported': SchemaChangeUnsupportedError,
     'schema_query_failed': SchemaQueryFailedError,
+    'schema_state_stuck_finishing': SchemaStateStuckFinishingError,
+    'schema_state_unavailable': SchemaStateUnavailableError,
+    'schema_state_unknown_combination': SchemaStateUnknownCombinationError,
     'schema_version_contention': SchemaVersionContentionError,
     'schema_version_not_found': SchemaVersionNotFoundError,
     'secret_key_missing': SecretKeyMissingError,

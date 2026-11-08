@@ -124,8 +124,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `board_not_found` | 1 | fix_and_retry | none |  | List the dashboards and pick one you can see. |
 | `budget_below_usage` | 1 | fix_and_retry | none |  | Confirm to pause the project, or set a budget at or above current. |
 | `builtin_not_found` | 1 | fix_and_retry | none |  | Pick a built-in dashboard from the list. |
-| `card_key_taken` | 1 | fix_and_retry | none |  | Pick another card key. |
+| `card_already_on_board` | 1 | fix_and_retry | none |  | The card is already on this dashboard; nothing to add. |
 | `card_not_found` | 1 | fix_and_retry | none |  | Pick a card key the dashboard has. |
+| `card_revision_conflict` | 1 | do_first | none |  | Reload the card to get its current revision, reapply your change, then save again. |
 | `catalogue_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
 | `change_event_not_found` | 1 | fix_and_retry | none |  | List the pipe's schema changes and pick one you can see. |
 | `clickhouse_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
@@ -195,7 +196,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `external_plan` | 1 | ask_human | none |  | Change the plan in the Shopify app; this meter takes no override. |
 | `external_warehouses_unsupported` | 1 | ask_human | none |  | Use the managed warehouse; pipelines land there without a destination to register. |
 | `extra_is_primary` | 1 | fix_and_retry | none |  | Leave the primary property out of the extra properties. |
+| `feature_not_in_plan` | 1 | ask_human | none |  | Ask an organization admin to move to a plan that includes this feature. |
 | `feature_not_rollout` | 1 | fix_and_retry | none |  | Pick a rollout feature; only those can be set per organization. |
+| `filter_type_conflict` | 1 | fix_and_retry | none |  | Rename the filter, keep its kind, or take the card off this dashboard. |
 | `folder_cycle` | 1 | fix_and_retry | none |  | Move the folder somewhere outside itself. |
 | `folder_name_taken` | 1 | fix_and_retry | none |  | Pick another folder name. |
 | `folder_not_empty` | 1 | do_first | none |  | Move or delete the folder's folders and dashboards first. |
@@ -206,6 +209,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `fx_rate_missing` | 1 | fix_and_retry | none |  | Pick a range or a reporting currency that has exchange rates. |
 | `fx_rate_unavailable` | 1 | fix_and_retry | none |  | Pick a reporting currency that has exchange rates for the currencies listed. |
 | `fx_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
+| `home_board_not_deletable` | 1 | do_first | none |  | Set another dashboard as the project's Overview, then delete this one. |
 | `home_conflict` | 1 | fix_and_retry | none |  | Share the resource into the project instead; it already has a home project. |
 | `host_not_allowed` | 1 | fix_and_retry | none |  | Use your database's own address, a public hostname or a private address in your network. |
 | `idempotency_key_required` | 1 | fix_and_retry | none |  | Send the apply again with an Idempotency-Key header. |
@@ -405,6 +409,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `retry_cooldown` | 6 | retry | none | 1 | Wait retry_after_s, then retry the warehouse. |
 | `revision_conflict` | 1 | do_first | none |  | Reload the dashboard to get the current revision, reapply your change, then save again. |
 | `rollout_off_cli_only` | 1 | ask_human | none |  | Ask an operator to change it with the operator CLI. |
+| `row_count_unavailable` | 6 | retry | none | 2 | Try again in a moment; until the warehouse answers, the count is unknown. |
 | `row_filter_invalid` | 1 | fix_and_retry | none |  | Fix the filter condition the error names so its column exists and its value fits the column type. |
 | `rule_column_unknown` | 1 | fix_and_retry | none |  | Pick columns the table has. |
 | `rule_duplicate_table` | 1 | fix_and_retry | none |  | Name each table once per warehouse in an access role. |
@@ -415,6 +420,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `rule_warehouse_not_visible` | 1 | do_first | none |  | Share the warehouse with this project first, or pick one it can see. |
 | `schema_change_unsupported` | 1 | ask_human | none |  | Change the destination table yourself, or rebuild the pipe's table; it cannot be applied for you. |
 | `schema_query_failed` | 6 | retry | unknown | 2 | Retry; contact support if the change still cannot be written. |
+| `schema_state_stuck_finishing` | 1 | ask_human | none |  | Contact support with the pipe's id; its rebuild finished but the change did not clear. |
+| `schema_state_unavailable` | 6 | retry | none | 3 | Retry in a moment. |
+| `schema_state_unknown_combination` | 1 | ask_human | none |  | Contact support with the pipe's id and the request id. |
 | `schema_version_contention` | 6 | retry | none | 3 | Retry; another apply on the pipe is in progress. |
 | `schema_version_not_found` | 1 | fix_and_retry | none |  | List the pipe's schema history and pick a version it has. |
 | `secret_key_missing` | 1 | ask_human | none |  | Ask your administrator to finish this server's setup. |

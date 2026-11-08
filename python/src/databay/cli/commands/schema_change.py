@@ -13,5 +13,6 @@ group = noun_group(
         _ops.SCHEMA_CHANGE_IGNORE,
         _ops.SCHEMA_CHANGE_LIST,
         _ops.SCHEMA_CHANGE_PENDING,
+        _ops.SCHEMA_CHANGE_STATE,
     ),
 )

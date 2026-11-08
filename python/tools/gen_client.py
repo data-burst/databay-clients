@@ -497,7 +497,7 @@ def render_model(writer: TypeWriter, name: str, schema: dict[str, Any], base: st
             body.append(f"    {ident}: {annotation} = {default}")
         else:
             body.append(f"    {ident}: {annotation}")
-    return [f"class {name}({base}):", *body, "", ""]
+    return [f"class {name}({base}):", *(body or ["    pass"]), "", ""]
 
 
 def render_model_module(spec: Spec, plan: ModelPlan, module: str, names: list[str], doc: str) -> str:
