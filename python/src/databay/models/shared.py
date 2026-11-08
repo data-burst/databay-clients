@@ -315,6 +315,16 @@ class CardChartType(OpenStrEnum):
     TABLE = 'table'
 
 
+class CardParamDefault(OpenStrEnum):
+    LAST_7_DAYS = 'last_7_days'
+    LAST_30_DAYS = 'last_30_days'
+    LAST_90_DAYS = 'last_90_days'
+    LAST_365_DAYS = 'last_365_days'
+    THIS_MONTH = 'this_month'
+    LAST_MONTH = 'last_month'
+    THIS_YEAR = 'this_year'
+
+
 class CardParamType(OpenStrEnum):
     DATE = 'Date'
     DATETIME = 'DateTime'
@@ -405,6 +415,11 @@ class BuiltinOrigin(ResponseModel):
     version: int
 
 
+class BoardRef(ResponseModel):
+    id: str
+    name: str
+
+
 class CardChart(ResponseModel):
     format: dict[str, CardChartFormat] | None = None
     series: str | None = None
@@ -416,6 +431,7 @@ class CardChart(ResponseModel):
 
 
 class CardParam(ResponseModel):
+    default: CardParamDefault | list[str] | None = None
     from_filter: str | None = None
     type: CardParamType
     value: Any | None = None
@@ -435,11 +451,16 @@ class CardSpec(ResponseModel):
 
 
 class CardOut(ResponseModel):
-    key: str
+    boards: list[BoardRef]
+    created_by: str
+    id: str
+    project_id: str
+    revision: int
     spec: CardSpec
     title: str
     updated_at: datetime
     updated_by: str
+    warehouse_id: str
 
 
 class DateRangeFilter(ResponseModel):
@@ -450,8 +471,8 @@ class DateRangeFilter(ResponseModel):
 
 
 class LayoutItem(ResponseModel):
+    card_id: str
     h: int
-    key: str
     w: int
     x: int
     y: int
@@ -464,32 +485,41 @@ class SelectFilter(ResponseModel):
     type: Literal['select']
 
 
+class WarehouseFilter(ResponseModel):
+    default: str
+    key: str
+    label: str
+    type: Literal['warehouse']
+
+
 class BoardOut(ResponseModel):
     cards: list[CardOut]
     created_at: datetime
     created_by: str
     description: str | None
-    filters: list[Annotated[DateRangeFilter | SelectFilter, Field(discriminator='type')]]
+    filters: list[Annotated[DateRangeFilter | SelectFilter | WarehouseFilter, Field(discriminator='type')]]
     folder_id: str | None
     id: str
-    layout: list[LayoutItem]
     name: str
+    placements: list[LayoutItem]
     project_id: str
+    refresh_interval_s: int | None
     revision: int
     source_builtin: BuiltinOrigin | None
     updated_at: datetime
     updated_by: str
-    warehouse_id: str
 
 
 class CardResult(ResponseModel):
     cached: bool
+    card_id: str | None
+    card_revision: int | None
     column_types: list[str]
     columns: list[str]
     elapsed_ms: int
-    key: str
     row_count: int
     rows: list[list[Any]]
+    warehouse_id: str
 
 
 class CardRunRequest(RequestModel):
@@ -692,6 +722,10 @@ class PipeV2Response(ResponseModel):
     sync_mode: str | None = None
     table_name: str | None = None
     uuid: str
+
+
+class PlacementCreate(RequestModel):
+    card_id: str
 
 
 class WarehouseAccessCapabilities(ResponseModel):

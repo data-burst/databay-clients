@@ -128,6 +128,20 @@ SCHEMA_CHANGE_PENDING = Operation(
             required=True,
             description='UUID of the pipe',
         ),
+        Param(
+            name='status',
+            location='query',
+            kind='list',
+            required=False,
+            description='Only events in these statuses; repeat the parameter for several. Defaults to `detected`.',
+            choices=(
+                'detected',
+                'applied',
+                'ignored',
+                'superseded',
+            ),
+            item_kind='string',
+        ),
     ),
     body=None,
     response=Response(
@@ -137,6 +151,55 @@ SCHEMA_CHANGE_PENDING = Operation(
     ),
     examples=(
         'databay schema-change pending <pipe_uuid>',
+        'databay schema-change pending <pipe_uuid> --status applied --status ignored',
+    ),
+)
+
+SCHEMA_CHANGE_STATE = Operation(
+    operation_id='schema_change_state',
+    noun='schema-change',
+    verb='state',
+    method='get',
+    path='/api/schema-evolution/pipes/state',
+    summary='Get Pipe Schema States',
+    description='Each pipe with a schema change that is not done, worst first (stopped, then needs_decision).',
+    project='header',
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='pipe_uuid',
+            location='query',
+            kind='string',
+            required=False,
+            description='Only this pipe.',
+            nullable=True,
+        ),
+        Param(
+            name='state',
+            location='query',
+            kind='string',
+            required=False,
+            description='Only pipes in this state.',
+            choices=(
+                'stopped',
+                'needs_decision',
+                'waiting',
+                'done',
+            ),
+            nullable=True,
+        ),
+    ),
+    body=None,
+    response=Response(
+        kind='json',
+        model='schema_change:SchemaChangeStateResponse',
+        shape='array',
+    ),
+    examples=(
+        'databay schema-change state',
+        'databay schema-change state --pipe-uuid <pipe_uuid> --state stopped',
     ),
 )
 
@@ -145,4 +208,5 @@ OPERATIONS = (
     SCHEMA_CHANGE_IGNORE,
     SCHEMA_CHANGE_LIST,
     SCHEMA_CHANGE_PENDING,
+    SCHEMA_CHANGE_STATE,
 )

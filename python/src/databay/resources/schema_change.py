@@ -11,7 +11,7 @@ from databay.operations import schema_change as _ops
 from databay.resource import Resource, UNSET, Unset
 
 if TYPE_CHECKING:
-    from databay.models.schema_change import SchemaChangeListResponse, SchemaChangePendingResponse
+    from databay.models.schema_change import SchemaChangeListResponse, SchemaChangePendingResponse, SchemaChangeStateResponse
 
 
 class SchemaChangeResource(Resource):
@@ -45,6 +45,17 @@ class SchemaChangeResource(Resource):
         self,
         *,
         pipe_uuid: str,
+        status: list[str] | Unset = UNSET,
     ) -> SchemaChangePendingResponse:
         """Get Schema Change Events. ``databay schema-change pending``."""
-        return self._call(_ops.SCHEMA_CHANGE_PENDING, {'pipe_uuid': pipe_uuid})
+        return self._call(_ops.SCHEMA_CHANGE_PENDING, {'pipe_uuid': pipe_uuid, 'status': status})
+
+    def state(
+        self,
+        *,
+        pipe_uuid: str | Unset = UNSET,
+        state: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> SchemaChangeStateResponse:
+        """Get Pipe Schema States. ``databay schema-change state``."""
+        return self._call(_ops.SCHEMA_CHANGE_STATE, {'pipe_uuid': pipe_uuid, 'state': state}, project=project)

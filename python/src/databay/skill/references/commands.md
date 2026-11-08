@@ -821,13 +821,13 @@ Usage: `databay canvas-table-check start [PROJECT_ID] [OPTIONS]`
 
 ### databay dashboards create
 
-Create an empty dashboard reading one of the project's warehouses.
+Create an empty dashboard in the project.
 
 Acts in a project, sent as path project_id: --project, else the profile's active project.
 
 ```
 Examples:
-  databay dashboards create --name <name> --warehouse-id <warehouse_id>
+  databay dashboards create --name <name>
 ```
 
 Usage: `databay dashboards create [PROJECT_ID] [OPTIONS]`
@@ -836,10 +836,9 @@ Usage: `databay dashboards create [PROJECT_ID] [OPTIONS]`
 |---|---|---|
 | `PROJECT_ID` |  | Project Id |
 | `--description STRING` |  | Description |
-| `--filters JSON` |  | Board filters (date_range, select); 422 invalid_filters when they do not fit. (JSON) |
+| `--filters JSON` |  | Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit. (JSON) |
 | `--folder-id STRING` |  | The folder to put it in; absent or null for the project's root. |
 | `--name STRING` | yes | Name |
-| `--warehouse-id STRING` | yes | The warehouse of the project every card reads. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
@@ -850,7 +849,7 @@ Usage: `databay dashboards create [PROJECT_ID] [OPTIONS]`
 
 ### databay dashboards delete
 
-Delete a dashboard and its cards.
+Delete a dashboard; its cards stay in the project. The project's Overview is 409 ``home_board_not_deletable``.
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
@@ -896,7 +895,7 @@ Usage: `databay dashboards duplicate BOARD_ID [OPTIONS]`
 
 ### databay dashboards get
 
-Return a dashboard with its filters, layout and cards; ``revision`` is what a change to it sends.
+Return a dashboard with its filters, cards and placements; ``revision`` is what a change to it sends.
 
 ```
 Examples:
@@ -937,7 +936,7 @@ Usage: `databay dashboards list [PROJECT_ID] [OPTIONS]`
 
 ### databay dashboards replace
 
-Save the whole board: details, filters, cards and layout. Cards missing from ``cards`` are removed.
+Save the dashboard's details, filters and placements; a card left out is taken off it, never deleted.
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
@@ -951,14 +950,12 @@ Usage: `databay dashboards replace BOARD_ID [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `BOARD_ID` | yes | Board Id |
-| `--cards JSON` | yes | Cards (JSON) |
 | `--description STRING` |  | Description |
-| `--filters JSON` | yes | Board filters (date_range, select); 422 invalid_filters when they do not fit. (JSON) |
+| `--filters JSON` | yes | Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit. (JSON) |
 | `--folder-id STRING` |  | The folder it sits in; absent or null for the project's root. |
-| `--layout JSON` | yes | One {key, x, y, w, h} per card in 24-column / 40px-row units; 422 invalid_layout when it does not fit. (JSON) |
 | `--name STRING` | yes | Name |
+| `--placements JSON` | yes | One {card_id, x, y, w, h} per card on the dashboard, in 24-column / 40px-row units; 422 invalid_layout when it does not fit. (JSON) |
 | `--revision INTEGER` | yes | The board revision this change was made on. |
-| `--warehouse-id STRING` | yes | The warehouse of the project every card reads. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--yes` |  | confirm: this removes or overwrites state |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -968,7 +965,7 @@ Usage: `databay dashboards replace BOARD_ID [OPTIONS]`
 
 ### databay dashboards run
 
-Run every card for the viewer: each card's rows or its error, at most four at a time.
+Run every card for the viewer with the dashboard's filters: each card's rows or its error, four at a time.
 
 ```
 Examples:
@@ -1004,6 +1001,7 @@ Usage: `databay dashboards update BOARD_ID [OPTIONS]`
 | `BOARD_ID` | yes | Board Id |
 | `--folder-id STRING` |  | The folder to move it to; null, sent in a body file, moves it to the project's root. |
 | `--name STRING` |  | Name |
+| `--refresh-interval-s INTEGER` |  | The dashboard's default auto-refresh interval in seconds; null is off. One of: 60, 300, 900, 1800, 3600. |
 | `--revision INTEGER` | yes | The board revision this change was made on. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -1015,23 +1013,26 @@ Usage: `databay dashboards update BOARD_ID [OPTIONS]`
 
 ### databay dashboards-card create
 
-Add a card under the dashboard's others and answer with the whole dashboard.
+Add a card to the project; with ``board_id``, also place it below that dashboard's other cards.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
 
 ```
 Examples:
-  databay dashboards-card create <board_id> --file <card_json_file>
+  databay dashboards-card create --file <card_json_file>
 ```
 
-Usage: `databay dashboards-card create BOARD_ID [OPTIONS]`
+Usage: `databay dashboards-card create [PROJECT_ID] [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `BOARD_ID` | yes | Board Id |
-| `--key STRING` |  | The card's key on this dashboard; absent makes one from the title. |
-| `--revision INTEGER` | yes | The board revision this change was made on. |
+| `PROJECT_ID` |  | Project Id |
+| `--board-id STRING` |  | A board of the project to place the new card on. |
 | `--spec JSON` | yes | A card spec: {spec_version: 1, query: {sql, ...}, chart: {type, ...}}; 422 invalid_spec when it does not fit. (JSON) |
 | `--title STRING` | yes | Title |
+| `--warehouse-id STRING` | yes | The warehouse of the project the card's query runs in. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
 | `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -1040,23 +1041,70 @@ Usage: `databay dashboards-card create BOARD_ID [OPTIONS]`
 
 ### databay dashboards-card delete
 
-Remove a card and answer with the whole dashboard.
+Delete a card and take it off every dashboard it sits on.
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
 ```
 Examples:
-  databay dashboards-card delete <board_id> <key> --revision <revision> --yes
+  databay dashboards-card delete <card_id> --revision <revision> --yes
 ```
 
-Usage: `databay dashboards-card delete BOARD_ID KEY [OPTIONS]`
+Usage: `databay dashboards-card delete CARD_ID [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `BOARD_ID` | yes | Board Id |
-| `KEY` | yes | Key |
-| `--revision INTEGER` | yes | The board revision this change was made on. |
+| `CARD_ID` | yes | Card Id |
+| `--revision INTEGER` | yes | The card revision this change was made on. |
 | `--yes` |  | confirm: this removes or overwrites state |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-card get
+
+Return a card with the dashboards it sits on; ``revision`` is what a change to it sends.
+
+```
+Examples:
+  databay dashboards-card get <card_id>
+```
+
+Usage: `databay dashboards-card get CARD_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `CARD_ID` | yes | Card Id |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-card list
+
+List one page of the project's cards, the most recently changed first, each with the dashboards it sits on.
+
+``next_cursor`` pages on with the same ``q`` and ``placement``; another list's cursor is 422 ``request_invalid``.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay dashboards-card list --limit 20
+  databay dashboards-card list --q revenue --placement unplaced
+```
+
+Usage: `databay dashboards-card list [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--limit INTEGER` |  | How many cards to answer, from 1 to 100; 20 when left out. |
+| `--q STRING` |  | Keep the cards whose title holds this text, in any case. |
+| `--placement STRING` |  | any: every card (when left out); unplaced: only the cards on no dashboard. One of: any, unplaced. |
+| `--cursor STRING` |  | The next_cursor of the page before, sent with the same q and placement. |
+| `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -1078,7 +1126,7 @@ Usage: `databay dashboards-card preview [PROJECT_ID] [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `PROJECT_ID` |  | Project Id |
-| `--board-filters JSON` |  | Board filters (date_range, select); 422 invalid_filters when they do not fit. (JSON) |
+| `--board-filters JSON` |  | Board filters (date_range, select, and at most one warehouse filter whose default is a warehouse of the project); 422 invalid_filters when they do not fit. (JSON) |
 | `--filters JSON` |  | Filter values by filter key; absent filters take their defaults. (JSON) |
 | `--spec JSON` | yes | A card spec: {spec_version: 1, query: {sql, ...}, chart: {type, ...}}; 422 invalid_spec when it does not fit. (JSON) |
 | `--warehouse-id STRING` | yes | The warehouse of the project the card reads. |
@@ -1091,19 +1139,18 @@ Usage: `databay dashboards-card preview [PROJECT_ID] [OPTIONS]`
 
 ### databay dashboards-card run
 
-Run one card for the viewer, as their console reader in the board's project.
+Run a card for the viewer with its variables' defaults, outside any dashboard.
 
 ```
 Examples:
-  databay dashboards-card run <board_id> <key>
+  databay dashboards-card run <card_id>
 ```
 
-Usage: `databay dashboards-card run BOARD_ID KEY [OPTIONS]`
+Usage: `databay dashboards-card run CARD_ID [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `BOARD_ID` | yes | Board Id |
-| `KEY` | yes | Key |
+| `CARD_ID` | yes | Card Id |
 | `--filters JSON` |  | Filter values by filter key; absent filters take their defaults. (JSON) |
 | `--refresh` / `--no-refresh` |  | Skip the per-viewer result cache. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
@@ -1114,22 +1161,22 @@ Usage: `databay dashboards-card run BOARD_ID KEY [OPTIONS]`
 
 ### databay dashboards-card update
 
-Change a card's title or spec and answer with the whole dashboard.
+Change a card's title, query, chart or warehouse, everywhere it sits.
 
 ```
 Examples:
-  databay dashboards-card update <board_id> <key> --revision <revision> --title <title>
+  databay dashboards-card update <card_id> --revision <revision> --title <title>
 ```
 
-Usage: `databay dashboards-card update BOARD_ID KEY [OPTIONS]`
+Usage: `databay dashboards-card update CARD_ID [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `BOARD_ID` | yes | Board Id |
-| `KEY` | yes | Key |
-| `--revision INTEGER` | yes | The board revision this change was made on. |
+| `CARD_ID` | yes | Card Id |
+| `--revision INTEGER` | yes | The card revision this change was made on. |
 | `--spec JSON` |  | A card spec: {spec_version: 1, query: {sql, ...}, chart: {type, ...}}; 422 invalid_spec when it does not fit. (JSON) |
 | `--title STRING` |  | Title |
+| `--warehouse-id STRING` |  | The warehouse of the project the card's query runs in. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -1227,6 +1274,181 @@ Usage: `databay dashboards-folder update FOLDER_ID [OPTIONS]`
 | `FOLDER_ID` | yes | Folder Id |
 | `--name STRING` |  | Name |
 | `--parent-id STRING` |  | The folder to move it to; null, sent in a body file, moves it to the project's root. |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+## dashboards-home
+
+### databay dashboards-home get
+
+Answer the dashboard the project's Overview shows; ``dashboard_id`` is null until someone pins or sets one.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay dashboards-home get
+```
+
+Usage: `databay dashboards-home get [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-home pin
+
+Place a card of the project on its Overview dashboard and answer that dashboard.
+
+The project's first pin creates an ordinary dashboard named "Overview" and makes it the Overview;
+a card already there is 409 ``card_already_on_board``.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay dashboards-home pin --card-id <card_id>
+```
+
+Usage: `databay dashboards-home pin [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--card-id STRING` | yes | Card Id |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-home pin-many
+
+Place 1 to 50 cards of the project on its Overview dashboard in one go, and answer that dashboard.
+
+The first pin creates the Overview dashboard as a single pin does. A card already there is left as
+it is and listed in ``already_placed``. When any card cannot be placed (``card_not_found``,
+``filter_type_conflict``, ``invalid_layout`` at 100 cards) the whole batch is refused and nothing changes.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay dashboards-home pin-many --file <card_ids_json_file>
+```
+
+Usage: `databay dashboards-home pin-many [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--card-ids LIST` (repeat) | yes | The cards to pin, 1 to 50, each named once. |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-home set
+
+Make a dashboard of the project its Overview for everyone in it, replacing the one it showed.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
+
+```
+Examples:
+  databay dashboards-home set --dashboard-id <board_id> --yes
+```
+
+Usage: `databay dashboards-home set [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--dashboard-id STRING` | yes | Dashboard Id |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--yes` |  | confirm: this removes or overwrites state |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+## dashboards-placement
+
+### databay dashboards-placement create
+
+Place an existing card of the dashboard's project below its other cards; 409 when it is already there.
+
+```
+Examples:
+  databay dashboards-placement create <board_id> --card-id <card_id>
+```
+
+Usage: `databay dashboards-placement create BOARD_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `BOARD_ID` | yes | Board Id |
+| `--card-id STRING` | yes | Card Id |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-placement delete
+
+Take a card off the dashboard; the card stays in the project and on its other dashboards.
+
+```
+Examples:
+  databay dashboards-placement delete <board_id> <card_id>
+```
+
+Usage: `databay dashboards-placement delete BOARD_ID CARD_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `BOARD_ID` | yes | Board Id |
+| `CARD_ID` | yes | Card Id |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay dashboards-placement run
+
+Run one card that sits on the dashboard for the viewer, with the dashboard's filters.
+
+```
+Examples:
+  databay dashboards-placement run <board_id> <card_id>
+```
+
+Usage: `databay dashboards-placement run BOARD_ID CARD_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `BOARD_ID` | yes | Board Id |
+| `CARD_ID` | yes | Card Id |
+| `--filters JSON` |  | Filter values by filter key; absent filters take their defaults. (JSON) |
+| `--refresh` / `--no-refresh` |  | Skip the per-viewer result cache. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -2257,7 +2479,8 @@ Usage: `databay pipe pause PIPE_UUID [OPTIONS]`
 Rebuild an ingest pipe's table from ``source``; one rebuild runs per pipe at a time.
 
 202 with the rebuild id. Repeating a request with the same ``Idempotency-Key`` returns the
-same rebuild. 409 ``rebuild_in_progress`` while another is open, 409 ``quota_reached`` for a
+same rebuild. A ``retype`` rebuild ends a held ``retype`` rebuild and drops its backup table.
+409 ``rebuild_in_progress`` while another is open, 409 ``quota_reached`` for a
 ``snapshot`` of a pipe a quota pause covers; 422 for a source the pipe cannot serve (a batch
 pipe has no snapshot).
 
@@ -3327,6 +3550,7 @@ Get Schema Change Events
 ```
 Examples:
   databay schema-change pending <pipe_uuid>
+  databay schema-change pending <pipe_uuid> --status applied --status ignored
 ```
 
 Usage: `databay schema-change pending PIPE_UUID [OPTIONS]`
@@ -3334,6 +3558,31 @@ Usage: `databay schema-change pending PIPE_UUID [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `PIPE_UUID` | yes | UUID of the pipe |
+| `--status LIST` (repeat) |  | Only events in these statuses; repeat the parameter for several. Defaults to `detected`. One of: detected, applied, ignored, superseded. |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay schema-change state
+
+Each pipe with a schema change that is not done, worst first (stopped, then needs_decision).
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay schema-change state
+  databay schema-change state --pipe-uuid <pipe_uuid> --state stopped
+```
+
+Usage: `databay schema-change state [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--pipe-uuid STRING` |  | Only this pipe. |
+| `--state STRING` |  | Only pipes in this state. One of: stopped, needs_decision, waiting, done. |
+| `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |

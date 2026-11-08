@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from databay.resources.dashboards_card import DashboardsCardResource
     from databay.resources.dashboards_dataset import DashboardsDatasetResource
     from databay.resources.dashboards_folder import DashboardsFolderResource
+    from databay.resources.dashboards_home import DashboardsHomeResource
+    from databay.resources.dashboards_placement import DashboardsPlacementResource
     from databay.resources.db import DbResource
     from databay.resources.db_column import DbColumnResource
     from databay.resources.docs_article import DocsArticleResource
@@ -192,6 +194,18 @@ class Api:
         from databay.resources.dashboards_folder import DashboardsFolderResource
 
         return DashboardsFolderResource(self._session)
+
+    @cached_property
+    def dashboards_home(self) -> DashboardsHomeResource:
+        from databay.resources.dashboards_home import DashboardsHomeResource
+
+        return DashboardsHomeResource(self._session)
+
+    @cached_property
+    def dashboards_placement(self) -> DashboardsPlacementResource:
+        from databay.resources.dashboards_placement import DashboardsPlacementResource
+
+        return DashboardsPlacementResource(self._session)
 
     @cached_property
     def db(self) -> DbResource:

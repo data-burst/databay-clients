@@ -17,7 +17,6 @@ class BoardCreate(RequestModel):
     filters: list[dict[str, Any]] | None = None
     folder_id: str | None = None
     name: str
-    warehouse_id: str
 
 
 class BoardDuplicate(RequestModel):
@@ -28,24 +27,17 @@ class BoardDuplicate(RequestModel):
 class BoardPatch(RequestModel):
     folder_id: str | None = None
     name: str | None = None
+    refresh_interval_s: int | None = None
     revision: int
-
-
-class CardIn(RequestModel):
-    key: str
-    spec: dict[str, Any]
-    title: str
 
 
 class BoardPut(RequestModel):
-    cards: list[CardIn]
     description: str | None = None
     filters: list[dict[str, Any]]
     folder_id: str | None = None
-    layout: list[dict[str, Any]]
     name: str
+    placements: list[dict[str, Any]]
     revision: int
-    warehouse_id: str
 
 
 class CardFailure(ResponseModel):
@@ -56,9 +48,10 @@ class CardFailure(ResponseModel):
 
 
 class CardOutcome(ResponseModel):
+    card_id: str
     error: CardFailure | None = None
-    key: str
     result: CardResult | None = None
+    warehouse_id: str
 
 
 class BoardRunResponse(ResponseModel):
@@ -72,14 +65,15 @@ class BoardSummary(ResponseModel):
     id: str
     name: str
     project_id: str
+    refresh_interval_s: int | None
     revision: int
     source_builtin: BuiltinOrigin | None
     updated_at: datetime
     updated_by: str
-    warehouse_id: str
 
 
 class FolderTree(ResponseModel):
     boards: list[BoardSummary]
+    card_count: int
     folders: list[FolderOut]
     project_id: str

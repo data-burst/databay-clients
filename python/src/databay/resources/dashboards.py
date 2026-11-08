@@ -21,7 +21,6 @@ class DashboardsResource(Resource):
         self,
         *,
         name: str,
-        warehouse_id: str,
         project_id: str | Unset = UNSET,
         description: str | None | Unset = UNSET,
         filters: Any | Unset = UNSET,
@@ -30,7 +29,7 @@ class DashboardsResource(Resource):
         idempotency_key: str | None = None,
     ) -> BoardOut:
         """Create a dashboard. ``databay dashboards create``."""
-        return self._call(_ops.DASHBOARDS_CREATE, {'project_id': project_id, 'description': description, 'filters': filters, 'folder_id': folder_id, 'name': name, 'warehouse_id': warehouse_id}, project=project, idempotency_key=idempotency_key)
+        return self._call(_ops.DASHBOARDS_CREATE, {'project_id': project_id, 'description': description, 'filters': filters, 'folder_id': folder_id, 'name': name}, project=project, idempotency_key=idempotency_key)
 
     def delete(
         self,
@@ -73,17 +72,15 @@ class DashboardsResource(Resource):
         self,
         *,
         board_id: str,
-        cards: Any,
         filters: Any,
-        layout: Any,
         name: str,
+        placements: Any,
         revision: int,
-        warehouse_id: str,
         description: str | None | Unset = UNSET,
         folder_id: str | None | Unset = UNSET,
     ) -> BoardOut:
-        """Save a whole dashboard. ``databay dashboards replace``."""
-        return self._call(_ops.DASHBOARDS_REPLACE, {'board_id': board_id, 'cards': cards, 'description': description, 'filters': filters, 'folder_id': folder_id, 'layout': layout, 'name': name, 'revision': revision, 'warehouse_id': warehouse_id})
+        """Save a dashboard's details, filters and placements. ``databay dashboards replace``."""
+        return self._call(_ops.DASHBOARDS_REPLACE, {'board_id': board_id, 'description': description, 'filters': filters, 'folder_id': folder_id, 'name': name, 'placements': placements, 'revision': revision})
 
     def run(
         self,
@@ -102,6 +99,7 @@ class DashboardsResource(Resource):
         revision: int,
         folder_id: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        refresh_interval_s: int | None | Unset = UNSET,
     ) -> BoardOut:
         """Rename or move a dashboard. ``databay dashboards update``."""
-        return self._call(_ops.DASHBOARDS_UPDATE, {'board_id': board_id, 'folder_id': folder_id, 'name': name, 'revision': revision})
+        return self._call(_ops.DASHBOARDS_UPDATE, {'board_id': board_id, 'folder_id': folder_id, 'name': name, 'refresh_interval_s': refresh_interval_s, 'revision': revision})
