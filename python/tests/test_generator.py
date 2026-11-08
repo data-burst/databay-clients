@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
 import re
@@ -42,6 +43,13 @@ def _registry(tmp_path: Path, data: object) -> str:
     path = tmp_path / "error_codes.json"
     path.write_text(json.dumps(data), encoding="utf-8")
     return str(path)
+
+
+@pytest.mark.parametrize("package", ["models", "operations", "resources", "cli.commands"])
+def test_every_generated_module_imports(package):
+    root = REPO / "python" / "src" / "databay" / package.replace(".", "/")
+    for path in sorted(root.glob("*.py")):
+        importlib.import_module(f"databay.{package}.{path.stem}")
 
 
 def test_a_registry_of_bare_code_lists_is_refused(tmp_path):

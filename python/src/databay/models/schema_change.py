@@ -48,6 +48,7 @@ class PipeSchemaStateState(OpenStrEnum):
 
 
 class ApplyChangeInfo(RequestModel):
+    pass
 
 
 class PipeSchemaChange(ResponseModel):
