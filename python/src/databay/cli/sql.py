@@ -8,7 +8,7 @@ from typing import Any
 
 import click
 
-from databay.cli.common import common_options, console_for
+from databay.cli.common import call_once, common_options, result_envelope
 
 SQL_HELP = """Run one read-only statement and print its rows.
 
@@ -63,30 +63,15 @@ def sql(
     **values: Any,  # noqa: ANN401
 ) -> None:
     from databay.cli.output import emit_grid  # noqa: PLC0415
-    from databay.cli.runner import open_session  # noqa: PLC0415
-    from databay.invoke import CallValues, resolve_project  # noqa: PLC0415
+    from databay.invoke import CallValues  # noqa: PLC0415
     from databay.operations.sql import SQL_EXECUTE  # noqa: PLC0415
 
-    console, state = console_for(ctx, values)
     query = _statement(statement, file)
     body: dict[str, Any] = {"query": query}
     if db is not None:
         body["db_uuid"] = db
     call = CallValues(body=body, has_body=True, project_flag=project)
-    session, chosen = open_session(values, console, state)
-    chosen_project = resolve_project(SQL_EXECUTE, call, session.active_project)
-    state["context"] = {
-        "server": chosen.server,
-        "profile": chosen.name,
-        "project": chosen_project,
-        "request_id": session.transport.request_id,
-    }
-    state["reading"] = True
-    try:
-        result = session.call(SQL_EXECUTE, call)
-    finally:
-        session.transport.close()
-    state["context"]["request_id"] = result.request_id
+    console, result = call_once(ctx, values, SQL_EXECUTE, call)
     answer = result.parsed
     if answer.truncated:
         console.notice(
@@ -96,7 +81,4 @@ def sql(
         )
     for warning in answer.warnings or []:
         console.notice("warning", f"{warning.code}: {warning.message}", only_on_terminal=console.output == "json")
-    envelope: dict[str, Any] = {"result": result.raw}
-    if result.project is not None:
-        envelope["project"] = result.project
-    emit_grid(console, envelope, list(answer.columns), [list(row) for row in answer.rows])
+    emit_grid(console, result_envelope(result), list(answer.columns), [list(row) for row in answer.rows])

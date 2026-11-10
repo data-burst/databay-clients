@@ -12,7 +12,7 @@ import pytest
 from conftest import PROJECT, answer
 
 from databay.agent_skill import SOURCE
-from databay.cli.metrics import parse_where
+from databay.cli.metrics import parse_order, parse_where
 from databay.errors import DatabayUsageError
 
 BASE = f"/api/semantic/projects/{PROJECT}/metrics"
@@ -98,7 +98,8 @@ def test_query_sends_every_flag_in_the_body(cli, server):
         "metrics", "query", "channel_sessions",
         "--by", "channel", "--by", "day",
         "--from", "2026-10-01", "--to", "2026-10-31",
-        "--where", "channel=Paid Search", "--where", "sessions>=10",
+        "--where", "channel=Paid Search", "--where", "day>=2026-10-15",
+        "--order", "channel_sessions:desc", "--order", "channel",
         "--limit", "50", "--warehouse", "wh-2", "--model-version", "3", "--dry-run",
     )  # fmt: skip
 
@@ -111,8 +112,9 @@ def test_query_sends_every_flag_in_the_body(cli, server):
         "time": {"from": "2026-10-01", "to": "2026-10-31"},
         "filters": [
             {"member": "channel", "op": "equals", "values": ["Paid Search"]},
-            {"member": "sessions", "op": "gte", "values": ["10"]},
+            {"member": "day", "op": "gte", "values": ["2026-10-15"]},
         ],
+        "order": [{"member": "channel_sessions", "direction": "desc"}, {"member": "channel", "direction": "asc"}],
         "limit": 50,
         "warehouse": "wh-2",
         "model_version": 3,
@@ -209,17 +211,44 @@ def test_a_bad_where_is_a_usage_error_before_any_request(cli, server):
         ("orders<10", "orders", "lt", "10"),
         ("channel=Paid Search, EU", "channel", "equals", "Paid Search, EU"),
         ("note=a=b", "note", "equals", "a=b"),
-        (" channel = paid", "channel", "equals", " paid"),
+        (" channel = Paid Search ", "channel", "equals", "Paid Search"),
     ],
 )
 def test_where_parses_into_a_filter(text, member, op, value):
     assert parse_where(text) == {"member": member, "op": op, "values": [value]}
 
 
-@pytest.mark.parametrize("text", ["channel", "channel=", "=paid", "Channel=paid", "1st=x", "channel~paid"])
+@pytest.mark.parametrize(
+    "text",
+    ["channel", "channel=", "channel= ", "=paid", "Channel=paid", "1st=x", "channel~paid", "a==b", "a=>5", "a<>b"],
+)
 def test_where_refuses_what_is_not_member_op_value(text):
     with pytest.raises(DatabayUsageError):
         parse_where(text)
+
+
+@pytest.mark.parametrize(
+    ("text", "member", "direction"),
+    [("net_sales", "net_sales", "asc"), ("net_sales:desc", "net_sales", "desc"), ("day:asc", "day", "asc")],
+)
+def test_order_parses_into_an_order(text, member, direction):
+    assert parse_order(text) == {"member": member, "direction": direction}
+
+
+@pytest.mark.parametrize("text", ["", "net_sales:down", "-net_sales"])
+def test_order_refuses_what_is_not_member_and_direction(text):
+    with pytest.raises(DatabayUsageError):
+        parse_order(text)
+
+
+def test_csv_says_the_explain_is_only_in_json(cli, server):
+    server.on("POST", f"{BASE}/query", answer(200, {**ROWS, "explain": EXPLAIN}))
+
+    run = cli("metrics", "query", "net_sales", "--explain", "--output", "csv")
+
+    assert run.code == 0, run.stderr
+    assert run.events("explain")
+    assert "SELECT" not in run.stdout
 
 
 class Terminal(io.StringIO):
@@ -249,6 +278,15 @@ def test_a_terminal_sees_no_trace_id_line_for_a_4xx():
 def test_captured_stderr_carries_the_trace_id_of_a_5xx(cli, server):
     body = {"detail": "the warehouse failed the query", "code": "metric_query_failed", "trace_id": "abc123"}
     server.on("POST", f"{BASE}/query", answer(502, body))
+
+    run = cli("metrics", "query", "net_sales", "--no-retry")
+
+    assert run.error()["details"]["trace_id"] == "abc123"
+
+
+def test_captured_stderr_carries_the_trace_id_of_a_5xx_with_a_code_this_cli_does_not_know(cli, server):
+    body = {"detail": "newer refusal", "code": "some_future_code", "trace_id": "abc123"}
+    server.on("POST", f"{BASE}/query", answer(503, body))
 
     run = cli("metrics", "query", "net_sales", "--no-retry")
 

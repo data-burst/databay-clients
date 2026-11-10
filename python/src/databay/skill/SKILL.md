@@ -168,7 +168,8 @@ SQL: a metric is defined once, so its answer matches the dashboards. Work in thi
    `databay metrics describe <metric> --output json`.
 3. **Query** it. `--by` groups by a dimension (repeat it), `--grain` by the time dimension,
    `--last 30d` or `--from`/`--to` sets the range, and `--where` filters (`channel=paid`; also
-   `!=`, `>`, `>=`, `<`, `<=`; repeat it and every filter must hold). Pass `--warehouse` only
+   `!=`, `>`, `>=`, `<`, `<=`; repeat it and every filter must hold), and `--order <member>:desc` with
+   `--limit 10` answers a top 10. Pass `--warehouse` only
    when the metric is in several warehouses (`ambiguous_warehouse` names them).
 4. **Explain** when the user asks how a number was made, or before you rely on a surprising
    one: the same query with `--explain` adds the metric's definition, the SQL it ran and the
