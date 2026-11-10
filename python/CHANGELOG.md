@@ -18,6 +18,13 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
 - `databay status` reports `needs_org_choice`.
 - `databay schema-change state [--pipe-uuid] [--state]`: each pipe with an unfinished schema change,
   worst first; `databay schema-change pending --status` picks the event statuses to list.
+- `databay metrics list`, `databay metrics describe <metric>` and `databay metrics query <metric>` with
+  `--by`, `--grain`, `--last` or `--from`/`--to`, `--where member=value` (also `!=`, `>`, `>=`, `<`, `<=`),
+  `--limit`, `--warehouse`, `--model-version`, `--explain` and `--dry-run`; a query sends
+  `X-Databay-Caller: cli`. `databay warehouse-access-role get-metrics|set-metrics` read and set a role's
+  metric grants. The agent skill teaches list, describe, query and explain, and labels a `databay sql`
+  fallback `answer_path: raw_sql`.
+- On a terminal, an error answered with a 5xx prints its `trace_id`.
 - Dashboards follow the server's cards model: a card belongs to the project (`dashboards-card`), is put
   on dashboards with `dashboards-placement`, and a dashboard takes `--refresh-interval-s`;
   `dashboards-home` reads or sets the project's Overview dashboard and pins cards to it.

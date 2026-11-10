@@ -221,6 +221,8 @@ def _create_answer() -> httpx.Response:
             "source_id": "s1",
             "sink_db_uuid": "d1",
             "backend": "ingest",
+            "new_columns": "add",
+            "new_columns_source": "request",
             "preflight_skipped": [],
         },
     )

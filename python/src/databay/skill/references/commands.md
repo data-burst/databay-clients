@@ -6544,6 +6544,8 @@ Usage: `databay warehouse-service-account-credential update PROJECT_ID SERVICE_A
 |---|---|
 | `databay login` | Sign in and save a profile |
 | `databay logout` | Sign out: revoke and delete the profile's credential |
+| `databay metrics describe` | Describe one metric you can query |
+| `databay metrics query` | Query one metric by dimensions and time grain |
 | `databay org switch` | Make another organization active and refresh the token |
 | `databay pipe wait` | Wait until a pipe is active or its table is ready to query |
 | `databay profile` | Switch between and list profiles |
