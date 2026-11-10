@@ -76,7 +76,8 @@ class ProjectResource(Resource):
         project_id: str | Unset = UNSET,
         access: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        new_columns_default: str | None | Unset = UNSET,
         project: str | None = None,
     ) -> Project:
         """Update Project. ``databay project update``."""
-        return self._call(_ops.PROJECT_UPDATE, {'project_id': project_id, 'access': access, 'name': name}, project=project)
+        return self._call(_ops.PROJECT_UPDATE, {'project_id': project_id, 'access': access, 'name': name, 'new_columns_default': new_columns_default}, project=project)

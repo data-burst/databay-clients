@@ -42,6 +42,8 @@ if TYPE_CHECKING:
     from databay.resources.linkedin_source import LinkedinSourceResource
     from databay.resources.me import MeResource
     from databay.resources.meta_ads_source import MetaAdsSourceResource
+    from databay.resources.metrics import MetricsResource
+    from databay.resources.models import ModelsResource
     from databay.resources.nlq import NlqResource
     from databay.resources.notebook_credential import NotebookCredentialResource
     from databay.resources.org import OrgResource
@@ -290,6 +292,18 @@ class Api:
         from databay.resources.meta_ads_source import MetaAdsSourceResource
 
         return MetaAdsSourceResource(self._session)
+
+    @cached_property
+    def metrics(self) -> MetricsResource:
+        from databay.resources.metrics import MetricsResource
+
+        return MetricsResource(self._session)
+
+    @cached_property
+    def models(self) -> ModelsResource:
+        from databay.resources.models import ModelsResource
+
+        return ModelsResource(self._session)
 
     @cached_property
     def nlq(self) -> NlqResource:

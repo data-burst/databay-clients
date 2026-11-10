@@ -24,6 +24,11 @@ class ProjectAccess(OpenStrEnum):
     ORGANIZATION = 'organization'
 
 
+class ProjectNewColumnsDefault(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
 class ProjectRole(OpenStrEnum):
     VIEWER = 'viewer'
     EDITOR = 'editor'
@@ -43,6 +48,11 @@ class ProjectCreateAccess(OpenStrEnum):
 class ProjectUpdateAccess(OpenStrEnum):
     RESTRICTED = 'restricted'
     ORGANIZATION = 'organization'
+
+
+class ProjectUpdateNewColumnsDefault(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
 
 
 class Capabilities(ResponseModel):
@@ -101,6 +111,7 @@ class Project(ResponseModel):
     id: str
     is_general: bool
     name: str
+    new_columns_default: ProjectNewColumnsDefault
     revision: int
     role: ProjectRole | None
     status: ProjectStatus
@@ -115,6 +126,7 @@ class ProjectCreate(RequestModel):
 class ProjectUpdate(RequestModel):
     access: ProjectUpdateAccess | None = None
     name: str | None = None
+    new_columns_default: ProjectUpdateNewColumnsDefault | None = None
 
 
 ProjectListResponse = list[Project]

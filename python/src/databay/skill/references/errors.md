@@ -76,6 +76,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | Code | Exit | Action | Side effects | Max retries | Hint |
 |---|---|---|---|---|---|
 | `access_capability_unsupported` | 1 | fix_and_retry | none |  | Remove the columns or row filter, or pick a warehouse that supports them. |
+| `access_check_unavailable` | 6 | retry | none | 3 | Access could not be checked; retry in a moment. |
 | `access_management_unsupported` | 1 | fix_and_retry | none |  | Pick a warehouse whose type supports access roles and logins. |
 | `access_pending` | 6 | retry | none | 5 | Try again in a moment; your warehouse access is still being set up. |
 | `access_role_name_taken` | 1 | fix_and_retry | none |  | Pick another name for the access role. |
@@ -97,6 +98,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `already_member` | 1 | fix_and_retry | none |  | Change their role instead. |
 | `already_org_shared` | 1 | fix_and_retry | none |  | Skip the share; the resource is already available in every project of the organization. |
 | `ambiguous_org` | 1 | do_first | none |  | Sign in again; if this persists, an operator must remove the extra organization. |
+| `ambiguous_warehouse` | 1 | fix_and_retry | none |  | Name one of the listed warehouses and ask again. |
 | `announcement_not_found` | 1 | fix_and_retry | none |  | Check the announcement uuid. |
 | `api_key_last_project` | 1 | do_first | none |  | Add another project first, or revoke the key. |
 | `api_key_membership_refused` | 1 | ask_human | unknown |  | Contact support; the key's project access could not be set up. |
@@ -123,14 +125,18 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `binding_removing` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `board_not_found` | 1 | fix_and_retry | none |  | List the dashboards and pick one you can see. |
 | `budget_below_usage` | 1 | fix_and_retry | none |  | Confirm to pause the project, or set a budget at or above current. |
+| `built_table_restricted_upstream` | 1 | fix_and_retry | none |  | Let the role read the upstream table in full, or grant it the upstream table instead of the built one. |
 | `builtin_not_found` | 1 | fix_and_retry | none |  | Pick a built-in dashboard from the list. |
 | `card_already_on_board` | 1 | fix_and_retry | none |  | The card is already on this dashboard; nothing to add. |
 | `card_not_found` | 1 | fix_and_retry | none |  | Pick a card key the dashboard has. |
 | `card_revision_conflict` | 1 | do_first | none |  | Reload the card to get its current revision, reapply your change, then save again. |
 | `catalogue_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
 | `change_event_not_found` | 1 | fix_and_retry | none |  | List the pipe's schema changes and pick one you can see. |
+| `clickhouse_admin_refused` | 1 | ask_human | none |  | Ask your Databay administrator to check the analytics server's admin account. |
 | `clickhouse_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `client_config_unavailable` | 1 | ask_human | none |  | Ask the operator to configure the browser sign-in address on the auth service. |
+| `column_decision_stale` | 1 | fix_and_retry | none |  | Reload the pipe's schema changes and decide on the column as it is listed now. |
+| `column_decision_unavailable` | 6 | retry | unknown | 3 | Retry in a moment; repeating the same decision is safe. |
 | `column_not_granted` | 1 | fix_and_retry | none |  | Leave out the columns listed in columns, or ask an admin to grant them. |
 | `columns_not_in_source` | 1 | fix_and_retry | none |  | Choose from the source table's current columns. |
 | `columns_on_schemaless_stream` | 1 | fix_and_retry | none |  | Send the request without a column selection for this stream. |
@@ -159,6 +165,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `credentials_renewed_elsewhere` | 1 | fix_and_retry | none |  | Renew this source's credentials through its own reconnect flow. |
 | `cross_org` | 1 | fix_and_retry | none |  | Pick a project of your own organization. |
 | `cross_warehouse_reference` | 1 | fix_and_retry | none |  | Drop the database name before the table. |
+| `currency_codes_changed` | 6 | retry | none | 2 | Run the card again in a moment. |
 | `current_version` | 1 | fix_and_retry | none |  | Pick a version that is not current, or confirm retiring the current one. |
 | `custom_plan_delivery_failed` | 6 | retry | none | 2 | Retry, or email us. |
 | `custom_plan_request_too_soon` | 6 | retry | none | 1 | Retry after the Retry-After interval. |
@@ -189,6 +196,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `draft_already_published` | 1 | do_first | none |  | Create a new draft from the published version. |
 | `draft_exists` | 1 | fix_and_retry | none |  | Edit the existing draft, or replace it. |
 | `effective_not_lowering` | 1 | fix_and_retry | none |  | Send the change without an effective date; it applies now. |
+| `elt_unavailable` | 6 | retry | none | 3 | The models could not be listed; retry in a moment. |
 | `email_not_verified` | 1 | ask_human | none |  | Open the link we emailed you, or send a new one from the sign-in page. |
 | `endpoint_removed` | 1 | fix_and_retry | none |  | Call the replacement route detail names. |
 | `entitlements_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
@@ -209,6 +217,21 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `fx_rate_missing` | 1 | fix_and_retry | none |  | Pick a range or a reporting currency that has exchange rates. |
 | `fx_rate_unavailable` | 1 | fix_and_retry | none |  | Pick a reporting currency that has exchange rates for the currencies listed. |
 | `fx_unavailable` | 6 | retry | none | 3 | Try again in a moment. |
+| `git_auth_failed` | 1 | do_first | none |  | Add the deploy key to the repository read-only, or use a token that can read it. |
+| `git_commit_rejected` | 1 | fix_and_retry | none |  | Fix the file and line named, then push a new commit. |
+| `git_connection_busy` | 6 | retry | none | 3 | Retry in a moment; the git connection changed meanwhile. |
+| `git_connection_exists` | 1 | do_first | none |  | Disconnect the project's repository first, then connect again. |
+| `git_host_key_changed` | 1 | ask_human | none |  | Check the repository host's key; if the change is expected, connect the repository again. |
+| `git_installation_not_yours` | 1 | do_first | none |  | Install the Databay GitHub App from Databay's own install link, then connect again. |
+| `git_not_connected` | 1 | do_first | none |  | Connect a repository to the project first. |
+| `git_ref_not_found` | 1 | fix_and_retry | none |  | Name a branch and folder that exist in the repository. |
+| `git_repo_not_installed` | 1 | do_first | none |  | Install the Databay GitHub App on the repository, then connect again. |
+| `git_repo_too_large` | 1 | fix_and_retry | none |  | Make the dbt folder smaller, or keep large files out of it. |
+| `git_sync_failed` | 6 | retry | none | 3 | Retry the sync; if it keeps failing, tell support. |
+| `git_unreachable` | 6 | retry | none | 3 | Retry in a moment; the repository's host did not answer. |
+| `github_app_not_configured` | 1 | fix_and_retry | none |  | Connect with a deploy key or a token; this server has no GitHub App. |
+| `github_app_permission_refused` | 1 | do_first | none |  | Grant the Databay GitHub App the permissions Databay lists, then retry. |
+| `github_unavailable` | 6 | retry | none | 3 | Retry in a moment; GitHub did not answer. |
 | `home_board_not_deletable` | 1 | do_first | none |  | Set another dashboard as the project's Overview, then delete this one. |
 | `home_conflict` | 1 | fix_and_retry | none |  | Share the resource into the project instead; it already has a home project. |
 | `host_not_allowed` | 1 | fix_and_retry | none |  | Use your database's own address, a public hostname or a private address in your network. |
@@ -245,10 +268,13 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `job_name_taken` | 1 | fix_and_retry | none |  | Pick another name; transformation names are unique in the organization. |
 | `job_not_found` | 1 | fix_and_retry | none |  | List the transformations and pick one you can see. |
 | `keyless_selection_needs_key` | 1 | fix_and_retry | none |  | Name a primary_key for the selection on this keyless table. |
+| `landed_tables_unreadable` | 1 | fix_and_retry | none |  | Fix the warehouse's connection settings or its user's access as detail says, then retry. |
 | `last_admin` | 1 | do_first | none |  | Make another member an admin first. |
 | `leftover_check_unavailable` | 6 | retry | none | 3 | Check that the database is reachable, then check again. |
 | `leftover_not_found` | 1 | fix_and_retry | none |  | Reload the list; this leftover is already resolved or is not in your project. |
 | `leftover_source_gone` | 1 | ask_human | none |  | Drop it on the database yourself with the SQL shown, then dismiss it. |
+| `lineage_unreadable` | 1 | ask_human | none |  | Ask your Databay administrator to check the warehouse's query log. |
+| `lineage_window_too_large` | 1 | fix_and_retry | none |  | Read the lineage in shorter windows. |
 | `login_validity_invalid` | 1 | fix_and_retry | none |  | Pick an expiry date in the future and within the allowed number of days. |
 | `logout_failed` | 6 | retry | unknown | 3 | Retry signing out. |
 | `managed_warehouse_sink_locked` | 1 | fix_and_retry | none |  | Send the request again without sink_db_uuid. |
@@ -261,15 +287,29 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `member_not_found` | 1 | fix_and_retry | none |  | List the organization's members and pick one of them. |
 | `member_not_in_organization` | 1 | do_first | none |  | Invite them to the organization first. |
 | `member_role_unchanged` | 1 | fix_and_retry | none |  | Pick a role the member does not hold yet. |
+| `metric_not_found` | 1 | fix_and_retry | none |  | List the metrics you can query and use one of their names. |
+| `metric_query_failed` | 6 | retry | none | 3 | The metric query failed; retry in a moment. |
 | `migration_refused` | 1 | fix_and_retry | none |  | Fix each organization listed in refused, or leave it out, then run the move again. |
 | `missing_feature_values` | 1 | fix_and_retry | none |  | Set a value for each feature listed in problems. |
 | `missing_meter_values` | 1 | fix_and_retry | none |  | Set a value for each meter listed in problems. |
 | `missing_param` | 1 | fix_and_retry | none |  | Bind the parameter to a filter, or give it a fixed value. |
 | `missing_sources` | 1 | do_first | none |  | Connect the sources listed in missing. |
+| `model_check_unavailable` | 6 | retry | none | 3 | Retry in a moment; nothing was saved. |
+| `model_in_git` | 1 | ask_human | none |  | Edit this model in its repository; Databay syncs the change. |
+| `model_in_use` | 1 | fix_and_retry | none |  | Change or delete the models listed in readers first, then delete this one. |
+| `model_name_reserved` | 1 | fix_and_retry | none |  | Pick a name without the reserved part. |
+| `model_name_taken` | 1 | fix_and_retry | none |  | Pick another name for the model. |
+| `model_refresh_unsupported` | 1 | fix_and_retry | none |  | Store the model as a table or incremental table, or set its refresh to manual. |
+| `model_sources_unavailable` | 6 | retry | none | 3 | Retry in a moment. |
+| `model_sql_rejected` | 1 | fix_and_retry | none |  | Change the model's SQL as detail says, then save again. |
+| `model_version_stale` | 1 | fix_and_retry | none |  | Open the current version, apply your edits to it, then save again. |
+| `model_version_unavailable` | 6 | retry | none | 3 | The metric model is updating; retry in a moment. |
+| `model_warehouse_unusable` | 1 | do_first | none |  | Pick a warehouse this project uses and that is ready, then save again. |
 | `multi_property_off` | 1 | fix_and_retry | none |  | Connect one property per connection. |
 | `name_collision` | 1 | ask_human | none |  | Contact support; the warehouse's analytics server name belongs to another warehouse. |
 | `name_reserved` | 1 | fix_and_retry | none |  | Pick another warehouse name. |
 | `name_taken` | 1 | fix_and_retry | none |  | Pick another warehouse name. |
+| `new_columns_unsupported` | 1 | fix_and_retry | none |  | Use add for new columns; asking first is not available for this pipe or organization. |
 | `no_draft` | 1 | do_first | none |  | Create a draft of the plan first. |
 | `no_published_version` | 1 | do_first | none |  | Publish the plan's draft first. |
 | `no_reachable_account` | 1 | fix_and_retry | none |  | Check that the token reaches at least one account. |
@@ -351,6 +391,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `plan_seed_invalid` | 1 | ask_human | none |  | Ask an operator to fix the built-in plan seed. |
 | `plan_source_limit` | 1 | ask_human | none |  | Contact us for a plan with more sources. |
 | `platform_credentials_missing` | 1 | fix_and_retry | none |  | Supply your own platform credentials. |
+| `policy_apply_failed` | 1 | ask_human | none |  | The metric model is not updating; ask your org admin to check access. |
 | `precheck_busy` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `precheck_limiter_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `precheck_rate_limited` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
@@ -363,6 +404,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `project_forbidden` | 1 | ask_human | none |  | Pick another project or ask a project admin for access. |
 | `project_general_immutable` | 1 | fix_and_retry | none |  | Use another project; General cannot be renamed, deleted, restricted or have its members changed. |
 | `project_live_graph_immutable` | 1 | fix_and_retry | none |  | Leave the items that have live pipelines unchanged, or delete those pipelines first. |
+| `project_models_broken` | 1 | do_first | none |  | Fix the models listed in broken_models first, then save again. |
 | `project_not_deleting` | 1 | fix_and_retry | none |  | Check the project's state; this call applies only to a project being deleted. |
 | `project_not_empty` | 1 | do_first | none |  | Move or delete its pipelines and resources, or ask an org admin for a forced delete. |
 | `project_not_found` | 1 | fix_and_retry | none |  | Pick a project you can see; this one does not exist, is being deleted, or is not visible to you. |
@@ -383,9 +425,11 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `question_failed` | 6 | retry | none | 2 | Ask again, or write the query in the SQL editor. |
 | `quota_exceeded` | 1 | do_first | none |  | Wait until the hourly query limit resets, then try again. |
 | `quota_reached` | 1 | ask_human | none |  | Delete one to make room, or ask whoever lift_by names to raise the limit in quota. |
+| `reader_conflict` | 1 | ask_human | none |  | Ask your Databay administrator to check this warehouse's reader. |
 | `reader_engine_mismatch` | 1 | fix_and_retry | none |  | Create the pipe without reader_id, or switch the reader to this pipe's engine first. |
 | `reader_full` | 1 | fix_and_retry | none |  | Create the pipe without reader_id to give it a reader of its own. |
 | `reader_partition_conflict` | 1 | fix_and_retry | none |  | Create the pipe without reader_id to give it a reader of its own. |
+| `reader_password_missing` | 1 | ask_human | none |  | Ask your Databay administrator to rotate this warehouse's reader. |
 | `reader_publication_mode_mismatch` | 1 | fix_and_retry | none |  | Create the pipe without reader_id; it then gets a reader of its own. |
 | `reader_scope_required` | 1 | fix_and_retry | none |  | Send the request again with "scope": "reader"; the answer lists the pipes it changes. |
 | `reason_required` | 1 | fix_and_retry | none |  | Say why you are making the change, then send it again. |
@@ -411,6 +455,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `rollout_off_cli_only` | 1 | ask_human | none |  | Ask an operator to change it with the operator CLI. |
 | `row_count_unavailable` | 6 | retry | none | 2 | Try again in a moment; until the warehouse answers, the count is unknown. |
 | `row_filter_invalid` | 1 | fix_and_retry | none |  | Fix the filter condition the error names so its column exists and its value fits the column type. |
+| `rule_built_relation_unknown` | 1 | fix_and_retry | none |  | Pick a model from the warehouse's built models. |
 | `rule_column_unknown` | 1 | fix_and_retry | none |  | Pick columns the table has. |
 | `rule_duplicate_table` | 1 | fix_and_retry | none |  | Name each table once per warehouse in an access role. |
 | `rule_overlap` | 1 | fix_and_retry | none |  | Keep either one whole-warehouse rule or table rules for each warehouse in a role. |
@@ -426,6 +471,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `schema_version_contention` | 6 | retry | none | 3 | Retry; another apply on the pipe is in progress. |
 | `schema_version_not_found` | 1 | fix_and_retry | none |  | List the pipe's schema history and pick a version it has. |
 | `secret_key_missing` | 1 | ask_human | none |  | Ask your administrator to finish this server's setup. |
+| `semantic_unavailable` | 6 | retry | none | 3 | The numbers are updating; retry in a moment. |
 | `service_account_key_invalid` | 1 | fix_and_retry | none |  | Send a valid service account key. |
 | `service_account_needs_access_role` | 1 | fix_and_retry | none |  | Pick at least one access role for the service account. |
 | `service_credential_exists` | 1 | fix_and_retry | none |  | Rotate the service account's credential for this warehouse to get a new password. |
@@ -526,6 +572,8 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `version_in_use` | 1 | do_first | none |  | Move the subscriptions off this version first. |
 | `version_published` | 1 | do_first | none |  | Create a draft from this version and change that instead. |
 | `version_retired` | 1 | fix_and_retry | none |  | Use the plan's current version. |
+| `warehouse_credential_rejected` | 1 | ask_human | none |  | Ask your org admin to re-run the warehouse access reconcile. |
+| `warehouse_name_unsafe` | 1 | ask_human | none |  | Ask your Databay administrator to check this warehouse's database name. |
 | `warehouse_not_in_project` | 1 | fix_and_retry | none |  | Pick a warehouse available in this project. |
 | `warehouse_not_queryable` | 1 | fix_and_retry | none |  | Pick a warehouse Databay manages on your organization's analytics server; only those can be queried. |
 | `warehouse_not_visible` | 1 | fix_and_retry | none |  | Pick a warehouse from this project's list. |
@@ -536,6 +584,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `webhook_body_invalid` | 1 | fix_and_retry | none |  | Send the webhook with every required field. |
 | `webhook_forbidden` | 1 | fix_and_retry | none |  | Send alerts from this project instead. |
 | `webhook_replay_unavailable` | 1 | fix_and_retry | none |  | Send a new Idempotency-Key to create the webhook again. |
+| `webhook_signature_invalid` | 1 | fix_and_retry | none |  | Sign the webhook with the secret shown when the repository was connected. |
 | `webhook_url_undeliverable` | 1 | fix_and_retry | none |  | Use a URL this webhook type can deliver to. |
 | `workspace_unavailable` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
 | `wrong_credentials` | 1 | fix_and_retry | none |  | Check the username and password, then sign in again. |
@@ -600,6 +649,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `lane_spill_exhausted` | do_first | partial |  | Resync the pipe to copy the table again; contact support if it happens again. |
 | `lane_stalled` | do_first | partial |  | Check the pipe's errors, then resync the pipe to copy the table again. |
 | `mask_failed` | fix_and_retry | partial |  | Check that the masked columns still exist at the source, then restart the pipe. |
+| `new_columns_untracked` | fix_and_retry | none |  | Set the pipe to add new columns automatically, or turn schema change tracking on, then restart it. |
 | `pipe_not_provisioned` | retry | unknown | 5 | Wait for provisioning to finish and retry; if the pipe stays in this state, delete and re-create it. |
 | `pipe_shares_reader` | do_first | none |  | Delete or move the other pipes of the reader first. |
 | `publication_drift` | ask_human | partial |  | Have the database admin add the table back to the publication, then resync the pipe to fill the gap. |
@@ -620,6 +670,7 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `source_auth_failed` | fix_and_retry | unknown |  | Update the source's username and password, then retry the pipe. |
 | `source_binlog_status_unreadable` | ask_human | none |  | Ask the database administrator to grant REPLICATION CLIENT to Databay's user, then restart the pipe. |
 | `source_cdc_cleanup_passed` | ask_human | none |  | Raise the source's CDC cleanup retention, then resync the pipe to copy the table again. |
+| `source_column_reserved` | fix_and_retry | none |  | Rename the source column, or create a new pipe that leaves it out. |
 | `source_database_dropped` | do_first | partial |  | Once the database is back, resync the pipe (a rebuild from the snapshot source) to copy it again. |
 | `source_host_changed_live_pipe` | do_first | partial |  | Delete and re-create the pipe to stream from the new host. |
 | `source_host_not_allowed` | fix_and_retry | unknown |  | Point the source at your database's own public or private address, then retry the pipe. |

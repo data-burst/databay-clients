@@ -89,6 +89,18 @@ PIPE_CREATE = Operation(
                 nullable=True,
             ),
             Param(
+                name='new_columns',
+                location='body',
+                kind='string',
+                required=False,
+                description="Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Omitted: the project's default.",
+                choices=(
+                    'add',
+                    'ask',
+                ),
+                nullable=True,
+            ),
+            Param(
                 name='nullable_overrides',
                 location='body',
                 kind='json',
@@ -806,6 +818,53 @@ PIPE_STATUS = Operation(
     ),
 )
 
+PIPE_UPDATE = Operation(
+    operation_id='pipe_update',
+    noun='pipe',
+    verb='update',
+    method='patch',
+    path='/api/cdc/pipe/{pipe_uuid}',
+    summary='Update Pipe',
+    description='Change whether new source columns are added automatically or wait for a decision.\n\n422 ``new_columns_unsupported`` for ``ask`` on a pipe that syncs on a schedule, in a Shopify store, or\nwhere source schema changes are not tracked.',
+    project=None,
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='pipe_uuid',
+            location='path',
+            kind='string',
+            required=True,
+            description='pipe uuid',
+        ),
+    ),
+    body=Body(
+        schema='PipeUpdate',
+        fields=(
+            Param(
+                name='new_columns',
+                location='body',
+                kind='string',
+                required=True,
+                description='Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Switching to `add` adds every column waiting for a decision; a skipped column stays out.',
+                choices=(
+                    'add',
+                    'ask',
+                ),
+            ),
+        ),
+    ),
+    response=Response(
+        kind='json',
+        model='pipe:PipeNewColumnsResponse',
+        shape='object',
+    ),
+    examples=(
+        'databay pipe update <pipe_uuid> --new-columns ask',
+    ),
+)
+
 OPERATIONS = (
     PIPE_CREATE,
     PIPE_DELETE,
@@ -819,4 +878,5 @@ OPERATIONS = (
     PIPE_RETRY,
     PIPE_ROLLUP,
     PIPE_STATUS,
+    PIPE_UPDATE,
 )

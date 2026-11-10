@@ -13,7 +13,7 @@ from databay.resource import Resource, UNSET, Unset, Waited
 if TYPE_CHECKING:
     from pydantic import SecretStr
 
-    from databay.models.pipe import PipeDeleteAccepted, PipeListResponse, PipePauseResponse, PipeRebuildAccepted, PipeRestartAccepted, PipeResumeResponse, PipeRetryAccepted, PipeRollup, PipeV2CreateResponse, PipeV2DetailResponse, PipeV2StatusResponse, PipelineMoved
+    from databay.models.pipe import PipeDeleteAccepted, PipeListResponse, PipeNewColumnsResponse, PipePauseResponse, PipeRebuildAccepted, PipeRestartAccepted, PipeResumeResponse, PipeRetryAccepted, PipeRollup, PipeV2CreateResponse, PipeV2DetailResponse, PipeV2StatusResponse, PipelineMoved
 
 
 class PipeResource(Resource):
@@ -31,6 +31,7 @@ class PipeResource(Resource):
         cron_expression: str | Unset = UNSET,
         mask_fields: Any | Unset = UNSET,
         mask_secret: SecretStr | str | None | Unset = UNSET,
+        new_columns: str | None | Unset = UNSET,
         nullable_overrides: Any | None | Unset = UNSET,
         primary_key: list[str] | None | Unset = UNSET,
         project_id: str | Unset = UNSET,
@@ -43,7 +44,7 @@ class PipeResource(Resource):
         idempotency_key: str | None = None,
     ) -> PipeV2CreateResponse:
         """Create Pipe. ``databay pipe create``."""
-        return self._call(_ops.PIPE_CREATE, {'acknowledge_org_visible': acknowledge_org_visible, 'backend': backend, 'column_types': column_types, 'columns': columns, 'cron_expression': cron_expression, 'dest_table_name': dest_table_name, 'mask_fields': mask_fields, 'mask_secret': mask_secret, 'nullable_overrides': nullable_overrides, 'primary_key': primary_key, 'project_id': project_id, 'reader_id': reader_id, 'schedule_type': schedule_type, 'schema_name': schema_name, 'sink_db_uuid': sink_db_uuid, 'source_id': source_id, 'sync_mode': sync_mode, 'table_name': table_name}, project=project, idempotency_key=idempotency_key)
+        return self._call(_ops.PIPE_CREATE, {'acknowledge_org_visible': acknowledge_org_visible, 'backend': backend, 'column_types': column_types, 'columns': columns, 'cron_expression': cron_expression, 'dest_table_name': dest_table_name, 'mask_fields': mask_fields, 'mask_secret': mask_secret, 'new_columns': new_columns, 'nullable_overrides': nullable_overrides, 'primary_key': primary_key, 'project_id': project_id, 'reader_id': reader_id, 'schedule_type': schedule_type, 'schema_name': schema_name, 'sink_db_uuid': sink_db_uuid, 'source_id': source_id, 'sync_mode': sync_mode, 'table_name': table_name}, project=project, idempotency_key=idempotency_key)
 
     def delete(
         self,
@@ -196,3 +197,12 @@ class PipeResource(Resource):
     ) -> PipeV2StatusResponse | Waited[PipeV2StatusResponse]:
         """Get Pipe Status. ``databay pipe status``."""
         return self._call(_ops.PIPE_STATUS, {'pipe_uuid': pipe_uuid}, wait=wait, timeout=timeout)
+
+    def update(
+        self,
+        *,
+        pipe_uuid: str,
+        new_columns: str,
+    ) -> PipeNewColumnsResponse:
+        """Update Pipe. ``databay pipe update``."""
+        return self._call(_ops.PIPE_UPDATE, {'pipe_uuid': pipe_uuid, 'new_columns': new_columns})

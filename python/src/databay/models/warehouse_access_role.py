@@ -22,10 +22,20 @@ class AccessRoleState(OpenStrEnum):
     DROPPING = 'dropping'
 
 
+class MetricGrantMode(OpenStrEnum):
+    INCLUDE = 'include'
+    EXCLUDE = 'exclude'
+
+
 class RuleStatus(OpenStrEnum):
     ACTIVE = 'active'
     INACTIVE = 'inactive'
     STALE = 'stale'
+
+
+class WriterKind(OpenStrEnum):
+    BUILTIN_WRITER = 'builtin_writer'
+    MODEL_WRITER = 'model_writer'
 
 
 class AccessRoleCreate(RequestModel):
@@ -34,6 +44,8 @@ class AccessRoleCreate(RequestModel):
 
 
 class AccessRuleOut(ResponseModel):
+    built_database: str | None
+    built_writer_kind: WriterKind | None
     columns: list[str] | None
     db_uuid: str
     row_filter: RowCondition | AllOfOutput | AnyOfOutput | None
@@ -75,6 +87,7 @@ class AllOfInput(RequestModel):
 
 
 class AccessRuleIn(RequestModel):
+    built_database: str | None = None
     columns: list[str] | None = None
     db_uuid: str
     row_filter: RowCondition | AllOfInput | AnyOfInput | None = None
@@ -91,9 +104,33 @@ class AccessScopeModePut(RequestModel):
     scope_mode: AccessScopeMode
 
 
+class MetricGrant(ResponseModel):
+    metrics: list[str]
+    mode: MetricGrantMode
+
+
+class MetricGrantPut(RequestModel):
+    metrics: list[str]
+    mode: MetricGrantMode
+    revision: int
+
+
+class RoleMetricsOut(ResponseModel):
+    grant: MetricGrant | None
+    revision: int
+    role_id: str
+
+
 class SchemaColumnOut(ResponseModel):
     name: str
     type: str
+
+
+class SchemaBuiltRelationOut(ResponseModel):
+    columns: list[SchemaColumnOut]
+    database: str
+    name: str
+    writer_kind: WriterKind
 
 
 class SchemaTableOut(ResponseModel):
@@ -102,6 +139,7 @@ class SchemaTableOut(ResponseModel):
 
 
 class WarehouseSchemaOut(ResponseModel):
+    built_relations: list[SchemaBuiltRelationOut]
     db_uuid: str
     tables: list[SchemaTableOut]
 

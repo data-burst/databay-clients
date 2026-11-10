@@ -2005,6 +2005,99 @@ Usage: `databay meta-ads-source list [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+## metrics
+
+### databay metrics list
+
+List the metrics you can query, each with its dimensions, grains, warehouses and state.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metrics list
+```
+
+Usage: `databay metrics list [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+## models
+
+### databay models check
+
+Check a branch's tip as a sync would, with ``EXPLAIN ESTIMATE`` advice; nothing is applied or built.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+Exits 9 (not_ready) when passed is false.
+
+```
+Examples:
+  databay models check --ref main
+```
+
+Usage: `databay models check [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--ref STRING` | yes | Ref |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay models sync
+
+Read the branch on the next pass; its outcome shows in the status.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay models sync
+```
+
+Usage: `databay models sync [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay models sync-status
+
+Connection Status
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+```
+Examples:
+  databay models sync-status
+```
+
+Usage: `databay models sync-status [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ## nlq
 
 ### databay nlq ask
@@ -2322,6 +2415,7 @@ Usage: `databay pipe create [OPTIONS]`
 | `--mask-fields JSON` |  | Columns to encrypt or hash on the way into the destination. Each masked column is stored as String. (JSON) |
 | `--mask-secret-env NAME` |  | name of the environment variable that holds mask_secret (secret) |
 | `--mask-secret-stdin` |  | read mask_secret (secret) from stdin |
+| `--new-columns STRING` |  | Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Omitted: the project's default. One of: add, ask. |
 | `--nullable-overrides JSON` |  | Per-column destination nullability, overriding the source's. A replication-key column is always written NOT NULL regardless of this. (JSON) |
 | `--primary-key LIST` (repeat) |  | Columns to use as the replication key, IN KEY ORDER. Becomes the destination table's ORDER BY, which is what deduplication happens on. Overrides the source table's own primary key, and is what lets a table with no primary key be replicated at all. Omit to use the source's key. IMMUTABLE after create — the destination's sort order cannot be altered, so changing it means deleting the pipe AND dropping the destination table. |
 | `--project-id STRING` |  | The workspace project the pipe belongs to; the caller needs edit there |
@@ -2640,6 +2734,30 @@ Usage: `databay pipe status PIPE_UUID [OPTIONS]`
 | `PIPE_UUID` | yes | pipe uuid |
 | `--wait` |  | wait until it is done, polling its status |
 | `--timeout S` |  | seconds --wait may take before exit 4 (resumable) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay pipe update
+
+Change whether new source columns are added automatically or wait for a decision.
+
+422 ``new_columns_unsupported`` for ``ask`` on a pipe that syncs on a schedule, in a Shopify store, or
+where source schema changes are not tracked.
+
+```
+Examples:
+  databay pipe update <pipe_uuid> --new-columns ask
+```
+
+Usage: `databay pipe update PIPE_UUID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PIPE_UUID` | yes | pipe uuid |
+| `--new-columns STRING` | yes | Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Switching to `add` adds every column waiting for a decision; a skipped column stays out. One of: add, ask. |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -3112,6 +3230,7 @@ Acts in a project, sent as path project_id: --project, else the profile's active
 ```
 Examples:
   databay project update <project_id> --name "Marketing analytics" --access organization
+  databay project update <project_id> --new-columns-default ask
 ```
 
 Usage: `databay project update [PROJECT_ID] [OPTIONS]`
@@ -3121,6 +3240,7 @@ Usage: `databay project update [PROJECT_ID] [OPTIONS]`
 | `PROJECT_ID` |  | Project Id |
 | `--access STRING` |  | Access. One of: restricted, organization. |
 | `--name STRING` |  | Name |
+| `--new-columns-default STRING` |  | What a new pipe in this project does with a new source column: add it automatically (`add`) or wait for a decision (`ask`). Each pipe takes it when it is created and can override it. One of: add, ask. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -3170,7 +3290,7 @@ Usage: `databay project-budget set [PROJECT_ID] [OPTIONS]`
 | `PROJECT_ID` |  | Project Id |
 | `--confirm-pause` / `--no-confirm-pause` |  | Save a flow budget below this period's usage anyway. |
 | `--limit INTEGER` |  | The budget; null removes it. |
-| `--meter STRING` | yes | One of: pipes, sources_db, sources_saas, warehouses_managed, projects, seats_editor, api_keys, ssbi_jobs, rows_landed, snapshot_rows, saas_sync_runs, max_backfill_days, max_streams_per_source, console_ch_queries, console_ch_errors, console_ch_read_rows, console_ch_execution_time, notebook_ch_queries, notebook_ch_errors, notebook_ch_read_rows, notebook_ch_execution_time, warehouse_cpu_seconds, warehouse_read_bytes, warehouse_principals, warehouse_login_ch_queries, warehouse_login_ch_errors, warehouse_login_ch_read_rows, warehouse_login_ch_execution_time. |
+| `--meter STRING` | yes | One of: pipes, sources_db, sources_saas, warehouses_managed, projects, seats_editor, api_keys, ssbi_jobs, rows_landed, snapshot_rows, saas_sync_runs, max_backfill_days, max_streams_per_source, console_ch_queries, console_ch_errors, console_ch_read_rows, console_ch_execution_time, notebook_ch_queries, notebook_ch_errors, notebook_ch_read_rows, notebook_ch_execution_time, semantic_ch_queries, semantic_ch_errors, semantic_ch_read_rows, semantic_ch_execution_time, warehouse_cpu_seconds, warehouse_read_bytes, warehouse_principals, warehouse_login_ch_queries, warehouse_login_ch_errors, warehouse_login_ch_read_rows, warehouse_login_ch_execution_time. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -3477,13 +3597,14 @@ Usage: `databay resource-home transfer RESOURCE_TYPE RESOURCE_ID [OPTIONS]`
 
 ### databay schema-change apply
 
-Apply Schema Change Event
+Remove a column the source dropped, or add a new column that waits for a decision (``backfill`` required).
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
 ```
 Examples:
   databay schema-change apply <event_uuid> --yes
+  databay schema-change apply <event_uuid> --backfill --yes
 ```
 
 Usage: `databay schema-change apply EVENT_UUID [OPTIONS]`
@@ -3491,6 +3612,7 @@ Usage: `databay schema-change apply EVENT_UUID [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `EVENT_UUID` | yes | UUID of the schema change event to apply |
+| `--backfill` / `--no-backfill` |  | Required to add a column that waits for a decision, refused for any other change. `true` reloads the table from the source so existing rows get the column; `false` fills it only in rows that change from now on. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--yes` |  | confirm: this removes or overwrites state |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -3500,7 +3622,7 @@ Usage: `databay schema-change apply EVENT_UUID [OPTIONS]`
 
 ### databay schema-change ignore
 
-Ignore Schema Change Event
+Keep a column the source dropped, or skip a new column that waits for a decision.
 
 Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
 
@@ -3581,7 +3703,7 @@ Usage: `databay schema-change state [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `--pipe-uuid STRING` |  | Only this pipe. |
-| `--state STRING` |  | Only pipes in this state. One of: stopped, needs_decision, waiting, done. |
+| `--state STRING` |  | Only pipes in this state. One of: stopped, needs_decision, done. |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -5618,6 +5740,29 @@ Usage: `databay warehouse-access-role delete PROJECT_ID ROLE_ID [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay warehouse-access-role get-metrics
+
+Show which semantic-layer metrics the role reads; ``grant`` null means every metric over what it reads.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay warehouse-access-role get-metrics <project_id> <role_id>
+```
+
+Usage: `databay warehouse-access-role get-metrics PROJECT_ID ROLE_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` | yes | Project Id |
+| `ROLE_ID` | yes | Role Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay warehouse-access-role list
 
 List the project's access roles and their rules.
@@ -5663,14 +5808,44 @@ Usage: `databay warehouse-access-role list-tables PROJECT_ID DB_UUID [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay warehouse-access-role set-metrics
+
+Replace the role's metric grant (revision-checked); names are stored as given, semantic checks them.
+
+``include`` reads only the named metrics, ``exclude`` all but them. Refusals: 422 ``request_invalid`` for a
+name that is not a distinct snake_case identifier; 409 ``access_role_revision_conflict``.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay warehouse-access-role set-metrics <project_id> <role_id> --file metrics.json
+```
+
+Usage: `databay warehouse-access-role set-metrics PROJECT_ID ROLE_ID [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` | yes | Project Id |
+| `ROLE_ID` | yes | Role Id |
+| `--metrics LIST` (repeat) | yes | Metrics |
+| `--mode STRING` | yes | One of: include, exclude. |
+| `--revision INTEGER` | yes | the role's revision the change is based on |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay warehouse-access-role set-rules
 
 Replace the role's rules (revision-checked), each checked at write time.
 
 Refusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,
 ``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,
-``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``; 409
-``conflicting_table_rules`` and ``access_role_revision_conflict``.
+``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``, ``built_table_restricted_upstream``;
+409 ``conflicting_table_rules`` and ``access_role_revision_conflict``.
 
 Acts in a project, sent as path project_id: --project, else the profile's active project.
 
@@ -6356,6 +6531,8 @@ Usage: `databay warehouse-service-account-credential update PROJECT_ID SERVICE_A
 
 | Operation | Command |
 |---|---|
+| `POST /api/semantic/projects/{project_id}/metrics/query` | `databay metrics query` (not in this CLI version) |
+| `GET /api/semantic/projects/{project_id}/metrics/{metric}` | `databay metrics describe` (not in this CLI version) |
 | `PUT /api/auth/me/active-org` | `databay org switch` (not in this CLI version) |
 | `POST /api/configstore/sql/execute` | `databay sql` |
 
