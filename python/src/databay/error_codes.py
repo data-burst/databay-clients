@@ -97,6 +97,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'cross_org': ErrorInfo('Pick a project of your own organization.', 'fix_and_retry', 'none', None),
     'cross_warehouse_reference': ErrorInfo('Drop the database name before the table.', 'fix_and_retry', 'none', None),
     'currency_codes_changed': ErrorInfo('Run the card again in a moment.', 'retry', 'none', 2),
+    'currency_unreadable': ErrorInfo("This data's currencies can't be read; contact support.", 'ask_human', 'none', None),
     'current_version': ErrorInfo('Pick a version that is not current, or confirm retiring the current one.', 'fix_and_retry', 'none', None),
     'custom_plan_delivery_failed': ErrorInfo('Retry, or email us.', 'retry', 'none', 2),
     'custom_plan_request_too_soon': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 1),
@@ -259,6 +260,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'notification_replay_expired': ErrorInfo('Run the replay again with a future --not-after.', 'fix_and_retry', 'none', None),
     'notification_replay_no_address': ErrorInfo("Fix the recipient's contact, then run the replay again.", 'ask_human', 'none', None),
     'notification_replay_not_eligible': ErrorInfo('Pick a row in a status replay takes; a sent row needs --include-sent.', 'fix_and_retry', 'none', None),
+    'numbers_updating': ErrorInfo('The numbers are still being built; retry in a moment.', 'retry', 'none', 3),
     'oauth_access_denied': ErrorInfo("Sign in again and allow Databay access on the provider's screen.", 'fix_and_retry', 'none', None),
     'oauth_callback_invalid': ErrorInfo('Start connecting again.', 'ask_human', 'none', None),
     'oauth_exchange_failed': ErrorInfo('Connect again.', 'ask_human', 'none', None),
@@ -477,6 +479,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'subscription_changed': ErrorInfo('Retry; the subscription changed while this ran.', 'retry', 'none', 3),
     'support_delivery_failed': ErrorInfo('Retry; the message was not sent.', 'retry', 'none', 2),
     'surface_disabled': ErrorInfo('Contact support, or whoever runs your Databay server, to turn project scoping on for this surface.', 'ask_human', 'none', None),
+    'table_check_unavailable': ErrorInfo('The query was not run; retry in a moment.', 'retry', 'none', 3),
     'table_checks_failed': ErrorInfo('Run the SQL shown for each table named, or remove it from this set, then try again.', 'ask_human', 'none', None),
     'table_not_found': ErrorInfo('Pick a table the warehouse has.', 'fix_and_retry', 'none', None),
     'token_invalid': ErrorInfo('Sign in again, or send a valid API key.', 'do_first', 'none', None),
@@ -884,6 +887,10 @@ class CrossWarehouseReferenceError(DatabayApiError):
 
 class CurrencyCodesChangedError(DatabayApiError):
     code = 'currency_codes_changed'
+
+
+class CurrencyUnreadableError(DatabayApiError):
+    code = 'currency_unreadable'
 
 
 class CurrentVersionError(DatabayApiError):
@@ -1532,6 +1539,10 @@ class NotificationReplayNoAddressError(DatabayApiError):
 
 class NotificationReplayNotEligibleError(DatabayApiError):
     code = 'notification_replay_not_eligible'
+
+
+class NumbersUpdatingError(DatabayApiError):
+    code = 'numbers_updating'
 
 
 class OauthAccessDeniedError(DatabayApiError):
@@ -2406,6 +2417,10 @@ class SurfaceDisabledError(DatabayApiError):
     code = 'surface_disabled'
 
 
+class TableCheckUnavailableError(DatabayApiError):
+    code = 'table_check_unavailable'
+
+
 class TableChecksFailedError(DatabayApiError):
     code = 'table_checks_failed'
 
@@ -2666,6 +2681,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'cross_org': CrossOrgError,
     'cross_warehouse_reference': CrossWarehouseReferenceError,
     'currency_codes_changed': CurrencyCodesChangedError,
+    'currency_unreadable': CurrencyUnreadableError,
     'current_version': CurrentVersionError,
     'custom_plan_delivery_failed': CustomPlanDeliveryFailedError,
     'custom_plan_request_too_soon': CustomPlanRequestTooSoonError,
@@ -2828,6 +2844,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'notification_replay_expired': NotificationReplayExpiredError,
     'notification_replay_no_address': NotificationReplayNoAddressError,
     'notification_replay_not_eligible': NotificationReplayNotEligibleError,
+    'numbers_updating': NumbersUpdatingError,
     'oauth_access_denied': OauthAccessDeniedError,
     'oauth_callback_invalid': OauthCallbackInvalidError,
     'oauth_exchange_failed': OauthExchangeFailedError,
@@ -3046,6 +3063,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'subscription_changed': SubscriptionChangedError,
     'support_delivery_failed': SupportDeliveryFailedError,
     'surface_disabled': SurfaceDisabledError,
+    'table_check_unavailable': TableCheckUnavailableError,
     'table_checks_failed': TableChecksFailedError,
     'table_not_found': TableNotFoundError,
     'token_invalid': TokenInvalidError,

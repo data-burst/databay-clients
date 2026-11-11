@@ -44,6 +44,7 @@ class AccessRoleCreate(RequestModel):
 
 
 class AccessRuleOut(ResponseModel):
+    auto_granted: bool
     built_database: str | None
     built_writer_kind: WriterKind | None
     columns: list[str] | None

@@ -307,6 +307,10 @@
    },
    "AccessRuleOut": {
     "properties": {
+     "auto_granted": {
+      "title": "Auto Granted",
+      "type": "boolean"
+     },
      "built_database": {
       "anyOf": [
        {
@@ -399,6 +403,7 @@
      "table_name",
      "built_database",
      "built_writer_kind",
+     "auto_granted",
      "columns",
      "row_filter",
      "status",
@@ -9226,8 +9231,15 @@
       "$ref": "#/components/schemas/MetricState"
      },
      "time_dimension": {
-      "title": "Time Dimension",
-      "type": "string"
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time Dimension"
      },
      "type": {
       "title": "Type",
@@ -9295,10 +9307,35 @@
       "type": "integer"
      },
      "metric": {
-      "maxLength": 64,
-      "pattern": "^[a-z][a-z0-9_]*$",
-      "title": "Metric",
-      "type": "string"
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Metric"
+     },
+     "metrics": {
+      "anyOf": [
+       {
+        "items": {
+         "maxLength": 64,
+         "pattern": "^[a-z][a-z0-9_]*$",
+         "type": "string"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Metrics"
      },
      "model_version": {
       "anyOf": [
@@ -9344,9 +9381,6 @@
       "title": "Warehouse"
      }
     },
-    "required": [
-     "metric"
-    ],
     "title": "MetricQuery",
     "type": "object"
    },
@@ -24897,7 +24931,7 @@
   },
   "/api/configstore/db/{db_uuid}/schema/{schema_name}/table/{table_name}/columns": {
    "get": {
-    "description": "Return column details of one table.\n\nService accounts name the physical database; people name a provisioned warehouse by\nits chosen name, and the warehouse must be ready.",
+    "description": "Return column details of one table.\n\nService accounts name the physical database; people name a provisioned warehouse by\nits chosen name, and the warehouse must be ready. A person may name a model of the\nwarehouse their access roles grant, as the SQL console reads it.",
     "operationId": "db_column_list",
     "parameters": [
      {
@@ -34792,7 +34826,7 @@
   },
   "/api/semantic/projects/{project_id}/metrics/query": {
    "post": {
-    "description": "Query one metric by its dimensions and time grain; ``explain`` adds its definition, SQL and lineage.\n\n``dry_run`` answers the explain without running the query. ``rows`` hold at most ``limit`` rows, and\n``truncated`` says when there were more.",
+    "description": "Query one metric, or several of one cube (``metrics``), by dimensions and time grain.\n\n``explain`` adds the metric's definition, SQL and lineage, for one metric only.\n\n``dry_run`` answers the explain without running the query. ``rows`` hold at most ``limit`` rows, and\n``truncated`` says when there were more.",
     "operationId": "metrics_query",
     "parameters": [
      {
