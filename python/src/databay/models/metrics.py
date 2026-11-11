@@ -97,7 +97,7 @@ class MetricOut(ResponseModel):
     name: str
     reason: str | None
     state: MetricState
-    time_dimension: str
+    time_dimension: str | None
     type: str
     warehouses: list[str]
 
@@ -128,7 +128,8 @@ class MetricQuery(RequestModel):
     explain: bool = False
     filters: list[MetricFilter] | None = None
     limit: int = 10000
-    metric: str
+    metric: str | None = None
+    metrics: list[str] | None = None
     model_version_: int | None = Field(default=None, alias='model_version')
     order: list[MetricOrder] | None = None
     time: TimeRange | None = None

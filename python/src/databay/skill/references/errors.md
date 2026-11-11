@@ -166,6 +166,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `cross_org` | 1 | fix_and_retry | none |  | Pick a project of your own organization. |
 | `cross_warehouse_reference` | 1 | fix_and_retry | none |  | Drop the database name before the table. |
 | `currency_codes_changed` | 6 | retry | none | 2 | Run the card again in a moment. |
+| `currency_unreadable` | 1 | ask_human | none |  | This data's currencies can't be read; contact support. |
 | `current_version` | 1 | fix_and_retry | none |  | Pick a version that is not current, or confirm retiring the current one. |
 | `custom_plan_delivery_failed` | 6 | retry | none | 2 | Retry, or email us. |
 | `custom_plan_request_too_soon` | 6 | retry | none | 1 | Retry after the Retry-After interval. |
@@ -328,6 +329,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `notification_replay_expired` | 1 | fix_and_retry | none |  | Run the replay again with a future --not-after. |
 | `notification_replay_no_address` | 1 | ask_human | none |  | Fix the recipient's contact, then run the replay again. |
 | `notification_replay_not_eligible` | 1 | fix_and_retry | none |  | Pick a row in a status replay takes; a sent row needs --include-sent. |
+| `numbers_updating` | 6 | retry | none | 3 | The numbers are still being built; retry in a moment. |
 | `oauth_access_denied` | 1 | fix_and_retry | none |  | Sign in again and allow Databay access on the provider's screen. |
 | `oauth_callback_invalid` | 1 | ask_human | none |  | Start connecting again. |
 | `oauth_exchange_failed` | 1 | ask_human | none |  | Connect again. |
@@ -546,6 +548,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `subscription_changed` | 6 | retry | none | 3 | Retry; the subscription changed while this ran. |
 | `support_delivery_failed` | 6 | retry | none | 2 | Retry; the message was not sent. |
 | `surface_disabled` | 1 | ask_human | none |  | Contact support, or whoever runs your Databay server, to turn project scoping on for this surface. |
+| `table_check_unavailable` | 6 | retry | none | 3 | The query was not run; retry in a moment. |
 | `table_checks_failed` | 1 | ask_human | none |  | Run the SQL shown for each table named, or remove it from this set, then try again. |
 | `table_not_found` | 1 | fix_and_retry | none |  | Pick a table the warehouse has. |
 | `token_invalid` | 3 | do_first | none |  | Sign in again, or send a valid API key. |

@@ -1627,7 +1627,8 @@ Usage: `databay db test [OPTIONS]`
 Return column details of one table.
 
 Service accounts name the physical database; people name a provisioned warehouse by
-its chosen name, and the warehouse must be ready.
+its chosen name, and the warehouse must be ready. A person may name a model of the
+warehouse their access roles grant, as the SQL console reads it.
 
 Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
 

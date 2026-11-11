@@ -38,7 +38,6 @@ class MetricsResource(Resource):
     def query(
         self,
         *,
-        metric: str,
         project_id: str | Unset = UNSET,
         x_databay_caller: str | Unset = UNSET,
         dimensions: list[str] | Unset = UNSET,
@@ -46,6 +45,8 @@ class MetricsResource(Resource):
         explain: bool | Unset = UNSET,
         filters: Any | Unset = UNSET,
         limit: int | Unset = UNSET,
+        metric: str | None | Unset = UNSET,
+        metrics: list[str] | None | Unset = UNSET,
         model_version: int | None | Unset = UNSET,
         order: Any | Unset = UNSET,
         time: Any | None | Unset = UNSET,
@@ -53,4 +54,4 @@ class MetricsResource(Resource):
         project: str | None = None,
     ) -> MetricQueryOut:
         """Post Metric Query. ``databay metrics query``."""
-        return self._call(_ops.METRICS_QUERY, {'project_id': project_id, 'X-Databay-Caller': x_databay_caller, 'dimensions': dimensions, 'dry_run': dry_run, 'explain': explain, 'filters': filters, 'limit': limit, 'metric': metric, 'model_version': model_version, 'order': order, 'time': time, 'warehouse': warehouse}, project=project)
+        return self._call(_ops.METRICS_QUERY, {'project_id': project_id, 'X-Databay-Caller': x_databay_caller, 'dimensions': dimensions, 'dry_run': dry_run, 'explain': explain, 'filters': filters, 'limit': limit, 'metric': metric, 'metrics': metrics, 'model_version': model_version, 'order': order, 'time': time, 'warehouse': warehouse}, project=project)
