@@ -23,6 +23,7 @@ def _project(project_id: str, name: str, status: str = "active") -> dict:
         "access": "restricted",
         "capabilities": CAPS,
         "is_general": False,
+        "new_columns_default": "add",
         "revision": 1,
         "role": "editor",
         "status": status,

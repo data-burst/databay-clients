@@ -29,7 +29,6 @@ class PipeSchemaStateDisplay(OpenStrEnum):
     FAILED = 'failed'
     OTHER_REBUILD = 'other_rebuild'
     NEEDS_DECISION = 'needs_decision'
-    WAITING = 'waiting'
     UNAVAILABLE = 'unavailable'
 
 
@@ -43,12 +42,11 @@ class PipeSchemaStateNextStep(OpenStrEnum):
 class PipeSchemaStateState(OpenStrEnum):
     STOPPED = 'stopped'
     NEEDS_DECISION = 'needs_decision'
-    WAITING = 'waiting'
     DONE = 'done'
 
 
 class ApplyChangeInfo(RequestModel):
-    pass
+    backfill: bool | None = None
 
 
 class PipeSchemaChange(ResponseModel):
@@ -76,6 +74,7 @@ class PipeSchemaState(ResponseModel):
 
 class SchemaChangeEventResponse(ResponseModel):
     created_at: datetime
+    decided_by: str | None = None
     is_nullable: bool | None = None
     operation: ChangeEventOperation
     organization: str

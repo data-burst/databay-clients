@@ -11,7 +11,7 @@ from databay.operations import warehouse_access_role as _ops
 from databay.resource import Resource, UNSET, Unset
 
 if TYPE_CHECKING:
-    from databay.models.warehouse_access_role import AccessRoleOut, WarehouseAccessRoleListResponse, WarehouseSchemaOut
+    from databay.models.warehouse_access_role import AccessRoleOut, RoleMetricsOut, WarehouseAccessRoleListResponse, WarehouseSchemaOut
 
 
 class WarehouseAccessRoleResource(Resource):
@@ -38,6 +38,16 @@ class WarehouseAccessRoleResource(Resource):
         """Delete Role. ``databay warehouse-access-role delete``."""
         return self._call(_ops.WAREHOUSE_ACCESS_ROLE_DELETE, {'project_id': project_id, 'role_id': role_id}, project=project)
 
+    def get_metrics(
+        self,
+        *,
+        role_id: str,
+        project_id: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> RoleMetricsOut:
+        """Get Metric Grant. ``databay warehouse-access-role get-metrics``."""
+        return self._call(_ops.WAREHOUSE_ACCESS_ROLE_GET_METRICS, {'project_id': project_id, 'role_id': role_id}, project=project)
+
     def list(
         self,
         *,
@@ -56,6 +66,19 @@ class WarehouseAccessRoleResource(Resource):
     ) -> WarehouseSchemaOut:
         """Warehouse Schema. ``databay warehouse-access-role list-tables``."""
         return self._call(_ops.WAREHOUSE_ACCESS_ROLE_LIST_TABLES, {'project_id': project_id, 'db_uuid': db_uuid}, project=project)
+
+    def set_metrics(
+        self,
+        *,
+        role_id: str,
+        metrics: list[str],
+        mode: str,
+        revision: int,
+        project_id: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> RoleMetricsOut:
+        """Put Metric Grant. ``databay warehouse-access-role set-metrics``."""
+        return self._call(_ops.WAREHOUSE_ACCESS_ROLE_SET_METRICS, {'project_id': project_id, 'role_id': role_id, 'metrics': metrics, 'mode': mode, 'revision': revision}, project=project)
 
     def set_rules(
         self,

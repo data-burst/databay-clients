@@ -13,7 +13,7 @@ SCHEMA_CHANGE_APPLY = Operation(
     method='post',
     path='/api/schema-evolution/schema-change-event/{event_uuid}/apply',
     summary='Apply Schema Change Event',
-    description='',
+    description='Remove a column the source dropped, or add a new column that waits for a decision (``backfill`` required).',
     project=None,
     destructive=True,
     idempotent=False,
@@ -29,12 +29,23 @@ SCHEMA_CHANGE_APPLY = Operation(
     ),
     body=Body(
         schema='ApplyChangeInfo',
+        fields=(
+            Param(
+                name='backfill',
+                location='body',
+                kind='boolean',
+                required=False,
+                description='Required to add a column that waits for a decision, refused for any other change. `true` reloads the table from the source so existing rows get the column; `false` fills it only in rows that change from now on.',
+                nullable=True,
+            ),
+        ),
     ),
     response=Response(
         kind='empty',
     ),
     examples=(
         'databay schema-change apply <event_uuid> --yes',
+        'databay schema-change apply <event_uuid> --backfill --yes',
     ),
 )
 
@@ -45,7 +56,7 @@ SCHEMA_CHANGE_IGNORE = Operation(
     method='post',
     path='/api/schema-evolution/schema-change-event/{event_uuid}/ignore',
     summary='Ignore Schema Change Event',
-    description='',
+    description='Keep a column the source dropped, or skip a new column that waits for a decision.',
     project=None,
     destructive=True,
     idempotent=False,
@@ -185,7 +196,6 @@ SCHEMA_CHANGE_STATE = Operation(
             choices=(
                 'stopped',
                 'needs_decision',
-                'waiting',
                 'done',
             ),
             nullable=True,

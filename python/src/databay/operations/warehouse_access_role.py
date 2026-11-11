@@ -93,6 +93,45 @@ WAREHOUSE_ACCESS_ROLE_DELETE = Operation(
     ),
 )
 
+WAREHOUSE_ACCESS_ROLE_GET_METRICS = Operation(
+    operation_id='warehouse_access_role_get_metrics',
+    noun='warehouse-access-role',
+    verb='get-metrics',
+    method='get',
+    path='/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/metrics',
+    summary='Get Metric Grant',
+    description='Show which semantic-layer metrics the role reads; ``grant`` null means every metric over what it reads.',
+    project='path:project_id',
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='project_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Project Id',
+        ),
+        Param(
+            name='role_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Role Id',
+        ),
+    ),
+    body=None,
+    response=Response(
+        kind='json',
+        model='warehouse_access_role:RoleMetricsOut',
+        shape='object',
+    ),
+    examples=(
+        'databay warehouse-access-role get-metrics <project_id> <role_id>',
+    ),
+)
+
 WAREHOUSE_ACCESS_ROLE_LIST = Operation(
     operation_id='warehouse_access_role_list',
     noun='warehouse-access-role',
@@ -170,6 +209,74 @@ WAREHOUSE_ACCESS_ROLE_LIST_TABLES = Operation(
     ),
 )
 
+WAREHOUSE_ACCESS_ROLE_SET_METRICS = Operation(
+    operation_id='warehouse_access_role_set_metrics',
+    noun='warehouse-access-role',
+    verb='set-metrics',
+    method='put',
+    path='/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/metrics',
+    summary='Put Metric Grant',
+    description="Replace the role's metric grant (revision-checked); names are stored as given, semantic checks them.\n\n``include`` reads only the named metrics, ``exclude`` all but them. Refusals: 422 ``request_invalid`` for a\nname that is not a distinct snake_case identifier; 409 ``access_role_revision_conflict``.",
+    project='path:project_id',
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='project_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Project Id',
+        ),
+        Param(
+            name='role_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Role Id',
+        ),
+    ),
+    body=Body(
+        schema='MetricGrantPut',
+        fields=(
+            Param(
+                name='metrics',
+                location='body',
+                kind='list',
+                required=True,
+                description='Metrics',
+                item_kind='string',
+            ),
+            Param(
+                name='mode',
+                location='body',
+                kind='string',
+                required=True,
+                choices=(
+                    'include',
+                    'exclude',
+                ),
+            ),
+            Param(
+                name='revision',
+                location='body',
+                kind='integer',
+                required=True,
+                description="the role's revision the change is based on",
+            ),
+        ),
+    ),
+    response=Response(
+        kind='json',
+        model='warehouse_access_role:RoleMetricsOut',
+        shape='object',
+    ),
+    examples=(
+        'databay warehouse-access-role set-metrics <project_id> <role_id> --file metrics.json',
+    ),
+)
+
 WAREHOUSE_ACCESS_ROLE_SET_RULES = Operation(
     operation_id='warehouse_access_role_set_rules',
     noun='warehouse-access-role',
@@ -177,7 +284,7 @@ WAREHOUSE_ACCESS_ROLE_SET_RULES = Operation(
     method='put',
     path='/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/rules',
     summary='Put Rules',
-    description="Replace the role's rules (revision-checked), each checked at write time.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``; 409\n``conflicting_table_rules`` and ``access_role_revision_conflict``.",
+    description="Replace the role's rules (revision-checked), each checked at write time.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``, ``built_table_restricted_upstream``;\n409 ``conflicting_table_rules`` and ``access_role_revision_conflict``.",
     project='path:project_id',
     destructive=False,
     idempotent=False,
@@ -356,8 +463,10 @@ WAREHOUSE_ACCESS_ROLE_UPDATE = Operation(
 OPERATIONS = (
     WAREHOUSE_ACCESS_ROLE_CREATE,
     WAREHOUSE_ACCESS_ROLE_DELETE,
+    WAREHOUSE_ACCESS_ROLE_GET_METRICS,
     WAREHOUSE_ACCESS_ROLE_LIST,
     WAREHOUSE_ACCESS_ROLE_LIST_TABLES,
+    WAREHOUSE_ACCESS_ROLE_SET_METRICS,
     WAREHOUSE_ACCESS_ROLE_SET_RULES,
     WAREHOUSE_ACCESS_ROLE_SET_SCOPE_MODE,
     WAREHOUSE_ACCESS_ROLE_UPDATE,

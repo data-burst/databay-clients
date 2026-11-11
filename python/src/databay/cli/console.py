@@ -115,4 +115,7 @@ class Console:
             self.stderr.write(f"hint: {body['hint']}\n")
         if body.get("next") and self._noticed.get("next") != body["next"]:
             self.stderr.write(f"next: {body['next']}\n")
+        trace_id = (body.get("details") or {}).get("trace_id")
+        if trace_id and (body.get("status") or 0) >= 500:  # noqa: PLR2004
+            self.stderr.write(f"trace_id: {trace_id}\n")
         self.stderr.flush()

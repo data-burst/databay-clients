@@ -336,13 +336,13 @@ def error_from(answer: Answer, request: Request) -> DatabayError:
         return DatabayUncodedError(
             f"{where}: HTTP {answer.status} without a code: {_message(detail, answer.status, None)}",
             hint=UNCODED_404_HINT if is_404 else None,
-            details={"detail": detail},
+            details={**extra, "detail": detail},
             **common,
         )
     if not isinstance(code, str) or code not in EXCEPTIONS:
         return DatabayUnknownCodeError(
             f"{where}: the server answered code {code!r}, which this CLI does not know",
-            details={"server_code": code, "detail": detail},
+            details={**extra, "server_code": code, "detail": detail},
             **common,
         )
     if not isinstance(detail, str):

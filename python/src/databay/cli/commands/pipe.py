@@ -21,5 +21,6 @@ group = noun_group(
         _ops.PIPE_RETRY,
         _ops.PIPE_ROLLUP,
         _ops.PIPE_STATUS,
+        _ops.PIPE_UPDATE,
     ),
 )

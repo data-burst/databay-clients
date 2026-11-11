@@ -7,6 +7,7 @@ from databay.errors import DatabayApiError, ErrorInfo
 
 REGISTRY: dict[str, ErrorInfo] = {
     'access_capability_unsupported': ErrorInfo('Remove the columns or row filter, or pick a warehouse that supports them.', 'fix_and_retry', 'none', None),
+    'access_check_unavailable': ErrorInfo('Access could not be checked; retry in a moment.', 'retry', 'none', 3),
     'access_management_unsupported': ErrorInfo('Pick a warehouse whose type supports access roles and logins.', 'fix_and_retry', 'none', None),
     'access_pending': ErrorInfo('Try again in a moment; your warehouse access is still being set up.', 'retry', 'none', 5),
     'access_role_name_taken': ErrorInfo('Pick another name for the access role.', 'fix_and_retry', 'none', None),
@@ -28,6 +29,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'already_member': ErrorInfo('Change their role instead.', 'fix_and_retry', 'none', None),
     'already_org_shared': ErrorInfo('Skip the share; the resource is already available in every project of the organization.', 'fix_and_retry', 'none', None),
     'ambiguous_org': ErrorInfo('Sign in again; if this persists, an operator must remove the extra organization.', 'do_first', 'none', None),
+    'ambiguous_warehouse': ErrorInfo('Name one of the listed warehouses and ask again.', 'fix_and_retry', 'none', None),
     'announcement_not_found': ErrorInfo('Check the announcement uuid.', 'fix_and_retry', 'none', None),
     'api_key_last_project': ErrorInfo('Add another project first, or revoke the key.', 'do_first', 'none', None),
     'api_key_membership_refused': ErrorInfo("Contact support; the key's project access could not be set up.", 'ask_human', 'unknown', None),
@@ -54,14 +56,18 @@ REGISTRY: dict[str, ErrorInfo] = {
     'binding_removing': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'board_not_found': ErrorInfo('List the dashboards and pick one you can see.', 'fix_and_retry', 'none', None),
     'budget_below_usage': ErrorInfo('Confirm to pause the project, or set a budget at or above current.', 'fix_and_retry', 'none', None),
+    'built_table_restricted_upstream': ErrorInfo('Let the role read the upstream table in full, or grant it the upstream table instead of the built one.', 'fix_and_retry', 'none', None),
     'builtin_not_found': ErrorInfo('Pick a built-in dashboard from the list.', 'fix_and_retry', 'none', None),
     'card_already_on_board': ErrorInfo('The card is already on this dashboard; nothing to add.', 'fix_and_retry', 'none', None),
     'card_not_found': ErrorInfo('Pick a card key the dashboard has.', 'fix_and_retry', 'none', None),
     'card_revision_conflict': ErrorInfo('Reload the card to get its current revision, reapply your change, then save again.', 'do_first', 'none', None),
     'catalogue_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
     'change_event_not_found': ErrorInfo("List the pipe's schema changes and pick one you can see.", 'fix_and_retry', 'none', None),
+    'clickhouse_admin_refused': ErrorInfo("Ask your Databay administrator to check the analytics server's admin account.", 'ask_human', 'none', None),
     'clickhouse_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'client_config_unavailable': ErrorInfo('Ask the operator to configure the browser sign-in address on the auth service.', 'ask_human', 'none', None),
+    'column_decision_stale': ErrorInfo("Reload the pipe's schema changes and decide on the column as it is listed now.", 'fix_and_retry', 'none', None),
+    'column_decision_unavailable': ErrorInfo('Retry in a moment; repeating the same decision is safe.', 'retry', 'unknown', 3),
     'column_not_granted': ErrorInfo('Leave out the columns listed in columns, or ask an admin to grant them.', 'fix_and_retry', 'none', None),
     'columns_not_in_source': ErrorInfo("Choose from the source table's current columns.", 'fix_and_retry', 'none', None),
     'columns_on_schemaless_stream': ErrorInfo('Send the request without a column selection for this stream.', 'fix_and_retry', 'none', None),
@@ -90,6 +96,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'credentials_renewed_elsewhere': ErrorInfo("Renew this source's credentials through its own reconnect flow.", 'fix_and_retry', 'none', None),
     'cross_org': ErrorInfo('Pick a project of your own organization.', 'fix_and_retry', 'none', None),
     'cross_warehouse_reference': ErrorInfo('Drop the database name before the table.', 'fix_and_retry', 'none', None),
+    'currency_codes_changed': ErrorInfo('Run the card again in a moment.', 'retry', 'none', 2),
     'current_version': ErrorInfo('Pick a version that is not current, or confirm retiring the current one.', 'fix_and_retry', 'none', None),
     'custom_plan_delivery_failed': ErrorInfo('Retry, or email us.', 'retry', 'none', 2),
     'custom_plan_request_too_soon': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 1),
@@ -120,6 +127,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'draft_already_published': ErrorInfo('Create a new draft from the published version.', 'do_first', 'none', None),
     'draft_exists': ErrorInfo('Edit the existing draft, or replace it.', 'fix_and_retry', 'none', None),
     'effective_not_lowering': ErrorInfo('Send the change without an effective date; it applies now.', 'fix_and_retry', 'none', None),
+    'elt_unavailable': ErrorInfo('The models could not be listed; retry in a moment.', 'retry', 'none', 3),
     'email_not_verified': ErrorInfo('Open the link we emailed you, or send a new one from the sign-in page.', 'ask_human', 'none', None),
     'endpoint_removed': ErrorInfo('Call the replacement route detail names.', 'fix_and_retry', 'none', None),
     'entitlements_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
@@ -140,6 +148,21 @@ REGISTRY: dict[str, ErrorInfo] = {
     'fx_rate_missing': ErrorInfo('Pick a range or a reporting currency that has exchange rates.', 'fix_and_retry', 'none', None),
     'fx_rate_unavailable': ErrorInfo('Pick a reporting currency that has exchange rates for the currencies listed.', 'fix_and_retry', 'none', None),
     'fx_unavailable': ErrorInfo('Try again in a moment.', 'retry', 'none', 3),
+    'git_auth_failed': ErrorInfo('Add the deploy key to the repository read-only, or use a token that can read it.', 'do_first', 'none', None),
+    'git_commit_rejected': ErrorInfo('Fix the file and line named, then push a new commit.', 'fix_and_retry', 'none', None),
+    'git_connection_busy': ErrorInfo('Retry in a moment; the git connection changed meanwhile.', 'retry', 'none', 3),
+    'git_connection_exists': ErrorInfo("Disconnect the project's repository first, then connect again.", 'do_first', 'none', None),
+    'git_host_key_changed': ErrorInfo("Check the repository host's key; if the change is expected, connect the repository again.", 'ask_human', 'none', None),
+    'git_installation_not_yours': ErrorInfo("Install the Databay GitHub App from Databay's own install link, then connect again.", 'do_first', 'none', None),
+    'git_not_connected': ErrorInfo('Connect a repository to the project first.', 'do_first', 'none', None),
+    'git_ref_not_found': ErrorInfo('Name a branch and folder that exist in the repository.', 'fix_and_retry', 'none', None),
+    'git_repo_not_installed': ErrorInfo('Install the Databay GitHub App on the repository, then connect again.', 'do_first', 'none', None),
+    'git_repo_too_large': ErrorInfo('Make the dbt folder smaller, or keep large files out of it.', 'fix_and_retry', 'none', None),
+    'git_sync_failed': ErrorInfo('Retry the sync; if it keeps failing, tell support.', 'retry', 'none', 3),
+    'git_unreachable': ErrorInfo("Retry in a moment; the repository's host did not answer.", 'retry', 'none', 3),
+    'github_app_not_configured': ErrorInfo('Connect with a deploy key or a token; this server has no GitHub App.', 'fix_and_retry', 'none', None),
+    'github_app_permission_refused': ErrorInfo('Grant the Databay GitHub App the permissions Databay lists, then retry.', 'do_first', 'none', None),
+    'github_unavailable': ErrorInfo('Retry in a moment; GitHub did not answer.', 'retry', 'none', 3),
     'home_board_not_deletable': ErrorInfo("Set another dashboard as the project's Overview, then delete this one.", 'do_first', 'none', None),
     'home_conflict': ErrorInfo('Share the resource into the project instead; it already has a home project.', 'fix_and_retry', 'none', None),
     'host_not_allowed': ErrorInfo("Use your database's own address, a public hostname or a private address in your network.", 'fix_and_retry', 'none', None),
@@ -176,10 +199,13 @@ REGISTRY: dict[str, ErrorInfo] = {
     'job_name_taken': ErrorInfo('Pick another name; transformation names are unique in the organization.', 'fix_and_retry', 'none', None),
     'job_not_found': ErrorInfo('List the transformations and pick one you can see.', 'fix_and_retry', 'none', None),
     'keyless_selection_needs_key': ErrorInfo('Name a primary_key for the selection on this keyless table.', 'fix_and_retry', 'none', None),
+    'landed_tables_unreadable': ErrorInfo("Fix the warehouse's connection settings or its user's access as detail says, then retry.", 'fix_and_retry', 'none', None),
     'last_admin': ErrorInfo('Make another member an admin first.', 'do_first', 'none', None),
     'leftover_check_unavailable': ErrorInfo('Check that the database is reachable, then check again.', 'retry', 'none', 3),
     'leftover_not_found': ErrorInfo('Reload the list; this leftover is already resolved or is not in your project.', 'fix_and_retry', 'none', None),
     'leftover_source_gone': ErrorInfo('Drop it on the database yourself with the SQL shown, then dismiss it.', 'ask_human', 'none', None),
+    'lineage_unreadable': ErrorInfo("Ask your Databay administrator to check the warehouse's query log.", 'ask_human', 'none', None),
+    'lineage_window_too_large': ErrorInfo('Read the lineage in shorter windows.', 'fix_and_retry', 'none', None),
     'login_validity_invalid': ErrorInfo('Pick an expiry date in the future and within the allowed number of days.', 'fix_and_retry', 'none', None),
     'logout_failed': ErrorInfo('Retry signing out.', 'retry', 'unknown', 3),
     'managed_warehouse_sink_locked': ErrorInfo('Send the request again without sink_db_uuid.', 'fix_and_retry', 'none', None),
@@ -192,15 +218,29 @@ REGISTRY: dict[str, ErrorInfo] = {
     'member_not_found': ErrorInfo("List the organization's members and pick one of them.", 'fix_and_retry', 'none', None),
     'member_not_in_organization': ErrorInfo('Invite them to the organization first.', 'do_first', 'none', None),
     'member_role_unchanged': ErrorInfo('Pick a role the member does not hold yet.', 'fix_and_retry', 'none', None),
+    'metric_not_found': ErrorInfo('List the metrics you can query and use one of their names.', 'fix_and_retry', 'none', None),
+    'metric_query_failed': ErrorInfo('The metric query failed; retry in a moment.', 'retry', 'none', 3),
     'migration_refused': ErrorInfo('Fix each organization listed in refused, or leave it out, then run the move again.', 'fix_and_retry', 'none', None),
     'missing_feature_values': ErrorInfo('Set a value for each feature listed in problems.', 'fix_and_retry', 'none', None),
     'missing_meter_values': ErrorInfo('Set a value for each meter listed in problems.', 'fix_and_retry', 'none', None),
     'missing_param': ErrorInfo('Bind the parameter to a filter, or give it a fixed value.', 'fix_and_retry', 'none', None),
     'missing_sources': ErrorInfo('Connect the sources listed in missing.', 'do_first', 'none', None),
+    'model_check_unavailable': ErrorInfo('Retry in a moment; nothing was saved.', 'retry', 'none', 3),
+    'model_in_git': ErrorInfo('Edit this model in its repository; Databay syncs the change.', 'ask_human', 'none', None),
+    'model_in_use': ErrorInfo('Change or delete the models listed in readers first, then delete this one.', 'fix_and_retry', 'none', None),
+    'model_name_reserved': ErrorInfo('Pick a name without the reserved part.', 'fix_and_retry', 'none', None),
+    'model_name_taken': ErrorInfo('Pick another name for the model.', 'fix_and_retry', 'none', None),
+    'model_refresh_unsupported': ErrorInfo('Store the model as a table or incremental table, or set its refresh to manual.', 'fix_and_retry', 'none', None),
+    'model_sources_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'none', 3),
+    'model_sql_rejected': ErrorInfo("Change the model's SQL as detail says, then save again.", 'fix_and_retry', 'none', None),
+    'model_version_stale': ErrorInfo('Open the current version, apply your edits to it, then save again.', 'fix_and_retry', 'none', None),
+    'model_version_unavailable': ErrorInfo('The metric model is updating; retry in a moment.', 'retry', 'none', 3),
+    'model_warehouse_unusable': ErrorInfo('Pick a warehouse this project uses and that is ready, then save again.', 'do_first', 'none', None),
     'multi_property_off': ErrorInfo('Connect one property per connection.', 'fix_and_retry', 'none', None),
     'name_collision': ErrorInfo("Contact support; the warehouse's analytics server name belongs to another warehouse.", 'ask_human', 'none', None),
     'name_reserved': ErrorInfo('Pick another warehouse name.', 'fix_and_retry', 'none', None),
     'name_taken': ErrorInfo('Pick another warehouse name.', 'fix_and_retry', 'none', None),
+    'new_columns_unsupported': ErrorInfo('Use add for new columns; asking first is not available for this pipe or organization.', 'fix_and_retry', 'none', None),
     'no_draft': ErrorInfo('Create a draft of the plan first.', 'do_first', 'none', None),
     'no_published_version': ErrorInfo("Publish the plan's draft first.", 'do_first', 'none', None),
     'no_reachable_account': ErrorInfo('Check that the token reaches at least one account.', 'fix_and_retry', 'none', None),
@@ -282,6 +322,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'plan_seed_invalid': ErrorInfo('Ask an operator to fix the built-in plan seed.', 'ask_human', 'none', None),
     'plan_source_limit': ErrorInfo('Contact us for a plan with more sources.', 'ask_human', 'none', None),
     'platform_credentials_missing': ErrorInfo('Supply your own platform credentials.', 'fix_and_retry', 'none', None),
+    'policy_apply_failed': ErrorInfo('The metric model is not updating; ask your org admin to check access.', 'ask_human', 'none', None),
     'precheck_busy': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'precheck_limiter_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'precheck_rate_limited': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
@@ -294,6 +335,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'project_forbidden': ErrorInfo('Pick another project or ask a project admin for access.', 'ask_human', 'none', None),
     'project_general_immutable': ErrorInfo('Use another project; General cannot be renamed, deleted, restricted or have its members changed.', 'fix_and_retry', 'none', None),
     'project_live_graph_immutable': ErrorInfo('Leave the items that have live pipelines unchanged, or delete those pipelines first.', 'fix_and_retry', 'none', None),
+    'project_models_broken': ErrorInfo('Fix the models listed in broken_models first, then save again.', 'do_first', 'none', None),
     'project_not_deleting': ErrorInfo("Check the project's state; this call applies only to a project being deleted.", 'fix_and_retry', 'none', None),
     'project_not_empty': ErrorInfo('Move or delete its pipelines and resources, or ask an org admin for a forced delete.', 'do_first', 'none', None),
     'project_not_found': ErrorInfo('Pick a project you can see; this one does not exist, is being deleted, or is not visible to you.', 'fix_and_retry', 'none', None),
@@ -314,9 +356,11 @@ REGISTRY: dict[str, ErrorInfo] = {
     'question_failed': ErrorInfo('Ask again, or write the query in the SQL editor.', 'retry', 'none', 2),
     'quota_exceeded': ErrorInfo('Wait until the hourly query limit resets, then try again.', 'do_first', 'none', None),
     'quota_reached': ErrorInfo('Delete one to make room, or ask whoever lift_by names to raise the limit in quota.', 'ask_human', 'none', None),
+    'reader_conflict': ErrorInfo("Ask your Databay administrator to check this warehouse's reader.", 'ask_human', 'none', None),
     'reader_engine_mismatch': ErrorInfo("Create the pipe without reader_id, or switch the reader to this pipe's engine first.", 'fix_and_retry', 'none', None),
     'reader_full': ErrorInfo('Create the pipe without reader_id to give it a reader of its own.', 'fix_and_retry', 'none', None),
     'reader_partition_conflict': ErrorInfo('Create the pipe without reader_id to give it a reader of its own.', 'fix_and_retry', 'none', None),
+    'reader_password_missing': ErrorInfo("Ask your Databay administrator to rotate this warehouse's reader.", 'ask_human', 'none', None),
     'reader_publication_mode_mismatch': ErrorInfo('Create the pipe without reader_id; it then gets a reader of its own.', 'fix_and_retry', 'none', None),
     'reader_scope_required': ErrorInfo('Send the request again with "scope": "reader"; the answer lists the pipes it changes.', 'fix_and_retry', 'none', None),
     'reason_required': ErrorInfo('Say why you are making the change, then send it again.', 'fix_and_retry', 'none', None),
@@ -342,6 +386,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'rollout_off_cli_only': ErrorInfo('Ask an operator to change it with the operator CLI.', 'ask_human', 'none', None),
     'row_count_unavailable': ErrorInfo('Try again in a moment; until the warehouse answers, the count is unknown.', 'retry', 'none', 2),
     'row_filter_invalid': ErrorInfo('Fix the filter condition the error names so its column exists and its value fits the column type.', 'fix_and_retry', 'none', None),
+    'rule_built_relation_unknown': ErrorInfo("Pick a model from the warehouse's built models.", 'fix_and_retry', 'none', None),
     'rule_column_unknown': ErrorInfo('Pick columns the table has.', 'fix_and_retry', 'none', None),
     'rule_duplicate_table': ErrorInfo('Name each table once per warehouse in an access role.', 'fix_and_retry', 'none', None),
     'rule_overlap': ErrorInfo('Keep either one whole-warehouse rule or table rules for each warehouse in a role.', 'fix_and_retry', 'none', None),
@@ -357,6 +402,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'schema_version_contention': ErrorInfo('Retry; another apply on the pipe is in progress.', 'retry', 'none', 3),
     'schema_version_not_found': ErrorInfo("List the pipe's schema history and pick a version it has.", 'fix_and_retry', 'none', None),
     'secret_key_missing': ErrorInfo("Ask your administrator to finish this server's setup.", 'ask_human', 'none', None),
+    'semantic_unavailable': ErrorInfo('The numbers are updating; retry in a moment.', 'retry', 'none', 3),
     'service_account_key_invalid': ErrorInfo('Send a valid service account key.', 'fix_and_retry', 'none', None),
     'service_account_needs_access_role': ErrorInfo('Pick at least one access role for the service account.', 'fix_and_retry', 'none', None),
     'service_credential_exists': ErrorInfo("Rotate the service account's credential for this warehouse to get a new password.", 'fix_and_retry', 'none', None),
@@ -457,6 +503,8 @@ REGISTRY: dict[str, ErrorInfo] = {
     'version_in_use': ErrorInfo('Move the subscriptions off this version first.', 'do_first', 'none', None),
     'version_published': ErrorInfo('Create a draft from this version and change that instead.', 'do_first', 'none', None),
     'version_retired': ErrorInfo("Use the plan's current version.", 'fix_and_retry', 'none', None),
+    'warehouse_credential_rejected': ErrorInfo('Ask your org admin to re-run the warehouse access reconcile.', 'ask_human', 'none', None),
+    'warehouse_name_unsafe': ErrorInfo("Ask your Databay administrator to check this warehouse's database name.", 'ask_human', 'none', None),
     'warehouse_not_in_project': ErrorInfo('Pick a warehouse available in this project.', 'fix_and_retry', 'none', None),
     'warehouse_not_queryable': ErrorInfo("Pick a warehouse Databay manages on your organization's analytics server; only those can be queried.", 'fix_and_retry', 'none', None),
     'warehouse_not_visible': ErrorInfo("Pick a warehouse from this project's list.", 'fix_and_retry', 'none', None),
@@ -467,6 +515,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'webhook_body_invalid': ErrorInfo('Send the webhook with every required field.', 'fix_and_retry', 'none', None),
     'webhook_forbidden': ErrorInfo('Send alerts from this project instead.', 'fix_and_retry', 'none', None),
     'webhook_replay_unavailable': ErrorInfo('Send a new Idempotency-Key to create the webhook again.', 'fix_and_retry', 'none', None),
+    'webhook_signature_invalid': ErrorInfo('Sign the webhook with the secret shown when the repository was connected.', 'fix_and_retry', 'none', None),
     'webhook_url_undeliverable': ErrorInfo('Use a URL this webhook type can deliver to.', 'fix_and_retry', 'none', None),
     'workspace_unavailable': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
     'wrong_credentials': ErrorInfo('Check the username and password, then sign in again.', 'fix_and_retry', 'none', None),
@@ -475,6 +524,10 @@ REGISTRY: dict[str, ErrorInfo] = {
 
 class AccessCapabilityUnsupportedError(DatabayApiError):
     code = 'access_capability_unsupported'
+
+
+class AccessCheckUnavailableError(DatabayApiError):
+    code = 'access_check_unavailable'
 
 
 class AccessManagementUnsupportedError(DatabayApiError):
@@ -559,6 +612,10 @@ class AlreadyOrgSharedError(DatabayApiError):
 
 class AmbiguousOrgError(DatabayApiError):
     code = 'ambiguous_org'
+
+
+class AmbiguousWarehouseError(DatabayApiError):
+    code = 'ambiguous_warehouse'
 
 
 class AnnouncementNotFoundError(DatabayApiError):
@@ -665,6 +722,10 @@ class BudgetBelowUsageError(DatabayApiError):
     code = 'budget_below_usage'
 
 
+class BuiltTableRestrictedUpstreamError(DatabayApiError):
+    code = 'built_table_restricted_upstream'
+
+
 class BuiltinNotFoundError(DatabayApiError):
     code = 'builtin_not_found'
 
@@ -689,12 +750,24 @@ class ChangeEventNotFoundError(DatabayApiError):
     code = 'change_event_not_found'
 
 
+class ClickhouseAdminRefusedError(DatabayApiError):
+    code = 'clickhouse_admin_refused'
+
+
 class ClickhouseUnavailableError(DatabayApiError):
     code = 'clickhouse_unavailable'
 
 
 class ClientConfigUnavailableError(DatabayApiError):
     code = 'client_config_unavailable'
+
+
+class ColumnDecisionStaleError(DatabayApiError):
+    code = 'column_decision_stale'
+
+
+class ColumnDecisionUnavailableError(DatabayApiError):
+    code = 'column_decision_unavailable'
 
 
 class ColumnNotGrantedError(DatabayApiError):
@@ -807,6 +880,10 @@ class CrossOrgError(DatabayApiError):
 
 class CrossWarehouseReferenceError(DatabayApiError):
     code = 'cross_warehouse_reference'
+
+
+class CurrencyCodesChangedError(DatabayApiError):
+    code = 'currency_codes_changed'
 
 
 class CurrentVersionError(DatabayApiError):
@@ -929,6 +1006,10 @@ class EffectiveNotLoweringError(DatabayApiError):
     code = 'effective_not_lowering'
 
 
+class EltUnavailableError(DatabayApiError):
+    code = 'elt_unavailable'
+
+
 class EmailNotVerifiedError(DatabayApiError):
     code = 'email_not_verified'
 
@@ -1007,6 +1088,66 @@ class FxRateUnavailableError(DatabayApiError):
 
 class FxUnavailableError(DatabayApiError):
     code = 'fx_unavailable'
+
+
+class GitAuthFailedError(DatabayApiError):
+    code = 'git_auth_failed'
+
+
+class GitCommitRejectedError(DatabayApiError):
+    code = 'git_commit_rejected'
+
+
+class GitConnectionBusyError(DatabayApiError):
+    code = 'git_connection_busy'
+
+
+class GitConnectionExistsError(DatabayApiError):
+    code = 'git_connection_exists'
+
+
+class GitHostKeyChangedError(DatabayApiError):
+    code = 'git_host_key_changed'
+
+
+class GitInstallationNotYoursError(DatabayApiError):
+    code = 'git_installation_not_yours'
+
+
+class GitNotConnectedError(DatabayApiError):
+    code = 'git_not_connected'
+
+
+class GitRefNotFoundError(DatabayApiError):
+    code = 'git_ref_not_found'
+
+
+class GitRepoNotInstalledError(DatabayApiError):
+    code = 'git_repo_not_installed'
+
+
+class GitRepoTooLargeError(DatabayApiError):
+    code = 'git_repo_too_large'
+
+
+class GitSyncFailedError(DatabayApiError):
+    code = 'git_sync_failed'
+
+
+class GitUnreachableError(DatabayApiError):
+    code = 'git_unreachable'
+
+
+class GithubAppNotConfiguredError(DatabayApiError):
+    code = 'github_app_not_configured'
+
+
+class GithubAppPermissionRefusedError(DatabayApiError):
+    code = 'github_app_permission_refused'
+
+
+class GithubUnavailableError(DatabayApiError):
+    code = 'github_unavailable'
 
 
 class HomeBoardNotDeletableError(DatabayApiError):
@@ -1153,6 +1294,10 @@ class KeylessSelectionNeedsKeyError(DatabayApiError):
     code = 'keyless_selection_needs_key'
 
 
+class LandedTablesUnreadableError(DatabayApiError):
+    code = 'landed_tables_unreadable'
+
+
 class LastAdminError(DatabayApiError):
     code = 'last_admin'
 
@@ -1167,6 +1312,14 @@ class LeftoverNotFoundError(DatabayApiError):
 
 class LeftoverSourceGoneError(DatabayApiError):
     code = 'leftover_source_gone'
+
+
+class LineageUnreadableError(DatabayApiError):
+    code = 'lineage_unreadable'
+
+
+class LineageWindowTooLargeError(DatabayApiError):
+    code = 'lineage_window_too_large'
 
 
 class LoginValidityInvalidError(DatabayApiError):
@@ -1217,6 +1370,14 @@ class MemberRoleUnchangedError(DatabayApiError):
     code = 'member_role_unchanged'
 
 
+class MetricNotFoundError(DatabayApiError):
+    code = 'metric_not_found'
+
+
+class MetricQueryFailedError(DatabayApiError):
+    code = 'metric_query_failed'
+
+
 class MigrationRefusedError(DatabayApiError):
     code = 'migration_refused'
 
@@ -1237,6 +1398,50 @@ class MissingSourcesError(DatabayApiError):
     code = 'missing_sources'
 
 
+class ModelCheckUnavailableError(DatabayApiError):
+    code = 'model_check_unavailable'
+
+
+class ModelInGitError(DatabayApiError):
+    code = 'model_in_git'
+
+
+class ModelInUseError(DatabayApiError):
+    code = 'model_in_use'
+
+
+class ModelNameReservedError(DatabayApiError):
+    code = 'model_name_reserved'
+
+
+class ModelNameTakenError(DatabayApiError):
+    code = 'model_name_taken'
+
+
+class ModelRefreshUnsupportedError(DatabayApiError):
+    code = 'model_refresh_unsupported'
+
+
+class ModelSourcesUnavailableError(DatabayApiError):
+    code = 'model_sources_unavailable'
+
+
+class ModelSqlRejectedError(DatabayApiError):
+    code = 'model_sql_rejected'
+
+
+class ModelVersionStaleError(DatabayApiError):
+    code = 'model_version_stale'
+
+
+class ModelVersionUnavailableError(DatabayApiError):
+    code = 'model_version_unavailable'
+
+
+class ModelWarehouseUnusableError(DatabayApiError):
+    code = 'model_warehouse_unusable'
+
+
 class MultiPropertyOffError(DatabayApiError):
     code = 'multi_property_off'
 
@@ -1251,6 +1456,10 @@ class NameReservedError(DatabayApiError):
 
 class NameTakenError(DatabayApiError):
     code = 'name_taken'
+
+
+class NewColumnsUnsupportedError(DatabayApiError):
+    code = 'new_columns_unsupported'
 
 
 class NoDraftError(DatabayApiError):
@@ -1577,6 +1786,10 @@ class PlatformCredentialsMissingError(DatabayApiError):
     code = 'platform_credentials_missing'
 
 
+class PolicyApplyFailedError(DatabayApiError):
+    code = 'policy_apply_failed'
+
+
 class PrecheckBusyError(DatabayApiError):
     code = 'precheck_busy'
 
@@ -1623,6 +1836,10 @@ class ProjectGeneralImmutableError(DatabayApiError):
 
 class ProjectLiveGraphImmutableError(DatabayApiError):
     code = 'project_live_graph_immutable'
+
+
+class ProjectModelsBrokenError(DatabayApiError):
+    code = 'project_models_broken'
 
 
 class ProjectNotDeletingError(DatabayApiError):
@@ -1705,6 +1922,10 @@ class QuotaReachedError(DatabayApiError):
     code = 'quota_reached'
 
 
+class ReaderConflictError(DatabayApiError):
+    code = 'reader_conflict'
+
+
 class ReaderEngineMismatchError(DatabayApiError):
     code = 'reader_engine_mismatch'
 
@@ -1715,6 +1936,10 @@ class ReaderFullError(DatabayApiError):
 
 class ReaderPartitionConflictError(DatabayApiError):
     code = 'reader_partition_conflict'
+
+
+class ReaderPasswordMissingError(DatabayApiError):
+    code = 'reader_password_missing'
 
 
 class ReaderPublicationModeMismatchError(DatabayApiError):
@@ -1817,6 +2042,10 @@ class RowFilterInvalidError(DatabayApiError):
     code = 'row_filter_invalid'
 
 
+class RuleBuiltRelationUnknownError(DatabayApiError):
+    code = 'rule_built_relation_unknown'
+
+
 class RuleColumnUnknownError(DatabayApiError):
     code = 'rule_column_unknown'
 
@@ -1875,6 +2104,10 @@ class SchemaVersionNotFoundError(DatabayApiError):
 
 class SecretKeyMissingError(DatabayApiError):
     code = 'secret_key_missing'
+
+
+class SemanticUnavailableError(DatabayApiError):
+    code = 'semantic_unavailable'
 
 
 class ServiceAccountKeyInvalidError(DatabayApiError):
@@ -2277,6 +2510,14 @@ class VersionRetiredError(DatabayApiError):
     code = 'version_retired'
 
 
+class WarehouseCredentialRejectedError(DatabayApiError):
+    code = 'warehouse_credential_rejected'
+
+
+class WarehouseNameUnsafeError(DatabayApiError):
+    code = 'warehouse_name_unsafe'
+
+
 class WarehouseNotInProjectError(DatabayApiError):
     code = 'warehouse_not_in_project'
 
@@ -2317,6 +2558,10 @@ class WebhookReplayUnavailableError(DatabayApiError):
     code = 'webhook_replay_unavailable'
 
 
+class WebhookSignatureInvalidError(DatabayApiError):
+    code = 'webhook_signature_invalid'
+
+
 class WebhookUrlUndeliverableError(DatabayApiError):
     code = 'webhook_url_undeliverable'
 
@@ -2331,6 +2576,7 @@ class WrongCredentialsError(DatabayApiError):
 
 EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'access_capability_unsupported': AccessCapabilityUnsupportedError,
+    'access_check_unavailable': AccessCheckUnavailableError,
     'access_management_unsupported': AccessManagementUnsupportedError,
     'access_pending': AccessPendingError,
     'access_role_name_taken': AccessRoleNameTakenError,
@@ -2352,6 +2598,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'already_member': AlreadyMemberError,
     'already_org_shared': AlreadyOrgSharedError,
     'ambiguous_org': AmbiguousOrgError,
+    'ambiguous_warehouse': AmbiguousWarehouseError,
     'announcement_not_found': AnnouncementNotFoundError,
     'api_key_last_project': ApiKeyLastProjectError,
     'api_key_membership_refused': ApiKeyMembershipRefusedError,
@@ -2378,14 +2625,18 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'binding_removing': BindingRemovingError,
     'board_not_found': BoardNotFoundError,
     'budget_below_usage': BudgetBelowUsageError,
+    'built_table_restricted_upstream': BuiltTableRestrictedUpstreamError,
     'builtin_not_found': BuiltinNotFoundError,
     'card_already_on_board': CardAlreadyOnBoardError,
     'card_not_found': CardNotFoundError,
     'card_revision_conflict': CardRevisionConflictError,
     'catalogue_unavailable': CatalogueUnavailableError,
     'change_event_not_found': ChangeEventNotFoundError,
+    'clickhouse_admin_refused': ClickhouseAdminRefusedError,
     'clickhouse_unavailable': ClickhouseUnavailableError,
     'client_config_unavailable': ClientConfigUnavailableError,
+    'column_decision_stale': ColumnDecisionStaleError,
+    'column_decision_unavailable': ColumnDecisionUnavailableError,
     'column_not_granted': ColumnNotGrantedError,
     'columns_not_in_source': ColumnsNotInSourceError,
     'columns_on_schemaless_stream': ColumnsOnSchemalessStreamError,
@@ -2414,6 +2665,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'credentials_renewed_elsewhere': CredentialsRenewedElsewhereError,
     'cross_org': CrossOrgError,
     'cross_warehouse_reference': CrossWarehouseReferenceError,
+    'currency_codes_changed': CurrencyCodesChangedError,
     'current_version': CurrentVersionError,
     'custom_plan_delivery_failed': CustomPlanDeliveryFailedError,
     'custom_plan_request_too_soon': CustomPlanRequestTooSoonError,
@@ -2444,6 +2696,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'draft_already_published': DraftAlreadyPublishedError,
     'draft_exists': DraftExistsError,
     'effective_not_lowering': EffectiveNotLoweringError,
+    'elt_unavailable': EltUnavailableError,
     'email_not_verified': EmailNotVerifiedError,
     'endpoint_removed': EndpointRemovedError,
     'entitlements_unavailable': EntitlementsUnavailableError,
@@ -2464,6 +2717,21 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'fx_rate_missing': FxRateMissingError,
     'fx_rate_unavailable': FxRateUnavailableError,
     'fx_unavailable': FxUnavailableError,
+    'git_auth_failed': GitAuthFailedError,
+    'git_commit_rejected': GitCommitRejectedError,
+    'git_connection_busy': GitConnectionBusyError,
+    'git_connection_exists': GitConnectionExistsError,
+    'git_host_key_changed': GitHostKeyChangedError,
+    'git_installation_not_yours': GitInstallationNotYoursError,
+    'git_not_connected': GitNotConnectedError,
+    'git_ref_not_found': GitRefNotFoundError,
+    'git_repo_not_installed': GitRepoNotInstalledError,
+    'git_repo_too_large': GitRepoTooLargeError,
+    'git_sync_failed': GitSyncFailedError,
+    'git_unreachable': GitUnreachableError,
+    'github_app_not_configured': GithubAppNotConfiguredError,
+    'github_app_permission_refused': GithubAppPermissionRefusedError,
+    'github_unavailable': GithubUnavailableError,
     'home_board_not_deletable': HomeBoardNotDeletableError,
     'home_conflict': HomeConflictError,
     'host_not_allowed': HostNotAllowedError,
@@ -2500,10 +2768,13 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'job_name_taken': JobNameTakenError,
     'job_not_found': JobNotFoundError,
     'keyless_selection_needs_key': KeylessSelectionNeedsKeyError,
+    'landed_tables_unreadable': LandedTablesUnreadableError,
     'last_admin': LastAdminError,
     'leftover_check_unavailable': LeftoverCheckUnavailableError,
     'leftover_not_found': LeftoverNotFoundError,
     'leftover_source_gone': LeftoverSourceGoneError,
+    'lineage_unreadable': LineageUnreadableError,
+    'lineage_window_too_large': LineageWindowTooLargeError,
     'login_validity_invalid': LoginValidityInvalidError,
     'logout_failed': LogoutFailedError,
     'managed_warehouse_sink_locked': ManagedWarehouseSinkLockedError,
@@ -2516,15 +2787,29 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'member_not_found': MemberNotFoundError,
     'member_not_in_organization': MemberNotInOrganizationError,
     'member_role_unchanged': MemberRoleUnchangedError,
+    'metric_not_found': MetricNotFoundError,
+    'metric_query_failed': MetricQueryFailedError,
     'migration_refused': MigrationRefusedError,
     'missing_feature_values': MissingFeatureValuesError,
     'missing_meter_values': MissingMeterValuesError,
     'missing_param': MissingParamError,
     'missing_sources': MissingSourcesError,
+    'model_check_unavailable': ModelCheckUnavailableError,
+    'model_in_git': ModelInGitError,
+    'model_in_use': ModelInUseError,
+    'model_name_reserved': ModelNameReservedError,
+    'model_name_taken': ModelNameTakenError,
+    'model_refresh_unsupported': ModelRefreshUnsupportedError,
+    'model_sources_unavailable': ModelSourcesUnavailableError,
+    'model_sql_rejected': ModelSqlRejectedError,
+    'model_version_stale': ModelVersionStaleError,
+    'model_version_unavailable': ModelVersionUnavailableError,
+    'model_warehouse_unusable': ModelWarehouseUnusableError,
     'multi_property_off': MultiPropertyOffError,
     'name_collision': NameCollisionError,
     'name_reserved': NameReservedError,
     'name_taken': NameTakenError,
+    'new_columns_unsupported': NewColumnsUnsupportedError,
     'no_draft': NoDraftError,
     'no_published_version': NoPublishedVersionError,
     'no_reachable_account': NoReachableAccountError,
@@ -2606,6 +2891,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'plan_seed_invalid': PlanSeedInvalidError,
     'plan_source_limit': PlanSourceLimitError,
     'platform_credentials_missing': PlatformCredentialsMissingError,
+    'policy_apply_failed': PolicyApplyFailedError,
     'precheck_busy': PrecheckBusyError,
     'precheck_limiter_unavailable': PrecheckLimiterUnavailableError,
     'precheck_rate_limited': PrecheckRateLimitedError,
@@ -2618,6 +2904,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'project_forbidden': ProjectForbiddenError,
     'project_general_immutable': ProjectGeneralImmutableError,
     'project_live_graph_immutable': ProjectLiveGraphImmutableError,
+    'project_models_broken': ProjectModelsBrokenError,
     'project_not_deleting': ProjectNotDeletingError,
     'project_not_empty': ProjectNotEmptyError,
     'project_not_found': ProjectNotFoundError,
@@ -2638,9 +2925,11 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'question_failed': QuestionFailedError,
     'quota_exceeded': QuotaExceededError,
     'quota_reached': QuotaReachedError,
+    'reader_conflict': ReaderConflictError,
     'reader_engine_mismatch': ReaderEngineMismatchError,
     'reader_full': ReaderFullError,
     'reader_partition_conflict': ReaderPartitionConflictError,
+    'reader_password_missing': ReaderPasswordMissingError,
     'reader_publication_mode_mismatch': ReaderPublicationModeMismatchError,
     'reader_scope_required': ReaderScopeRequiredError,
     'reason_required': ReasonRequiredError,
@@ -2666,6 +2955,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'rollout_off_cli_only': RolloutOffCliOnlyError,
     'row_count_unavailable': RowCountUnavailableError,
     'row_filter_invalid': RowFilterInvalidError,
+    'rule_built_relation_unknown': RuleBuiltRelationUnknownError,
     'rule_column_unknown': RuleColumnUnknownError,
     'rule_duplicate_table': RuleDuplicateTableError,
     'rule_overlap': RuleOverlapError,
@@ -2681,6 +2971,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'schema_version_contention': SchemaVersionContentionError,
     'schema_version_not_found': SchemaVersionNotFoundError,
     'secret_key_missing': SecretKeyMissingError,
+    'semantic_unavailable': SemanticUnavailableError,
     'service_account_key_invalid': ServiceAccountKeyInvalidError,
     'service_account_needs_access_role': ServiceAccountNeedsAccessRoleError,
     'service_credential_exists': ServiceCredentialExistsError,
@@ -2781,6 +3072,8 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'version_in_use': VersionInUseError,
     'version_published': VersionPublishedError,
     'version_retired': VersionRetiredError,
+    'warehouse_credential_rejected': WarehouseCredentialRejectedError,
+    'warehouse_name_unsafe': WarehouseNameUnsafeError,
     'warehouse_not_in_project': WarehouseNotInProjectError,
     'warehouse_not_queryable': WarehouseNotQueryableError,
     'warehouse_not_visible': WarehouseNotVisibleError,
@@ -2791,6 +3084,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'webhook_body_invalid': WebhookBodyInvalidError,
     'webhook_forbidden': WebhookForbiddenError,
     'webhook_replay_unavailable': WebhookReplayUnavailableError,
+    'webhook_signature_invalid': WebhookSignatureInvalidError,
     'webhook_url_undeliverable': WebhookUrlUndeliverableError,
     'workspace_unavailable': WorkspaceUnavailableError,
     'wrong_credentials': WrongCredentialsError,

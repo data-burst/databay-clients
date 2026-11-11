@@ -143,6 +143,10 @@ class Meter(OpenStrEnum):
     NOTEBOOK_CH_ERRORS = 'notebook_ch_errors'
     NOTEBOOK_CH_READ_ROWS = 'notebook_ch_read_rows'
     NOTEBOOK_CH_EXECUTION_TIME = 'notebook_ch_execution_time'
+    SEMANTIC_CH_QUERIES = 'semantic_ch_queries'
+    SEMANTIC_CH_ERRORS = 'semantic_ch_errors'
+    SEMANTIC_CH_READ_ROWS = 'semantic_ch_read_rows'
+    SEMANTIC_CH_EXECUTION_TIME = 'semantic_ch_execution_time'
     WAREHOUSE_CPU_SECONDS = 'warehouse_cpu_seconds'
     WAREHOUSE_READ_BYTES = 'warehouse_read_bytes'
     WAREHOUSE_PRINCIPALS = 'warehouse_principals'
@@ -197,6 +201,9 @@ class PrincipalKind(OpenStrEnum):
     SERVICE = 'service'
     CONSOLE = 'console'
     NOTEBOOK = 'notebook'
+    SEMANTIC = 'semantic'
+    BUILTIN_WRITER = 'builtin_writer'
+    MODEL_WRITER = 'model_writer'
 
 
 class PrincipalState(OpenStrEnum):
@@ -342,6 +349,16 @@ class DateRangeFilterDefault(OpenStrEnum):
     THIS_MONTH = 'this_month'
     LAST_MONTH = 'last_month'
     THIS_YEAR = 'this_year'
+
+
+class PipeV2ResponseNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeV2ResponseNewColumnsSource(OpenStrEnum):
+    REQUEST = 'request'
+    PROJECT_DEFAULT = 'project_default'
 
 
 class AdAccountOption(ResponseModel):
@@ -709,6 +726,8 @@ class PipeV2Response(ResponseModel):
     last_healthy_at: datetime | None = None
     last_sync_status: str | None = None
     masked_count: int = 0
+    new_columns: PipeV2ResponseNewColumns
+    new_columns_source: PipeV2ResponseNewColumnsSource | None
     primary_key: list[str] | None = None
     project_id: str | None = None
     reader_id: str | None = None

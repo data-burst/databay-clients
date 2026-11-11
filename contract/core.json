@@ -228,6 +228,20 @@
     "additionalProperties": false,
     "description": "One rule: a managed warehouse, optionally one table, its columns and a row filter.",
     "properties": {
+     "built_database": {
+      "anyOf": [
+       {
+        "maxLength": 256,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "null: a table of the warehouse's own database. Otherwise the database a model of the project was built in (from the warehouse's schema, built_relations): table_name names the model, read whole",
+      "title": "Built Database"
+     },
      "columns": {
       "anyOf": [
        {
@@ -293,6 +307,27 @@
    },
    "AccessRuleOut": {
     "properties": {
+     "built_database": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Built Database"
+     },
+     "built_writer_kind": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/WriterKind"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "columns": {
       "anyOf": [
        {
@@ -362,6 +397,8 @@
      "uuid",
      "db_uuid",
      "table_name",
+     "built_database",
+     "built_writer_kind",
      "columns",
      "row_filter",
      "status",
@@ -1489,8 +1526,21 @@
    },
    "ApplyChangeInfo": {
     "additionalProperties": false,
-    "description": "The apply body carries nothing: a removal needs no input, and the warehouse type is never the caller's.",
-    "properties": {},
+    "description": "The apply body: ``backfill`` for an added column, nothing else. The warehouse type is never the caller's.",
+    "properties": {
+     "backfill": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Required to add a column that waits for a decision, refused for any other change. `true` reloads the table from the source so existing rows get the column; `false` fills it only in rows that change from now on.",
+      "title": "Backfill"
+     }
+    },
     "title": "ApplyChangeInfo",
     "type": "object"
    },
@@ -2776,6 +2826,22 @@
     "title": "BoardSummary",
     "type": "object"
    },
+   "BranchCheckRequest": {
+    "additionalProperties": false,
+    "description": "Check a branch's tip as a sync would, without applying or building anything.",
+    "properties": {
+     "ref": {
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9._/-]{0,199}$",
+      "title": "Ref",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "title": "BranchCheckRequest",
+    "type": "object"
+   },
    "BreakdownLine": {
     "properties": {
      "pipe_uuid": {
@@ -2873,6 +2939,16 @@
      "year"
     ],
     "title": "CadenceUnit",
+    "type": "string"
+   },
+   "Caller": {
+    "description": "Who asked, for ``semantic_metric_queries_total``: the ``X-Databay-Caller`` header, ``api`` without one.",
+    "enum": [
+     "cli",
+     "agent",
+     "api"
+    ],
+    "title": "Caller",
     "type": "string"
    },
    "CanvasSummary": {
@@ -4331,6 +4407,48 @@
     "title": "CheckRunTablesResponse",
     "type": "object"
    },
+   "CheckedGitModel": {
+    "additionalProperties": false,
+    "description": "A model of a checked commit: how it would be stored and refreshed, and ``EXPLAIN ESTIMATE``'s rows.",
+    "properties": {
+     "estimated_rows": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimated Rows"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "path": {
+      "title": "Path",
+      "type": "string"
+     },
+     "refresh": {
+      "title": "Refresh",
+      "type": "string"
+     },
+     "storage": {
+      "title": "Storage",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "path",
+     "storage",
+     "refresh",
+     "estimated_rows"
+    ],
+    "title": "CheckedGitModel",
+    "type": "object"
+   },
    "ClickhouseClusterConfig": {
     "additionalProperties": false,
     "description": "How a ClickHouse sink is laid out, and how its DDL must therefore be written.\n\nDefaults describe a single node, so a sink without this config deserialises to\nsingle-node behaviour. ``mode`` is the only field that changes what DDL is emitted;\nthe rest tune it.",
@@ -4420,6 +4538,24 @@
     "title": "ClickhouseDeploymentMode",
     "type": "string"
    },
+   "Column": {
+    "properties": {
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "type"
+    ],
+    "title": "Column",
+    "type": "object"
+   },
    "ColumnInfo": {
     "properties": {
      "column_is_nullable": {
@@ -4444,6 +4580,137 @@
      "column_is_nullable"
     ],
     "title": "ColumnInfo",
+    "type": "object"
+   },
+   "CommitCheck": {
+    "additionalProperties": false,
+    "description": "A commit checked with the warehouse's models as a sync would, nothing applied, built or written.",
+    "properties": {
+     "commit": {
+      "title": "Commit",
+      "type": "string"
+     },
+     "disabled_models": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Disabled Models",
+      "type": "array"
+     },
+     "models": {
+      "items": {
+       "$ref": "#/components/schemas/CheckedGitModel"
+      },
+      "title": "Models",
+      "type": "array"
+     },
+     "passed": {
+      "title": "Passed",
+      "type": "boolean"
+     },
+     "problems": {
+      "items": {
+       "$ref": "#/components/schemas/CommitProblem"
+      },
+      "title": "Problems",
+      "type": "array"
+     }
+    },
+    "required": [
+     "commit",
+     "passed",
+     "problems",
+     "models",
+     "disabled_models"
+    ],
+    "title": "CommitCheck",
+    "type": "object"
+   },
+   "CommitProblem": {
+    "additionalProperties": false,
+    "description": "Why a checked commit would be refused: the error's code, message and fields, with its file and line.",
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "extra": {
+      "additionalProperties": true,
+      "title": "Extra",
+      "type": "object"
+     },
+     "file": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     }
+    },
+    "required": [
+     "code",
+     "detail",
+     "file",
+     "line",
+     "extra"
+    ],
+    "title": "CommitProblem",
+    "type": "object"
+   },
+   "CompiledSql": {
+    "properties": {
+     "params": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Params",
+      "type": "array"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text",
+     "params"
+    ],
+    "title": "CompiledSql",
     "type": "object"
    },
    "CompletenessResultResponse": {
@@ -6415,6 +6682,22 @@
       "format": "password",
       "title": "mask secret"
      },
+     "new_columns": {
+      "anyOf": [
+       {
+        "enum": [
+         "add",
+         "ask"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Omitted: the project's default.",
+      "title": "new columns"
+     },
      "nullable_overrides": {
       "anyOf": [
        {
@@ -6510,6 +6793,26 @@
     "title": "DraftSettings",
     "type": "object"
    },
+   "Explain": {
+    "properties": {
+     "definition": {
+      "$ref": "#/components/schemas/MetricDefinition"
+     },
+     "lineage": {
+      "$ref": "#/components/schemas/Lineage"
+     },
+     "sql": {
+      "$ref": "#/components/schemas/CompiledSql"
+     }
+    },
+    "required": [
+     "definition",
+     "sql",
+     "lineage"
+    ],
+    "title": "Explain",
+    "type": "object"
+   },
    "FeatureFlagsState": {
     "description": "Whether ``GET /api/auth/me`` could resolve the caller's features.",
     "enum": [
@@ -6572,6 +6875,24 @@
      "not_ready"
     ],
     "title": "FeatureSource",
+    "type": "string"
+   },
+   "FilterOp": {
+    "enum": [
+     "equals",
+     "notEquals",
+     "contains",
+     "notContains",
+     "startsWith",
+     "endsWith",
+     "gt",
+     "gte",
+     "lt",
+     "lte",
+     "set",
+     "notSet"
+    ],
+    "title": "FilterOp",
     "type": "string"
    },
    "FolderCreate": {
@@ -6791,6 +7112,219 @@
     "title": "Ga4ConnectedConfig",
     "type": "object"
    },
+   "GitAuthKind": {
+    "enum": [
+     "deploy_key",
+     "token",
+     "github_app"
+    ],
+    "title": "GitAuthKind",
+    "type": "string"
+   },
+   "GitConnectionOut": {
+    "additionalProperties": false,
+    "properties": {
+     "applied_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Applied At"
+     },
+     "applied_commit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Applied Commit"
+     },
+     "auth_kind": {
+      "$ref": "#/components/schemas/GitAuthKind"
+     },
+     "branch": {
+      "title": "Branch",
+      "type": "string"
+     },
+     "connection_id": {
+      "title": "Connection Id",
+      "type": "string"
+     },
+     "disabled_models": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Disabled Models",
+      "type": "array"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GitSyncError"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "folder": {
+      "title": "Folder",
+      "type": "string"
+     },
+     "github_installation_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Github Installation Id"
+     },
+     "github_repo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Github Repo"
+     },
+     "last_sync_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Sync At"
+     },
+     "next_sync_at": {
+      "format": "date-time",
+      "title": "Next Sync At",
+      "type": "string"
+     },
+     "project_id": {
+      "title": "Project Id",
+      "type": "string"
+     },
+     "public_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Public Key"
+     },
+     "repo_url": {
+      "title": "Repo Url",
+      "type": "string"
+     },
+     "token_username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Token Username"
+     },
+     "warehouse_db_uuid": {
+      "title": "Warehouse Db Uuid",
+      "type": "string"
+     },
+     "webhook_path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Webhook Path"
+     }
+    },
+    "required": [
+     "connection_id",
+     "project_id",
+     "warehouse_db_uuid",
+     "repo_url",
+     "branch",
+     "folder",
+     "auth_kind",
+     "public_key",
+     "github_installation_id",
+     "github_repo",
+     "token_username",
+     "webhook_path",
+     "applied_commit",
+     "applied_at",
+     "disabled_models",
+     "last_sync_at",
+     "next_sync_at",
+     "error"
+    ],
+    "title": "GitConnectionOut",
+    "type": "object"
+   },
+   "GitSyncError": {
+    "additionalProperties": false,
+    "description": "Why the last sync did not apply its commit; the last applied commit keeps building.",
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "commit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Commit"
+     },
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "extra": {
+      "additionalProperties": true,
+      "title": "Extra",
+      "type": "object"
+     }
+    },
+    "required": [
+     "code",
+     "detail",
+     "commit",
+     "extra"
+    ],
+    "title": "GitSyncError",
+    "type": "object"
+   },
    "GoogleAdsConnectedConfig": {
     "description": "Decrypted config blob for a Google Ads source.\n\nStores the long-lived ``refresh_token``, not an access token: the Google Ads\nsource refreshes the access token itself from\n``credentials{client_id, client_secret, developer_token, refresh_token}``, so\nit does not expire the way a Meta token does. ``customer_id``\nis the 10-digit account (no dashes), mirrored as the source's\n``external_ref``. ``login_customer_id`` is the manager (MCC) account id, set\nonly when the customer is accessed through a manager account.",
     "properties": {
@@ -6850,6 +7384,17 @@
     "title": "GoogleAdsConnectedConfig",
     "type": "object"
    },
+   "Grain": {
+    "enum": [
+     "day",
+     "week",
+     "month",
+     "quarter",
+     "year"
+    ],
+    "title": "Grain",
+    "type": "string"
+   },
    "GraphEdge": {
     "additionalProperties": false,
     "properties": {
@@ -6886,6 +7431,7 @@
    },
    "GraphNode": {
     "additionalProperties": false,
+    "description": "A card on the canvas. A ``model`` node is only where an elt model sits: ``resource_id`` is the model's id.",
     "properties": {
      "id": {
       "maxLength": 128,
@@ -6896,7 +7442,8 @@
      "kind": {
       "enum": [
        "source",
-       "destination"
+       "destination",
+       "model"
       ],
       "title": "Kind",
       "type": "string"
@@ -7592,6 +8139,53 @@
     "title": "LeftoverReason",
     "type": "string"
    },
+   "Lineage": {
+    "properties": {
+     "tables": {
+      "items": {
+       "$ref": "#/components/schemas/LineageRelation"
+      },
+      "title": "Tables",
+      "type": "array"
+     },
+     "views": {
+      "items": {
+       "$ref": "#/components/schemas/LineageRelation"
+      },
+      "title": "Views",
+      "type": "array"
+     },
+     "warehouse": {
+      "title": "Warehouse",
+      "type": "string"
+     }
+    },
+    "required": [
+     "warehouse",
+     "views",
+     "tables"
+    ],
+    "title": "Lineage",
+    "type": "object"
+   },
+   "LineageRelation": {
+    "properties": {
+     "database": {
+      "title": "Database",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "database",
+     "name"
+    ],
+    "title": "LineageRelation",
+    "type": "object"
+   },
    "LinkedInPagesConnectedConfig": {
     "description": "Decrypted config blob for a LinkedIn Pages (organic page analytics) source.\n\n``access_token`` is a LinkedIn member token (~60 days) with ``rw_organization_admin``,\nminted by databay's platform LinkedIn app or pasted on the manual path; the member must\nbe an ADMINISTRATOR of the Page. No refresh token is kept: on expiry the user reconnects\nor renews the token. ``organization_id`` is the numeric Page id (``urn:li:organization:<id>``),\nmirrored as the ConnectedSource ``external_ref``.",
     "properties": {
@@ -8220,6 +8814,10 @@
      "notebook_ch_errors",
      "notebook_ch_read_rows",
      "notebook_ch_execution_time",
+     "semantic_ch_queries",
+     "semantic_ch_errors",
+     "semantic_ch_read_rows",
+     "semantic_ch_execution_time",
      "warehouse_cpu_seconds",
      "warehouse_read_bytes",
      "warehouse_principals",
@@ -8364,6 +8962,486 @@
     ],
     "title": "MeterUsage",
     "type": "object"
+   },
+   "MetricDefinition": {
+    "properties": {
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
+     "description": {
+      "title": "Description",
+      "type": "string"
+     },
+     "expression": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expression"
+     },
+     "members": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Members",
+      "type": "array"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "description",
+     "type",
+     "expression",
+     "cube",
+     "members"
+    ],
+    "title": "MetricDefinition",
+    "type": "object"
+   },
+   "MetricFilter": {
+    "additionalProperties": false,
+    "properties": {
+     "member": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Member",
+      "type": "string"
+     },
+     "op": {
+      "$ref": "#/components/schemas/FilterOp"
+     },
+     "values": {
+      "items": {
+       "maxLength": 200,
+       "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Values",
+      "type": "array"
+     }
+    },
+    "required": [
+     "member",
+     "op"
+    ],
+    "title": "MetricFilter",
+    "type": "object"
+   },
+   "MetricGrant": {
+    "additionalProperties": false,
+    "description": "Which metrics a role reads: only ``metrics`` (``include``), or every one but them (``exclude``).\n\nA name is kept as given: the metric catalogue lives in semantic, which checks the names at query time.",
+    "properties": {
+     "metrics": {
+      "items": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Metrics",
+      "type": "array"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/MetricGrantMode"
+     }
+    },
+    "required": [
+     "mode",
+     "metrics"
+    ],
+    "title": "MetricGrant",
+    "type": "object"
+   },
+   "MetricGrantMode": {
+    "enum": [
+     "include",
+     "exclude"
+    ],
+    "title": "MetricGrantMode",
+    "type": "string"
+   },
+   "MetricGrantPut": {
+    "additionalProperties": false,
+    "description": "A role's whole metric grant; an empty ``include`` reads no metric, an empty ``exclude`` clears the grant.",
+    "properties": {
+     "metrics": {
+      "items": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Metrics",
+      "type": "array"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/MetricGrantMode"
+     },
+     "revision": {
+      "description": "the role's revision the change is based on",
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "mode",
+     "metrics",
+     "revision"
+    ],
+    "title": "MetricGrantPut",
+    "type": "object"
+   },
+   "MetricListOut": {
+    "description": "The metrics the caller can query; ``state`` and ``reason`` say why the list is empty when it is.",
+    "properties": {
+     "metrics": {
+      "items": {
+       "$ref": "#/components/schemas/MetricOut"
+      },
+      "title": "Metrics",
+      "type": "array"
+     },
+     "model_version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model Version"
+     },
+     "policy_revision": {
+      "title": "Policy Revision",
+      "type": "string"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "state": {
+      "$ref": "#/components/schemas/MetricState"
+     }
+    },
+    "required": [
+     "model_version",
+     "policy_revision",
+     "state",
+     "reason",
+     "metrics"
+    ],
+    "title": "MetricListOut",
+    "type": "object"
+   },
+   "MetricOrder": {
+    "additionalProperties": false,
+    "properties": {
+     "direction": {
+      "default": "asc",
+      "enum": [
+       "asc",
+       "desc"
+      ],
+      "title": "Direction",
+      "type": "string"
+     },
+     "member": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Member",
+      "type": "string"
+     }
+    },
+    "required": [
+     "member"
+    ],
+    "title": "MetricOrder",
+    "type": "object"
+   },
+   "MetricOut": {
+    "properties": {
+     "description": {
+      "title": "Description",
+      "type": "string"
+     },
+     "dimensions": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Dimensions",
+      "type": "array"
+     },
+     "filter_ops": {
+      "items": {
+       "$ref": "#/components/schemas/FilterOp"
+      },
+      "title": "Filter Ops",
+      "type": "array"
+     },
+     "grains": {
+      "items": {
+       "$ref": "#/components/schemas/Grain"
+      },
+      "title": "Grains",
+      "type": "array"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "state": {
+      "$ref": "#/components/schemas/MetricState"
+     },
+     "time_dimension": {
+      "title": "Time Dimension",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     },
+     "warehouses": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Warehouses",
+      "type": "array"
+     }
+    },
+    "required": [
+     "name",
+     "description",
+     "type",
+     "state",
+     "reason",
+     "warehouses",
+     "dimensions",
+     "time_dimension",
+     "grains",
+     "filter_ops"
+    ],
+    "title": "MetricOut",
+    "type": "object"
+   },
+   "MetricQuery": {
+    "additionalProperties": false,
+    "properties": {
+     "dimensions": {
+      "items": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Dimensions",
+      "type": "array"
+     },
+     "dry_run": {
+      "default": false,
+      "title": "Dry Run",
+      "type": "boolean"
+     },
+     "explain": {
+      "default": false,
+      "title": "Explain",
+      "type": "boolean"
+     },
+     "filters": {
+      "items": {
+       "$ref": "#/components/schemas/MetricFilter"
+      },
+      "maxItems": 20,
+      "title": "Filters",
+      "type": "array"
+     },
+     "limit": {
+      "default": 10000,
+      "maximum": 10000.0,
+      "minimum": 1.0,
+      "title": "Limit",
+      "type": "integer"
+     },
+     "metric": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Metric",
+      "type": "string"
+     },
+     "model_version": {
+      "anyOf": [
+       {
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model Version"
+     },
+     "order": {
+      "items": {
+       "$ref": "#/components/schemas/MetricOrder"
+      },
+      "maxItems": 10,
+      "title": "Order",
+      "type": "array"
+     },
+     "time": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TimeRange"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "warehouse": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Warehouse"
+     }
+    },
+    "required": [
+     "metric"
+    ],
+    "title": "MetricQuery",
+    "type": "object"
+   },
+   "MetricQueryOut": {
+    "properties": {
+     "answer_path": {
+      "const": "metric",
+      "default": "metric",
+      "title": "Answer Path",
+      "type": "string"
+     },
+     "columns": {
+      "items": {
+       "$ref": "#/components/schemas/Column"
+      },
+      "title": "Columns",
+      "type": "array"
+     },
+     "dry_run": {
+      "title": "Dry Run",
+      "type": "boolean"
+     },
+     "explain": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Explain"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "model_version": {
+      "title": "Model Version",
+      "type": "integer"
+     },
+     "policy_revision": {
+      "title": "Policy Revision",
+      "type": "string"
+     },
+     "row_count": {
+      "title": "Row Count",
+      "type": "integer"
+     },
+     "rows": {
+      "items": {
+       "items": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "type": "array"
+      },
+      "title": "Rows",
+      "type": "array"
+     },
+     "truncated": {
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "warehouse": {
+      "title": "Warehouse",
+      "type": "string"
+     }
+    },
+    "required": [
+     "columns",
+     "rows",
+     "row_count",
+     "truncated",
+     "model_version",
+     "policy_revision",
+     "warehouse",
+     "dry_run",
+     "explain"
+    ],
+    "title": "MetricQueryOut",
+    "type": "object"
+   },
+   "MetricState": {
+    "enum": [
+     "ready",
+     "compiling",
+     "unavailable"
+    ],
+    "title": "MetricState",
+    "type": "string"
    },
    "Mode": {
     "enum": [
@@ -10167,6 +11245,37 @@
     "title": "PipeMaskFieldV2",
     "type": "object"
    },
+   "PipeNewColumnsResponse": {
+    "properties": {
+     "new_columns": {
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "new columns",
+      "type": "string"
+     },
+     "new_columns_source": {
+      "enum": [
+       "request",
+       "project_default"
+      ],
+      "title": "new columns source",
+      "type": "string"
+     },
+     "uuid": {
+      "title": "pipe uuid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "uuid",
+     "new_columns",
+     "new_columns_source"
+    ],
+    "title": "PipeNewColumnsResponse",
+    "type": "object"
+   },
    "PipePauseResponse": {
     "description": "Response for ``PUT /api/cdc/pipe/{pipe_uuid}/pause``.",
     "properties": {
@@ -10535,7 +11644,6 @@
        "failed",
        "other_rebuild",
        "needs_decision",
-       "waiting",
        "unavailable"
       ],
       "title": "Display",
@@ -10575,7 +11683,6 @@
       "enum": [
        "stopped",
        "needs_decision",
-       "waiting",
        "done"
       ],
       "title": "State",
@@ -10643,6 +11750,26 @@
      "by_status"
     ],
     "title": "PipeStatusBucketMap",
+    "type": "object"
+   },
+   "PipeUpdate": {
+    "additionalProperties": false,
+    "description": "Body of ``PATCH /api/cdc/pipe/{pipe_uuid}``: the pipe settings that can change after create.",
+    "properties": {
+     "new_columns": {
+      "description": "Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Switching to `add` adds every column waiting for a decision; a skipped column stays out.",
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "new columns",
+      "type": "string"
+     }
+    },
+    "required": [
+     "new_columns"
+    ],
+    "title": "PipeUpdate",
     "type": "object"
    },
    "PipeV2Create": {
@@ -10728,6 +11855,22 @@
       "description": "Shared symmetric key for any 'reversible' (encrypt) columns. Required iff one is present, and must be exactly 16 printable ASCII characters with no spaces \u2014 it is used verbatim as a 16-byte AES-128 key, so any other length silently yields an UNENCRYPTED column.",
       "format": "password",
       "title": "mask secret"
+     },
+     "new_columns": {
+      "anyOf": [
+       {
+        "enum": [
+         "add",
+         "ask"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Whether new source columns are added automatically (`add`) or wait for a decision (`ask`). Omitted: the project's default.",
+      "title": "new columns"
      },
      "nullable_overrides": {
       "anyOf": [
@@ -11059,6 +12202,31 @@
       "title": "masked column count",
       "type": "integer"
      },
+     "new_columns": {
+      "description": "What the pipe does with a new source column: `add` lands it, `ask` holds its values out of the warehouse until someone adds or skips it on the pipe's schema changes.",
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "new columns",
+      "type": "string"
+     },
+     "new_columns_source": {
+      "anyOf": [
+       {
+        "enum": [
+         "request",
+         "project_default"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Where `new_columns` came from: the create or update request, or the project's default. Null on a pipe that syncs on a schedule, where the setting does not apply, and on a pipe created before it existed.",
+      "title": "new columns source"
+     },
      "preflight_skipped": {
       "description": "Source checks that could not run (the source was unreachable or refused the check's query); the pipe was created anyway. A problem one of them would have caught shows up later on the pipe's health. Empty when every check that applies ran.",
       "items": {
@@ -11198,6 +12366,8 @@
      "source_id",
      "sink_db_uuid",
      "backend",
+     "new_columns",
+     "new_columns_source",
      "preflight_skipped"
     ],
     "title": "PipeV2CreateResponse",
@@ -11445,6 +12615,31 @@
       "title": "masked column count",
       "type": "integer"
      },
+     "new_columns": {
+      "description": "What the pipe does with a new source column: `add` lands it, `ask` holds its values out of the warehouse until someone adds or skips it on the pipe's schema changes.",
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "new columns",
+      "type": "string"
+     },
+     "new_columns_source": {
+      "anyOf": [
+       {
+        "enum": [
+         "request",
+         "project_default"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Where `new_columns` came from: the create or update request, or the project's default. Null on a pipe that syncs on a schedule, where the setting does not apply, and on a pipe created before it existed.",
+      "title": "new columns source"
+     },
      "primary_key": {
       "anyOf": [
        {
@@ -11587,7 +12782,9 @@
      "uuid",
      "source_id",
      "sink_db_uuid",
-     "backend"
+     "backend",
+     "new_columns",
+     "new_columns_source"
     ],
     "title": "PipeV2DetailResponse",
     "type": "object"
@@ -11860,6 +13057,31 @@
       "title": "masked column count",
       "type": "integer"
      },
+     "new_columns": {
+      "description": "What the pipe does with a new source column: `add` lands it, `ask` holds its values out of the warehouse until someone adds or skips it on the pipe's schema changes.",
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "new columns",
+      "type": "string"
+     },
+     "new_columns_source": {
+      "anyOf": [
+       {
+        "enum": [
+         "request",
+         "project_default"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Where `new_columns` came from: the create or update request, or the project's default. Null on a pipe that syncs on a schedule, where the setting does not apply, and on a pipe created before it existed.",
+      "title": "new columns source"
+     },
      "primary_key": {
       "anyOf": [
        {
@@ -11990,7 +13212,9 @@
      "uuid",
      "source_id",
      "sink_db_uuid",
-     "backend"
+     "backend",
+     "new_columns",
+     "new_columns_source"
     ],
     "title": "PipeV2Response",
     "type": "object"
@@ -12842,12 +14066,15 @@
     "type": "string"
    },
    "PrincipalKind": {
-    "description": "A native login: a person's or service's external login, or one of Databay's readers.",
+    "description": "A native login: a person's or service's external login, or one of Databay's readers or writers.",
     "enum": [
      "personal",
      "service",
      "console",
-     "notebook"
+     "notebook",
+     "semantic",
+     "builtin_writer",
+     "model_writer"
     ],
     "title": "PrincipalKind",
     "type": "string"
@@ -12907,6 +14134,15 @@
       "title": "Name",
       "type": "string"
      },
+     "new_columns_default": {
+      "description": "What a new pipe in this project does with a new source column: add it automatically (`add`) or wait for a decision (`ask`). Each pipe takes it when it is created and can override it.",
+      "enum": [
+       "add",
+       "ask"
+      ],
+      "title": "New Columns Default",
+      "type": "string"
+     },
      "revision": {
       "title": "Revision",
       "type": "integer"
@@ -12954,6 +14190,7 @@
      "is_general",
      "status",
      "revision",
+     "new_columns_default",
      "role",
      "capabilities"
     ],
@@ -13030,6 +14267,16 @@
    "ProjectGraph": {
     "additionalProperties": false,
     "properties": {
+     "collapsed_groups": {
+      "items": {
+       "maxLength": 400,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 1000,
+      "title": "Collapsed Groups",
+      "type": "array"
+     },
      "edges": {
       "items": {
        "$ref": "#/components/schemas/GraphEdge"
@@ -13254,6 +14501,22 @@
        }
       ],
       "title": "Name"
+     },
+     "new_columns_default": {
+      "anyOf": [
+       {
+        "enum": [
+         "add",
+         "ask"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "What a new pipe in this project does with a new source column: add it automatically (`add`) or wait for a decision (`ask`). Each pipe takes it when it is created and can override it.",
+      "title": "New Columns Default"
      }
     },
     "title": "ProjectUpdate",
@@ -14528,6 +15791,35 @@
     "title": "ResourceProfileUpdate",
     "type": "object"
    },
+   "RoleMetricsOut": {
+    "properties": {
+     "grant": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricGrant"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     },
+     "role_id": {
+      "title": "Role Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "role_id",
+     "revision",
+     "grant"
+    ],
+    "title": "RoleMetricsOut",
+    "type": "object"
+   },
    "RowCondition": {
     "additionalProperties": false,
     "description": "One ``{column, op, value}`` leaf of a row filter.",
@@ -14669,6 +15961,37 @@
     "title": "ScheduleUpdate",
     "type": "object"
    },
+   "SchemaBuiltRelationOut": {
+    "description": "A model the project built on the warehouse: a rule names it with ``built_database`` and ``table_name``.",
+    "properties": {
+     "columns": {
+      "items": {
+       "$ref": "#/components/schemas/SchemaColumnOut"
+      },
+      "title": "Columns",
+      "type": "array"
+     },
+     "database": {
+      "title": "Database",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "writer_kind": {
+      "$ref": "#/components/schemas/WriterKind"
+     }
+    },
+    "required": [
+     "database",
+     "name",
+     "writer_kind",
+     "columns"
+    ],
+    "title": "SchemaBuiltRelationOut",
+    "type": "object"
+   },
    "SchemaChangeEventResponse": {
     "properties": {
      "created_at": {
@@ -14676,6 +15999,18 @@
       "format": "date-time",
       "title": "Created At",
       "type": "string"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "User ID of the person whose Add or Skip decided a new column that waited; null otherwise",
+      "title": "Decided By"
      },
      "is_nullable": {
       "anyOf": [
@@ -16705,6 +18040,60 @@
     "title": "TablesReadStatus",
     "type": "string"
    },
+   "TimeRange": {
+    "additionalProperties": false,
+    "description": "The metric's time dimension: a ``grain`` to group by, and a range: ``from``/``to`` (inclusive) or ``last``.\n\n``last`` is ``<n>d``: the ``n`` UTC days that end today.",
+    "properties": {
+     "from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "From"
+     },
+     "grain": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Grain"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "last": {
+      "anyOf": [
+       {
+        "pattern": "^[1-9][0-9]{0,3}d$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last"
+     },
+     "to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "To"
+     }
+    },
+    "title": "TimeRange",
+    "type": "object"
+   },
    "TransformTypeResponse": {
     "description": "One transform type the canvas can offer.",
     "properties": {
@@ -17650,6 +19039,13 @@
    "WarehouseSchemaOut": {
     "description": "The tables an access role's rules can name in one warehouse visible in the project.",
     "properties": {
+     "built_relations": {
+      "items": {
+       "$ref": "#/components/schemas/SchemaBuiltRelationOut"
+      },
+      "title": "Built Relations",
+      "type": "array"
+     },
      "db_uuid": {
       "title": "Db Uuid",
       "type": "string"
@@ -17664,7 +19060,8 @@
     },
     "required": [
      "db_uuid",
-     "tables"
+     "tables",
+     "built_relations"
     ],
     "title": "WarehouseSchemaOut",
     "type": "object"
@@ -17712,6 +19109,15 @@
     ],
     "title": "WarehouseStatsResponse",
     "type": "object"
+   },
+   "WriterKind": {
+    "description": "The elt writer that built a relation: the writer members of ``PrincipalKind``, by value.",
+    "enum": [
+     "builtin_writer",
+     "model_writer"
+    ],
+    "title": "WriterKind",
+    "type": "string"
    }
   }
  },
@@ -20933,6 +22339,76 @@
      "kind": "exposed",
      "noun": "pipe",
      "verb": "get"
+    }
+   },
+   "patch": {
+    "description": "Change whether new source columns are added automatically or wait for a decision.\n\n422 ``new_columns_unsupported`` for ``ask`` on a pipe that syncs on a schedule, in a Shopify store, or\nwhere source schema changes are not tracked.",
+    "operationId": "pipe_update",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pipe_uuid",
+      "required": true,
+      "schema": {
+       "title": "pipe uuid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PipeUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PipeNewColumnsResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Update Pipe",
+    "tags": [
+     "cdc-v2",
+     "pipe",
+     "private"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay pipe update <pipe_uuid> --new-columns ask"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "pipe",
+     "verb": "update"
     }
    }
   },
@@ -25512,9 +26988,168 @@
     }
    }
   },
+  "/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/metrics": {
+   "get": {
+    "description": "Show which semantic-layer metrics the role reads; ``grant`` null means every metric over what it reads.",
+    "operationId": "warehouse_access_role_get_metrics",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "role_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Role Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RoleMetricsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Metric Grant",
+    "tags": [
+     "warehouse-access"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay warehouse-access-role get-metrics <project_id> <role_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "warehouse-access-role",
+     "project": "path:project_id",
+     "verb": "get-metrics"
+    }
+   },
+   "put": {
+    "description": "Replace the role's metric grant (revision-checked); names are stored as given, semantic checks them.\n\n``include`` reads only the named metrics, ``exclude`` all but them. Refusals: 422 ``request_invalid`` for a\nname that is not a distinct snake_case identifier; 409 ``access_role_revision_conflict``.",
+    "operationId": "warehouse_access_role_set_metrics",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "role_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Role Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MetricGrantPut"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RoleMetricsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     },
+     "503": {
+      "description": "workspace_unavailable: project access could not be checked; nothing changed"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Metric Grant",
+    "tags": [
+     "warehouse-access"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay warehouse-access-role set-metrics <project_id> <role_id> --file metrics.json"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "warehouse-access-role",
+     "project": "path:project_id",
+     "verb": "set-metrics"
+    }
+   }
+  },
   "/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/rules": {
    "put": {
-    "description": "Replace the role's rules (revision-checked), each checked at write time.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``; 409\n``conflicting_table_rules`` and ``access_role_revision_conflict``.",
+    "description": "Replace the role's rules (revision-checked), each checked at write time.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``, ``built_table_restricted_upstream``;\n409 ``conflicting_table_rules`` and ``access_role_revision_conflict``.",
     "operationId": "warehouse_access_role_set_rules",
     "parameters": [
      {
@@ -29702,6 +31337,169 @@
     }
    }
   },
+  "/api/elt/git/connection": {
+   "get": {
+    "operationId": "models_sync_status",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GitConnectionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Connection Status",
+    "tags": [
+     "elt"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [
+      "repo_url",
+      "branch",
+      "folder",
+      "applied_commit",
+      "last_sync_at",
+      "error"
+     ],
+     "destructive": false,
+     "examples": [
+      "databay models sync-status"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "models",
+     "project": "header",
+     "verb": "sync-status"
+    }
+   }
+  },
+  "/api/elt/git/connection/check": {
+   "post": {
+    "description": "Check a branch's tip as a sync would, with ``EXPLAIN ESTIMATE`` advice; nothing is applied or built.",
+    "operationId": "models_check",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BranchCheckRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CommitCheck"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Check",
+    "tags": [
+     "elt"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [
+      "commit",
+      "passed",
+      "problems"
+     ],
+     "destructive": false,
+     "examples": [
+      "databay models check --ref main"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "models",
+     "project": "header",
+     "verb": "check",
+     "verdict": {
+      "field": "/passed",
+      "not_ready": [
+       "false"
+      ],
+      "ok": [
+       "true"
+      ]
+     }
+    }
+   }
+  },
+  "/api/elt/git/connection/sync": {
+   "post": {
+    "description": "Read the branch on the next pass; its outcome shows in the status.",
+    "operationId": "models_sync",
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GitConnectionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Sync Now",
+    "tags": [
+     "elt"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [
+      "applied_commit",
+      "next_sync_at",
+      "error"
+     ],
+     "destructive": false,
+     "examples": [
+      "databay models sync"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "models",
+     "project": "header",
+     "verb": "sync"
+    }
+   }
+  },
   "/api/entitlements/plans": {
    "get": {
     "description": "Return each public plan's current version: price, limits and capabilities.",
@@ -32399,7 +34197,6 @@
          "enum": [
           "stopped",
           "needs_decision",
-          "waiting",
           "done"
          ],
          "type": "string"
@@ -32487,6 +34284,7 @@
   },
   "/api/schema-evolution/schema-change-event/{event_uuid}/apply": {
    "post": {
+    "description": "Remove a column the source dropped, or add a new column that waits for a decision (``backfill`` required).",
     "operationId": "schema_change_apply",
     "parameters": [
      {
@@ -32540,7 +34338,8 @@
      "columns": [],
      "destructive": true,
      "examples": [
-      "databay schema-change apply <event_uuid> --yes"
+      "databay schema-change apply <event_uuid> --yes",
+      "databay schema-change apply <event_uuid> --backfill --yes"
      ],
      "idempotent": false,
      "kind": "exposed",
@@ -32551,6 +34350,7 @@
   },
   "/api/schema-evolution/schema-change-event/{event_uuid}/ignore": {
    "post": {
+    "description": "Keep a column the source dropped, or skip a new column that waits for a decision.",
     "operationId": "schema_change_ignore",
     "parameters": [
      {
@@ -32922,6 +34722,240 @@
      "noun": "schema-history",
      "project": "header",
      "verb": "summary"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/metrics": {
+   "get": {
+    "description": "List the metrics you can query, each with its dimensions, grains, warehouses and state.",
+    "operationId": "metrics_list",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricListOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
+     },
+     "422": {
+      "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
+     },
+     "502": {
+      "description": "metric_query_failed: Cube or the warehouse failed the query; nothing was done"
+     },
+     "503": {
+      "description": "model_version_unavailable (Retry-After), policy_apply_failed, semantic_unavailable, access_check_unavailable or warehouse_credential_rejected; each with trace_id"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Metrics",
+    "tags": [
+     "metrics"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metrics list"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metrics",
+     "project": "path:project_id",
+     "verb": "list"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/metrics/query": {
+   "post": {
+    "description": "Query one metric by its dimensions and time grain; ``explain`` adds its definition, SQL and lineage.\n\n``dry_run`` answers the explain without running the query. ``rows`` hold at most ``limit`` rows, and\n``truncated`` says when there were more.",
+    "operationId": "metrics_query",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "X-Databay-Caller",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/Caller"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Databay-Caller"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MetricQuery"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricQueryOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
+     },
+     "422": {
+      "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
+     },
+     "502": {
+      "description": "metric_query_failed: Cube or the warehouse failed the query; nothing was done"
+     },
+     "503": {
+      "description": "model_version_unavailable (Retry-After), policy_apply_failed, semantic_unavailable, access_check_unavailable or warehouse_credential_rejected; each with trace_id"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Post Metric Query",
+    "tags": [
+     "metrics"
+    ],
+    "x-databay-client": {
+     "agent_shape": "curated:metrics query",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metrics query net_sales --grain day --last 30d",
+      "databay metrics query channel_sessions --by channel --grain week --last 90d --where channel=Direct",
+      "databay metrics query net_sales --grain day --last 30d --explain"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metrics",
+     "project": "path:project_id",
+     "verb": "query"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/metrics/{metric}": {
+   "get": {
+    "description": "Describe one metric you can query.",
+    "operationId": "metrics_describe",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "metric",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "title": "Metric",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
+     },
+     "422": {
+      "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
+     },
+     "502": {
+      "description": "metric_query_failed: Cube or the warehouse failed the query; nothing was done"
+     },
+     "503": {
+      "description": "model_version_unavailable (Retry-After), policy_apply_failed, semantic_unavailable, access_check_unavailable or warehouse_credential_rejected; each with trace_id"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Metric",
+    "tags": [
+     "metrics"
+    ],
+    "x-databay-client": {
+     "agent_shape": "curated:metrics describe",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metrics describe net_sales"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metrics",
+     "project": "path:project_id",
+     "verb": "describe"
     }
    }
   },
@@ -33666,7 +35700,8 @@
      "columns": [],
      "destructive": false,
      "examples": [
-      "databay project update <project_id> --name \"Marketing analytics\" --access organization"
+      "databay project update <project_id> --name \"Marketing analytics\" --access organization",
+      "databay project update <project_id> --new-columns-default ask"
      ],
      "idempotent": false,
      "kind": "exposed",

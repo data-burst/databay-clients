@@ -16,5 +16,7 @@ HANDWRITTEN: dict[str, tuple[str, str, str]] = {
     "org switch": ("databay.cli.org", "org_switch", "Make another organization active and refresh the token"),
     "project use": ("databay.cli.profile", "project_use", "Set the profile's active project"),
     "pipe wait": ("databay.cli.pipe_wait", "pipe_wait", "Wait until a pipe is active or its table is ready to query"),
+    "metrics describe": ("databay.cli.metrics", "describe", "Describe one metric you can query"),
+    "metrics query": ("databay.cli.metrics", "query", "Query one metric by dimensions and time grain"),
     "sql": ("databay.cli.sql", "sql", "Run one read-only SQL statement"),
 }

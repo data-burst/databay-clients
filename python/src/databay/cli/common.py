@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     import httpx
 
     from databay.cli.console import Console
+    from databay.invoke import CallValues, Result
+    from databay.operation import Operation
 
 
 def common_options(command: Callable[..., Any], *, profile_help: str | None = None) -> Callable[..., Any]:
@@ -59,3 +61,33 @@ def http_client(state: dict[str, Any]) -> Iterator[httpx.Client]:
 
     with new_http_client(SETTINGS) as client:
         yield client
+
+
+def call_once(ctx: click.Context, values: dict[str, Any], op: Operation, call: CallValues) -> tuple[Console, Result]:
+    """Send ``op`` once as a curated read (``sql``, ``metrics query``), recording the context a failure prints."""
+    from databay.cli.runner import open_session  # noqa: PLC0415
+    from databay.invoke import resolve_project  # noqa: PLC0415
+
+    console, state = console_for(ctx, values)
+    session, chosen = open_session(values, console, state)
+    try:
+        state["context"] = {
+            "server": chosen.server,
+            "profile": chosen.name,
+            "project": resolve_project(op, call, session.active_project),
+            "request_id": session.transport.request_id,
+        }
+        state["reading"] = True
+        result = session.call(op, call)
+    finally:
+        session.transport.close()
+    state["context"]["request_id"] = result.request_id
+    return console, result
+
+
+def result_envelope(result: Result) -> dict[str, Any]:
+    """``{"result": ..., "project": ...}``: the JSON a curated command prints."""
+    envelope: dict[str, Any] = {"result": result.raw}
+    if result.project is not None:
+        envelope["project"] = result.project
+    return envelope

@@ -11,9 +11,15 @@ from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
 from databay.models.shared import BackendKind, PipeMaskFieldV2, PipeV2Response, SyncMode
 
 
+class DraftSettingsNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
 class GraphNodeKind(OpenStrEnum):
     SOURCE = 'source'
     DESTINATION = 'destination'
+    MODEL = 'model'
 
 
 class DraftSettings(RequestModel):
@@ -25,6 +31,7 @@ class DraftSettings(RequestModel):
     dest_table_name: str
     mask_fields: list[PipeMaskFieldV2] | None = None
     mask_secret: str | None = None
+    new_columns: DraftSettingsNewColumns | None = None
     nullable_overrides: dict[str, bool] | None = None
     primary_key: list[str] | None = None
     project_id: None = None
@@ -62,6 +69,7 @@ class GraphNode(RequestModel):
 
 
 class ProjectGraph(RequestModel):
+    collapsed_groups: list[str] | None = None
     edges: list[GraphEdge] | None = None
     nodes: list[GraphNode] | None = None
 

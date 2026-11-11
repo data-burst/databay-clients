@@ -3,9 +3,9 @@ name: databay
 description: >-
   Drive a Databay server with the databay CLI: sign in, pick a project, add and check a
   database source, create pipes that replicate its tables into a warehouse, wait for them,
-  query the warehouse with SQL, and build dashboards. Use when the
-  user asks to move or sync data with Databay, create or fix a pipe, query a Databay
-  warehouse, build a dashboard, or run any `databay` command.
+  query metrics such as net sales, query the warehouse with SQL, and build dashboards. Use
+  when the user asks to move or sync data with Databay, create or fix a pipe, ask for a
+  metric, query a Databay warehouse, build a dashboard, or run any `databay` command.
 ---
 
 # databay
@@ -154,6 +154,53 @@ Run the steps in this order. Each step's check must pass before the next.
    landed yet. Always pass `--db`: without it the statement runs on the org's default warehouse,
    which may not be the pipe's. `sql` runs one read-only statement; it can also read
    `--file <path>`.
+
+## Answer with a metric
+
+For a business number (net sales, orders, sessions, ad spend), query a metric before writing
+SQL: a metric is defined once, so its answer matches the dashboards. Work in this order:
+
+1. **List** what this project can query: `databay metrics list --output json`. Each metric has
+   its `dimensions`, `grains`, `filter_ops`, `warehouses` and a `state`. An empty list with
+   `state` `compiling` means the model is being built: wait a minute and list again. With
+   `unavailable`, `reason` is the error code that says why (look it up in `references/errors.md`).
+2. **Describe** the one you will use, to see which dimensions and grains it takes:
+   `databay metrics describe <metric> --output json`.
+3. **Query** it. `--by` groups by a dimension (repeat it), `--grain` by the time dimension,
+   `--last 30d` or `--from`/`--to` sets the range, and `--where` filters (`channel=paid`; also
+   `!=`, `>`, `>=`, `<`, `<=`; repeat it and every filter must hold), and `--order <member>:desc` with
+   `--limit 10` answers a top 10. Pass `--warehouse` only
+   when the metric is in several warehouses (`ambiguous_warehouse` names them).
+4. **Explain** when the user asks how a number was made, or before you rely on a surprising
+   one: the same query with `--explain` adds the metric's definition, the SQL it ran and the
+   tables it read. `--dry-run` answers that without running the query.
+
+`truncated: true` means only the first `row_count` rows came back: narrow the range or pass a
+coarser `--grain`. `model_version_unavailable` is a retry: wait for its `Retry-After`, then run
+the same command.
+
+### Worked example
+
+How did net sales go over the last 30 days, and how is it computed?
+
+```
+databay metrics list --output json
+databay metrics describe net_sales --output json
+databay metrics query net_sales --grain day --last 30d --output json
+databay metrics query net_sales --grain day --last 30d --explain --output json
+```
+
+Report the rows, and say the answer came from the `net_sales` metric (`answer_path: metric`,
+with its `model_version`).
+
+### When there is no metric for it
+
+`metric_not_found` means the metric is not in this project's model; its `did_you_mean` lists
+close names you can query. If none of them fits, you may answer with `databay sql` against the
+warehouse instead (step 5 of "Replicate a database table" shows `--db`). Label that answer `answer_path: raw_sql` when
+you report it, and say it is your own query, not a defined metric, so the user knows it may
+not match the dashboards. Never use SQL to get around `permission_denied` or a metric the user
+cannot see: the SQL console applies the user's own grants and refuses the same columns.
 
 ## Dashboards
 

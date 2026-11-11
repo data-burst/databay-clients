@@ -20,9 +20,10 @@ class SchemaChangeResource(Resource):
         self,
         *,
         event_uuid: str,
+        backfill: bool | None | Unset = UNSET,
     ) -> None:
         """Apply Schema Change Event. ``databay schema-change apply``."""
-        return self._call(_ops.SCHEMA_CHANGE_APPLY, {'event_uuid': event_uuid})
+        return self._call(_ops.SCHEMA_CHANGE_APPLY, {'event_uuid': event_uuid, 'backfill': backfill})
 
     def ignore(
         self,

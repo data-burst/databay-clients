@@ -324,6 +324,12 @@
    "side_effects": "partial",
    "max_retries": null
   },
+  "new_columns_untracked": {
+   "hint": "Set the pipe to add new columns automatically, or turn schema change tracking on, then restart it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "pipe_not_provisioned": {
    "hint": "Wait for provisioning to finish and retry; if the pipe stays in this state, delete and re-create it.",
    "action": "retry",
@@ -444,6 +450,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "source_column_reserved": {
+   "hint": "Rename the source column, or create a new pipe that leaves it out.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "source_database_dropped": {
    "hint": "Once the database is back, resync the pipe (a rebuild from the snapshot source) to copy it again.",
    "action": "do_first",
@@ -559,6 +571,12 @@
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
+  },
+  "access_check_unavailable": {
+   "hint": "Access could not be checked; retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
   },
   "access_management_unsupported": {
    "hint": "Pick a warehouse whose type supports access roles and logins.",
@@ -683,6 +701,12 @@
   "ambiguous_org": {
    "hint": "Sign in again; if this persists, an operator must remove the extra organization.",
    "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "ambiguous_warehouse": {
+   "hint": "Name one of the listed warehouses and ask again.",
+   "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
   },
@@ -842,6 +866,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "built_table_restricted_upstream": {
+   "hint": "Let the role read the upstream table in full, or grant it the upstream table instead of the built one.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "builtin_not_found": {
    "hint": "Pick a built-in dashboard from the list.",
    "action": "fix_and_retry",
@@ -878,6 +908,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "clickhouse_admin_refused": {
+   "hint": "Ask your Databay administrator to check the analytics server's admin account.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "clickhouse_unavailable": {
    "hint": "Retry after the Retry-After interval.",
    "action": "retry",
@@ -889,6 +925,18 @@
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
+  },
+  "column_decision_stale": {
+   "hint": "Reload the pipe's schema changes and decide on the column as it is listed now.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "column_decision_unavailable": {
+   "hint": "Retry in a moment; repeating the same decision is safe.",
+   "action": "retry",
+   "side_effects": "unknown",
+   "max_retries": 3
   },
   "column_not_granted": {
    "hint": "Leave out the columns listed in columns, or ask an admin to grant them.",
@@ -1057,6 +1105,12 @@
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
+  },
+  "currency_codes_changed": {
+   "hint": "Run the card again in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 2
   },
   "current_version": {
    "hint": "Pick a version that is not current, or confirm retiring the current one.",
@@ -1238,6 +1292,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "elt_unavailable": {
+   "hint": "The models could not be listed; retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
   "email_not_verified": {
    "hint": "Open the link we emailed you, or send a new one from the sign-in page.",
    "action": "ask_human",
@@ -1354,6 +1414,96 @@
   },
   "fx_unavailable": {
    "hint": "Try again in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "git_auth_failed": {
+   "hint": "Add the deploy key to the repository read-only, or use a token that can read it.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_commit_rejected": {
+   "hint": "Fix the file and line named, then push a new commit.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_connection_busy": {
+   "hint": "Retry in a moment; the git connection changed meanwhile.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "git_connection_exists": {
+   "hint": "Disconnect the project's repository first, then connect again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_host_key_changed": {
+   "hint": "Check the repository host's key; if the change is expected, connect the repository again.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_installation_not_yours": {
+   "hint": "Install the Databay GitHub App from Databay's own install link, then connect again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_not_connected": {
+   "hint": "Connect a repository to the project first.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_ref_not_found": {
+   "hint": "Name a branch and folder that exist in the repository.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_repo_not_installed": {
+   "hint": "Install the Databay GitHub App on the repository, then connect again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_repo_too_large": {
+   "hint": "Make the dbt folder smaller, or keep large files out of it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "git_sync_failed": {
+   "hint": "Retry the sync; if it keeps failing, tell support.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "git_unreachable": {
+   "hint": "Retry in a moment; the repository's host did not answer.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "github_app_not_configured": {
+   "hint": "Connect with a deploy key or a token; this server has no GitHub App.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "github_app_permission_refused": {
+   "hint": "Grant the Databay GitHub App the permissions Databay lists, then retry.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "github_unavailable": {
+   "hint": "Retry in a moment; GitHub did not answer.",
    "action": "retry",
    "side_effects": "none",
    "max_retries": 3
@@ -1574,6 +1724,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "landed_tables_unreadable": {
+   "hint": "Fix the warehouse's connection settings or its user's access as detail says, then retry.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "last_admin": {
    "hint": "Make another member an admin first.",
    "action": "do_first",
@@ -1595,6 +1751,18 @@
   "leftover_source_gone": {
    "hint": "Drop it on the database yourself with the SQL shown, then dismiss it.",
    "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "lineage_unreadable": {
+   "hint": "Ask your Databay administrator to check the warehouse's query log.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "lineage_window_too_large": {
+   "hint": "Read the lineage in shorter windows.",
+   "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1670,6 +1838,18 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "metric_not_found": {
+   "hint": "List the metrics you can query and use one of their names.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "metric_query_failed": {
+   "hint": "The metric query failed; retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
   "migration_refused": {
    "hint": "Fix each organization listed in refused, or leave it out, then run the move again.",
    "action": "fix_and_retry",
@@ -1700,6 +1880,72 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "model_check_unavailable": {
+   "hint": "Retry in a moment; nothing was saved.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "model_in_git": {
+   "hint": "Edit this model in its repository; Databay syncs the change.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_in_use": {
+   "hint": "Change or delete the models listed in readers first, then delete this one.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_name_reserved": {
+   "hint": "Pick a name without the reserved part.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_name_taken": {
+   "hint": "Pick another name for the model.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_refresh_unsupported": {
+   "hint": "Store the model as a table or incremental table, or set its refresh to manual.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_sources_unavailable": {
+   "hint": "Retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "model_sql_rejected": {
+   "hint": "Change the model's SQL as detail says, then save again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_version_stale": {
+   "hint": "Open the current version, apply your edits to it, then save again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_version_unavailable": {
+   "hint": "The metric model is updating; retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "model_warehouse_unusable": {
+   "hint": "Pick a warehouse this project uses and that is ready, then save again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "multi_property_off": {
    "hint": "Connect one property per connection.",
    "action": "fix_and_retry",
@@ -1720,6 +1966,12 @@
   },
   "name_taken": {
    "hint": "Pick another warehouse name.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "new_columns_unsupported": {
+   "hint": "Use add for new columns; asking first is not available for this pipe or organization.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -2210,6 +2462,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "policy_apply_failed": {
+   "hint": "The metric model is not updating; ask your org admin to check access.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "precheck_busy": {
    "hint": "Retry after the Retry-After interval.",
    "action": "retry",
@@ -2279,6 +2537,12 @@
   "project_live_graph_immutable": {
    "hint": "Leave the items that have live pipelines unchanged, or delete those pipelines first.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "project_models_broken": {
+   "hint": "Fix the models listed in broken_models first, then save again.",
+   "action": "do_first",
    "side_effects": "none",
    "max_retries": null
   },
@@ -2402,6 +2666,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "reader_conflict": {
+   "hint": "Ask your Databay administrator to check this warehouse's reader.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "reader_engine_mismatch": {
    "hint": "Create the pipe without reader_id, or switch the reader to this pipe's engine first.",
    "action": "fix_and_retry",
@@ -2417,6 +2687,12 @@
   "reader_partition_conflict": {
    "hint": "Create the pipe without reader_id to give it a reader of its own.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "reader_password_missing": {
+   "hint": "Ask your Databay administrator to rotate this warehouse's reader.",
+   "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
   },
@@ -2570,6 +2846,12 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "rule_built_relation_unknown": {
+   "hint": "Pick a model from the warehouse's built models.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "rule_column_unknown": {
    "hint": "Pick columns the table has.",
    "action": "fix_and_retry",
@@ -2659,6 +2941,12 @@
    "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
+  },
+  "semantic_unavailable": {
+   "hint": "The numbers are updating; retry in a moment.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
   },
   "service_account_key_invalid": {
    "hint": "Send a valid service account key.",
@@ -3260,6 +3548,18 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "warehouse_credential_rejected": {
+   "hint": "Ask your org admin to re-run the warehouse access reconcile.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "warehouse_name_unsafe": {
+   "hint": "Ask your Databay administrator to check this warehouse's database name.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "warehouse_not_in_project": {
    "hint": "Pick a warehouse available in this project.",
    "action": "fix_and_retry",
@@ -3316,6 +3616,12 @@
   },
   "webhook_replay_unavailable": {
    "hint": "Send a new Idempotency-Key to create the webhook again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "webhook_signature_invalid": {
+   "hint": "Sign the webhook with the secret shown when the repository was connected.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null

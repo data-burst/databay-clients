@@ -277,6 +277,18 @@ PROJECT_UPDATE = Operation(
                 description='Name',
                 nullable=True,
             ),
+            Param(
+                name='new_columns_default',
+                location='body',
+                kind='string',
+                required=False,
+                description='What a new pipe in this project does with a new source column: add it automatically (`add`) or wait for a decision (`ask`). Each pipe takes it when it is created and can override it.',
+                choices=(
+                    'add',
+                    'ask',
+                ),
+                nullable=True,
+            ),
         ),
     ),
     response=Response(
@@ -286,6 +298,7 @@ PROJECT_UPDATE = Operation(
     ),
     examples=(
         'databay project update <project_id> --name "Marketing analytics" --access organization',
+        'databay project update <project_id> --new-columns-default ask',
     ),
 )
 

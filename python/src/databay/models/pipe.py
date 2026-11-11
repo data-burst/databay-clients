@@ -54,11 +54,51 @@ class ReaderTableState(OpenStrEnum):
     QUARANTINED = 'quarantined'
 
 
+class PipeNewColumnsResponseNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeNewColumnsResponseNewColumnsSource(OpenStrEnum):
+    REQUEST = 'request'
+    PROJECT_DEFAULT = 'project_default'
+
+
 class PipeRebuildRequestSource(OpenStrEnum):
     WAREHOUSE_COPY = 'warehouse-copy'
     RE_EXTRACT = 're-extract'
     SNAPSHOT = 'snapshot'
     RETYPE = 'retype'
+
+
+class PipeUpdateNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeV2CreateNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeV2CreateResponseNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeV2CreateResponseNewColumnsSource(OpenStrEnum):
+    REQUEST = 'request'
+    PROJECT_DEFAULT = 'project_default'
+
+
+class PipeV2DetailResponseNewColumns(OpenStrEnum):
+    ADD = 'add'
+    ASK = 'ask'
+
+
+class PipeV2DetailResponseNewColumnsSource(OpenStrEnum):
+    REQUEST = 'request'
+    PROJECT_DEFAULT = 'project_default'
 
 
 class MovePipeline(RequestModel):
@@ -69,6 +109,12 @@ class PipeDeleteAccepted(ResponseModel):
     drop_destination: bool
     pipe_uuid: str
     status: Literal['deleting']
+
+
+class PipeNewColumnsResponse(ResponseModel):
+    new_columns: PipeNewColumnsResponseNewColumns
+    new_columns_source: PipeNewColumnsResponseNewColumnsSource
+    uuid: str
 
 
 class ReaderPublicationCheck(ResponseModel):
@@ -157,6 +203,10 @@ class PipeRollup(ResponseModel):
     rows_unavailable: bool
 
 
+class PipeUpdate(RequestModel):
+    new_columns: PipeUpdateNewColumns
+
+
 class PipeV2Create(RequestModel):
     acknowledge_org_visible: bool = False
     backend: BackendKind | None = None
@@ -166,6 +216,7 @@ class PipeV2Create(RequestModel):
     dest_table_name: str
     mask_fields: list[PipeMaskFieldV2] | None = None
     mask_secret: str | None = None
+    new_columns: PipeV2CreateNewColumns | None = None
     nullable_overrides: dict[str, bool] | None = None
     primary_key: list[str] | None = None
     project_id: str
@@ -199,6 +250,8 @@ class PipeV2CreateResponse(ResponseModel):
     last_healthy_at: datetime | None = None
     last_sync_status: str | None = None
     masked_count: int = 0
+    new_columns: PipeV2CreateResponseNewColumns
+    new_columns_source: PipeV2CreateResponseNewColumnsSource | None
     preflight_skipped: list[PreflightCheck]
     primary_key: list[str] | None = None
     project_id: str | None = None
@@ -237,6 +290,8 @@ class PipeV2DetailResponse(ResponseModel):
     last_sync_status: str | None = None
     masked_columns: list[PipeMaskFieldV2] | None = None
     masked_count: int = 0
+    new_columns: PipeV2DetailResponseNewColumns
+    new_columns_source: PipeV2DetailResponseNewColumnsSource | None
     primary_key: list[str] | None = None
     project_id: str | None = None
     reader: ReaderInfo | None = None
