@@ -96,6 +96,14 @@ def test_an_unknown_caller_is_a_usage_error_before_any_request(cli, server):
     assert server.calls("POST", f"{BASE}/query") == []
 
 
+def test_caller_offers_every_caller_the_contract_takes_but_api():
+    from databay.cli.metrics import CALLER_HEADER, CALLERS
+    from databay.operations.metrics import METRICS_QUERY
+
+    [header] = [p for p in METRICS_QUERY.params if p.name == CALLER_HEADER]
+    assert set(CALLERS) == set(header.choices) - {"api"}
+
+
 def test_the_skills_worked_example_runs_against_the_api(cli, server):
     text = (SOURCE / "SKILL.md").read_text(encoding="utf-8")
     block = re.search(r"### Worked example\n.*?```\n(.*?)```", text, re.DOTALL)
