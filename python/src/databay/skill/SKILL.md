@@ -166,14 +166,15 @@ SQL: a metric is defined once, so its answer matches the dashboards. Work in thi
    `unavailable`, `reason` is the error code that says why (look it up in `references/errors.md`).
 2. **Describe** the one you will use, to see which dimensions and grains it takes:
    `databay metrics describe <metric> --output json`.
-3. **Query** it. `--by` groups by a dimension (repeat it), `--grain` by the time dimension,
-   `--last 30d` or `--from`/`--to` sets the range, and `--where` filters (`channel=paid`; also
+3. **Query** it, always with `--caller agent`: it tells the server an agent ran the query, so
+   it is counted apart from a person's. `--by` groups by a dimension (repeat it), `--grain` by
+   the time dimension, `--last 30d` or `--from`/`--to` sets the range, and `--where` filters (`channel=paid`; also
    `!=`, `>`, `>=`, `<`, `<=`; repeat it and every filter must hold), and `--order <member>:desc` with
    `--limit 10` answers a top 10. Pass `--warehouse` only
    when the metric is in several warehouses (`ambiguous_warehouse` names them).
 4. **Explain** when the user asks how a number was made, or before you rely on a surprising
-   one: the same query with `--explain` adds the metric's definition, the SQL it ran and the
-   tables it read. `--dry-run` answers that without running the query.
+   one: the same query, still with `--caller agent`, plus `--explain` adds the metric's
+   definition, the SQL it ran and the tables it read. `--dry-run` answers that without running the query.
 
 `truncated: true` means only the first `row_count` rows came back: narrow the range or pass a
 coarser `--grain`. `model_version_unavailable` is a retry: wait for its `Retry-After`, then run
@@ -186,8 +187,8 @@ How did net sales go over the last 30 days, and how is it computed?
 ```
 databay metrics list --output json
 databay metrics describe net_sales --output json
-databay metrics query net_sales --grain day --last 30d --output json
-databay metrics query net_sales --grain day --last 30d --explain --output json
+databay metrics query net_sales --grain day --last 30d --caller agent --output json
+databay metrics query net_sales --grain day --last 30d --explain --caller agent --output json
 ```
 
 Report the rows, and say the answer came from the `net_sales` metric (`answer_path: metric`,
