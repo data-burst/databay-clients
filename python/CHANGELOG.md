@@ -21,7 +21,8 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
 - `databay metrics list`, `databay metrics describe <metric>` and `databay metrics query <metric>` with
   `--by`, `--grain`, `--last` or `--from`/`--to`, `--where member=value` (also `!=`, `>`, `>=`, `<`, `<=`),
   `--order member[:desc]`, `--limit`, `--warehouse`, `--model-version`, `--explain` and `--dry-run`; a query sends
-  `X-Databay-Caller: cli`. `databay warehouse-access-role get-metrics|set-metrics` read and set a role's
+  `X-Databay-Caller: cli`, or `agent` with `--caller agent`, which the agent skill passes on every query.
+  `databay warehouse-access-role get-metrics|set-metrics` read and set a role's
   metric grants. The agent skill teaches list, describe, query and explain, and labels a `databay sql`
   fallback `answer_path: raw_sql`.
 - On a terminal, an error answered with a 5xx prints its `trace_id`.

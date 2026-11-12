@@ -59,13 +59,15 @@ def _sent(server) -> dict:
     return json.loads(server.calls("POST", f"{BASE}/query")[-1].content)
 
 
-def test_the_hello_world_sequence_lists_queries_and_explains(cli, server):
+def test_the_hello_world_sequence_run_by_an_agent_lists_queries_and_explains_as_agent(cli, server):
     server.on("GET", BASE, answer(200, LISTED))
     server.on("POST", f"{BASE}/query", answer(200, ROWS), answer(200, {**ROWS, "explain": EXPLAIN}))
 
     listed = cli("metrics", "list")
-    queried = cli("metrics", "query", "net_sales", "--grain", "day", "--last", "30d")
-    explained = cli("metrics", "query", "net_sales", "--grain", "day", "--last", "30d", "--explain")
+    queried = cli("metrics", "query", "net_sales", "--grain", "day", "--last", "30d", "--caller", "agent")
+    explained = cli(
+        "metrics", "query", "net_sales", "--grain", "day", "--last", "30d", "--explain", "--caller", "agent"
+    )
 
     assert (listed.code, queried.code, explained.code) == (0, 0, 0), explained.stderr
     assert [m["name"] for m in listed.json()["result"]["metrics"]] == ["net_sales"]
@@ -74,7 +76,32 @@ def test_the_hello_world_sequence_lists_queries_and_explains(cli, server):
     first, second = (json.loads(r.content) for r in server.calls("POST", f"{BASE}/query"))
     assert first == {"metric": "net_sales", "explain": False, "dry_run": False, "time": {"grain": "day", "last": "30d"}}
     assert second == {**first, "explain": True}
-    assert {r.headers["x-databay-caller"] for r in server.calls("POST", f"{BASE}/query")} == {"cli"}
+    assert {r.headers["x-databay-caller"] for r in server.calls("POST", f"{BASE}/query")} == {"agent"}
+
+
+def test_a_query_without_caller_is_counted_as_cli(cli, server):
+    server.on("POST", f"{BASE}/query", answer(200, ROWS))
+
+    run = cli("metrics", "query", "net_sales")
+
+    assert run.code == 0, run.stderr
+    assert server.calls("POST", f"{BASE}/query")[-1].headers["x-databay-caller"] == "cli"
+
+
+def test_an_unknown_caller_is_a_usage_error_before_any_request(cli, server):
+    run = cli("metrics", "query", "net_sales", "--caller", "bot")
+
+    assert run.code == 2
+    assert run.error()["code"] == "usage_invalid"
+    assert server.calls("POST", f"{BASE}/query") == []
+
+
+def test_caller_offers_every_caller_the_contract_takes_but_api():
+    from databay.cli.metrics import CALLER_HEADER, CALLERS
+    from databay.operations.metrics import METRICS_QUERY
+
+    [header] = [p for p in METRICS_QUERY.params if p.name == CALLER_HEADER]
+    assert set(CALLERS) == set(header.choices) - {"api"}
 
 
 def test_the_skills_worked_example_runs_against_the_api(cli, server):
@@ -89,6 +116,7 @@ def test_the_skills_worked_example_runs_against_the_api(cli, server):
 
     assert [run.code for run in runs] == [0] * 4, [run.stderr for run in runs]
     assert runs[-1].json()["result"]["explain"] == EXPLAIN
+    assert {r.headers["x-databay-caller"] for r in server.calls("POST", f"{BASE}/query")} == {"agent"}
 
 
 def test_query_sends_every_flag_in_the_body(cli, server):

@@ -10,8 +10,9 @@ import click
 from databay.cli.common import call_once, common_options, result_envelope
 from databay.models.metrics import Grain
 
-#: Who ran the query, for the server's per-caller count; the CLI has no agent mode, so always ``cli``.
+#: Who ran the query, for the server's per-caller count: ``--caller``, ``cli`` unless an agent passes ``agent``.
 CALLER_HEADER = "X-Databay-Caller"
+CALLERS = ("cli", "agent")
 #: ``--where`` operators; ``!=``, ``>=`` and ``<=`` come before ``=``, ``>`` and ``<`` so the regex reads them whole.
 WHERE_OPS = {"!=": "notEquals", ">=": "gte", "<=": "lte", "=": "equals", ">": "gt", "<": "lt"}
 _WHERE = re.compile(
@@ -83,6 +84,9 @@ compiled to and its lineage; --dry-run answers that without running it.
 and <=, and repeats (each must hold). --order member[:desc] sorts, and
 repeats; with --limit it answers a top N.
 \b
+--caller agent marks a query an AI agent ran, so the server counts it
+apart from a person's; without it the query counts as cli.
+\b
 Examples:
   databay metrics query net_sales --grain day --last 30d
   databay metrics query channel_sessions --by channel --grain week --last 90d --where channel=Direct
@@ -108,6 +112,7 @@ Examples:
 @click.option("--model-version", "model_version", type=click.IntRange(min=1), default=None, help="pin a model version")
 @click.option("--explain", is_flag=True, default=False, help="add the definition, compiled SQL and lineage")
 @click.option("--dry-run", "dry_run", is_flag=True, default=False, help="answer the explain without running it")
+@click.option("--caller", type=click.Choice(CALLERS), default="cli", help="who runs the query: cli or agent")
 @click.option("--project", default=None, help=_PROJECT_HELP)
 @common_options
 @click.pass_context
@@ -126,6 +131,7 @@ def query(
     model_version: int | None,
     explain: bool,
     dry_run: bool,
+    caller: str,
     project: str | None,
     **values: Any,  # noqa: ANN401
 ) -> None:
@@ -147,7 +153,7 @@ def query(
         "model_version": model_version,
     }
     body.update({k: v for k, v in optional.items() if v is not None})
-    call = CallValues(body=body, has_body=True, headers={CALLER_HEADER: "cli"}, project_flag=project)
+    call = CallValues(body=body, has_body=True, headers={CALLER_HEADER: caller}, project_flag=project)
     console, result = call_once(ctx, values, METRICS_QUERY, call)
     answer = result.parsed
     if answer.truncated:
