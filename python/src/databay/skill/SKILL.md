@@ -203,6 +203,23 @@ you report it, and say it is your own query, not a defined metric, so the user k
 not match the dashboards. Never use SQL to get around `permission_denied` or a metric the user
 cannot see: the SQL console applies the user's own grants and refuses the same columns.
 
+## Define metrics
+
+A project's own metrics come from its metric model, a YAML file. Metrics query the published
+version; a draft changes nothing until it is published.
+
+1. **Validate** the file: `databay metric-models validate --yaml "$(cat metrics.yml)" --output json`
+   names the cubes and metrics it defines. `model_rejected` lists each field to fix.
+2. **Push** it as the draft: `databay metric-models push --yaml "$(cat metrics.yml)" --output json`.
+   It replaces the draft there is.
+3. **Publish** the draft: `databay metric-models publish --output json`. Then `databay metrics list`
+   shows them with `source` `customer`.
+
+To start from the project's built dbt models instead, `databay metric-models import-dbt --dry-run --output json`
+shows the YAML it would write; without `--dry-run` it stores that as the draft, and `draft_exists`
+means there is one already (pass `--replace-draft` only when the user agrees to lose it). Review it with
+`databay metric-models show-draft --output json`, then publish.
+
 ## Dashboards
 
 Use the `dashboards`, `dashboards-card`, `dashboards-placement`, `dashboards-folder` and

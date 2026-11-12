@@ -1916,8 +1916,20 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "model_not_published": {
+   "hint": "Publish the project's draft metric model, then query again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "model_refresh_unsupported": {
    "hint": "Store the model as a table or incremental table, or set its refresh to manual.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_rejected": {
+   "hint": "Fix each listed field of the model and upload it again.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -2549,6 +2561,12 @@
   "project_live_graph_immutable": {
    "hint": "Leave the items that have live pipelines unchanged, or delete those pipelines first.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "project_member_not_found": {
+   "hint": "Add them to the project as a member first.",
+   "action": "do_first",
    "side_effects": "none",
    "max_retries": null
   },

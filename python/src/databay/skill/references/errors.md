@@ -300,7 +300,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `model_in_use` | 1 | fix_and_retry | none |  | Change or delete the models listed in readers first, then delete this one. |
 | `model_name_reserved` | 1 | fix_and_retry | none |  | Pick a name without the reserved part. |
 | `model_name_taken` | 1 | fix_and_retry | none |  | Pick another name for the model. |
+| `model_not_published` | 1 | do_first | none |  | Publish the project's draft metric model, then query again. |
 | `model_refresh_unsupported` | 1 | fix_and_retry | none |  | Store the model as a table or incremental table, or set its refresh to manual. |
+| `model_rejected` | 1 | fix_and_retry | none |  | Fix each listed field of the model and upload it again. |
 | `model_sources_unavailable` | 6 | retry | none | 3 | Retry in a moment. |
 | `model_sql_rejected` | 1 | fix_and_retry | none |  | Change the model's SQL as detail says, then save again. |
 | `model_version_stale` | 1 | fix_and_retry | none |  | Open the current version, apply your edits to it, then save again. |
@@ -406,6 +408,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `project_forbidden` | 1 | ask_human | none |  | Pick another project or ask a project admin for access. |
 | `project_general_immutable` | 1 | fix_and_retry | none |  | Use another project; General cannot be renamed, deleted, restricted or have its members changed. |
 | `project_live_graph_immutable` | 1 | fix_and_retry | none |  | Leave the items that have live pipelines unchanged, or delete those pipelines first. |
+| `project_member_not_found` | 1 | do_first | none |  | Add them to the project as a member first. |
 | `project_models_broken` | 1 | do_first | none |  | Fix the models listed in broken_models first, then save again. |
 | `project_not_deleting` | 1 | fix_and_retry | none |  | Check the project's state; this call applies only to a project being deleted. |
 | `project_not_empty` | 1 | do_first | none |  | Move or delete its pipelines and resources, or ask an org admin for a forced delete. |

@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from databay.resources.linkedin_source import LinkedinSourceResource
     from databay.resources.me import MeResource
     from databay.resources.meta_ads_source import MetaAdsSourceResource
+    from databay.resources.metric_models import MetricModelsResource
     from databay.resources.metrics import MetricsResource
     from databay.resources.models import ModelsResource
     from databay.resources.nlq import NlqResource
@@ -62,6 +63,7 @@ if TYPE_CHECKING:
     from databay.resources.project import ProjectResource
     from databay.resources.project_budget import ProjectBudgetResource
     from databay.resources.project_member import ProjectMemberResource
+    from databay.resources.project_privilege import ProjectPrivilegeResource
     from databay.resources.project_share import ProjectShareResource
     from databay.resources.provision import ProvisionResource
     from databay.resources.provisioning import ProvisioningResource
@@ -294,6 +296,12 @@ class Api:
         return MetaAdsSourceResource(self._session)
 
     @cached_property
+    def metric_models(self) -> MetricModelsResource:
+        from databay.resources.metric_models import MetricModelsResource
+
+        return MetricModelsResource(self._session)
+
+    @cached_property
     def metrics(self) -> MetricsResource:
         from databay.resources.metrics import MetricsResource
 
@@ -412,6 +420,12 @@ class Api:
         from databay.resources.project_member import ProjectMemberResource
 
         return ProjectMemberResource(self._session)
+
+    @cached_property
+    def project_privilege(self) -> ProjectPrivilegeResource:
+        from databay.resources.project_privilege import ProjectPrivilegeResource
+
+        return ProjectPrivilegeResource(self._session)
 
     @cached_property
     def project_share(self) -> ProjectShareResource:

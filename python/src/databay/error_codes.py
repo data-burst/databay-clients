@@ -231,7 +231,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'model_in_use': ErrorInfo('Change or delete the models listed in readers first, then delete this one.', 'fix_and_retry', 'none', None),
     'model_name_reserved': ErrorInfo('Pick a name without the reserved part.', 'fix_and_retry', 'none', None),
     'model_name_taken': ErrorInfo('Pick another name for the model.', 'fix_and_retry', 'none', None),
+    'model_not_published': ErrorInfo("Publish the project's draft metric model, then query again.", 'do_first', 'none', None),
     'model_refresh_unsupported': ErrorInfo('Store the model as a table or incremental table, or set its refresh to manual.', 'fix_and_retry', 'none', None),
+    'model_rejected': ErrorInfo('Fix each listed field of the model and upload it again.', 'fix_and_retry', 'none', None),
     'model_sources_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'none', 3),
     'model_sql_rejected': ErrorInfo("Change the model's SQL as detail says, then save again.", 'fix_and_retry', 'none', None),
     'model_version_stale': ErrorInfo('Open the current version, apply your edits to it, then save again.', 'fix_and_retry', 'none', None),
@@ -337,6 +339,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'project_forbidden': ErrorInfo('Pick another project or ask a project admin for access.', 'ask_human', 'none', None),
     'project_general_immutable': ErrorInfo('Use another project; General cannot be renamed, deleted, restricted or have its members changed.', 'fix_and_retry', 'none', None),
     'project_live_graph_immutable': ErrorInfo('Leave the items that have live pipelines unchanged, or delete those pipelines first.', 'fix_and_retry', 'none', None),
+    'project_member_not_found': ErrorInfo('Add them to the project as a member first.', 'do_first', 'none', None),
     'project_models_broken': ErrorInfo('Fix the models listed in broken_models first, then save again.', 'do_first', 'none', None),
     'project_not_deleting': ErrorInfo("Check the project's state; this call applies only to a project being deleted.", 'fix_and_retry', 'none', None),
     'project_not_empty': ErrorInfo('Move or delete its pipelines and resources, or ask an org admin for a forced delete.', 'do_first', 'none', None),
@@ -1425,8 +1428,16 @@ class ModelNameTakenError(DatabayApiError):
     code = 'model_name_taken'
 
 
+class ModelNotPublishedError(DatabayApiError):
+    code = 'model_not_published'
+
+
 class ModelRefreshUnsupportedError(DatabayApiError):
     code = 'model_refresh_unsupported'
+
+
+class ModelRejectedError(DatabayApiError):
+    code = 'model_rejected'
 
 
 class ModelSourcesUnavailableError(DatabayApiError):
@@ -1847,6 +1858,10 @@ class ProjectGeneralImmutableError(DatabayApiError):
 
 class ProjectLiveGraphImmutableError(DatabayApiError):
     code = 'project_live_graph_immutable'
+
+
+class ProjectMemberNotFoundError(DatabayApiError):
+    code = 'project_member_not_found'
 
 
 class ProjectModelsBrokenError(DatabayApiError):
@@ -2815,7 +2830,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'model_in_use': ModelInUseError,
     'model_name_reserved': ModelNameReservedError,
     'model_name_taken': ModelNameTakenError,
+    'model_not_published': ModelNotPublishedError,
     'model_refresh_unsupported': ModelRefreshUnsupportedError,
+    'model_rejected': ModelRejectedError,
     'model_sources_unavailable': ModelSourcesUnavailableError,
     'model_sql_rejected': ModelSqlRejectedError,
     'model_version_stale': ModelVersionStaleError,
@@ -2921,6 +2938,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'project_forbidden': ProjectForbiddenError,
     'project_general_immutable': ProjectGeneralImmutableError,
     'project_live_graph_immutable': ProjectLiveGraphImmutableError,
+    'project_member_not_found': ProjectMemberNotFoundError,
     'project_models_broken': ProjectModelsBrokenError,
     'project_not_deleting': ProjectNotDeletingError,
     'project_not_empty': ProjectNotEmptyError,

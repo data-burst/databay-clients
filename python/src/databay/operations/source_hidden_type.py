@@ -36,6 +36,8 @@ SOURCE_HIDDEN_TYPE_LIST = Operation(
                 'ga4',
                 'instagram',
                 'linkedin_pages',
+                'x',
+                'tiktok_ads',
             ),
             item_kind='string',
         ),

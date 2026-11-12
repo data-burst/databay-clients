@@ -22,6 +22,8 @@ NET_SALES = {
     "type": "sum",
     "state": "ready",
     "reason": None,
+    "source": "builtin",
+    "customer_model_version": None,
     "warehouses": ["wh-1"],
     "dimensions": [],
     "time_dimension": "day",

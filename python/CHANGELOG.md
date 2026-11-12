@@ -25,6 +25,9 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
   `databay warehouse-access-role get-metrics|set-metrics` read and set a role's
   metric grants. The agent skill teaches list, describe, query and explain, and labels a `databay sql`
   fallback `answer_path: raw_sql`.
+- `databay metric-models push|validate|publish|show-draft|show-published|list|import-dbt`: a project's own
+  metric model, which the agent skill teaches (validate, push, publish, import from dbt).
+  `databay project-privilege list|grant|revoke`: a member's privileges in a project.
 - On a terminal, an error answered with a 5xx prints its `trace_id`.
 - Dashboards follow the server's cards model: a card belongs to the project (`dashboards-card`), is put
   on dashboards with `dashboards-placement`, and a dashboard takes `--refresh-interval-s`;

@@ -36,6 +36,11 @@ class Grain(OpenStrEnum):
     YEAR = 'year'
 
 
+class MetricSource(OpenStrEnum):
+    BUILTIN = 'builtin'
+    CUSTOMER = 'customer'
+
+
 class MetricState(OpenStrEnum):
     READY = 'ready'
     COMPILING = 'compiling'
@@ -90,12 +95,14 @@ class MetricFilter(RequestModel):
 
 
 class MetricOut(ResponseModel):
+    customer_model_version: int | None
     description: str
     dimensions: list[str]
     filter_ops: list[FilterOp]
     grains: list[Grain]
     name: str
     reason: str | None
+    source: MetricSource
     state: MetricState
     time_dimension: str | None
     type: str
