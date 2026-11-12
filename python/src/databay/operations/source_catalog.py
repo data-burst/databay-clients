@@ -65,6 +65,8 @@ SOURCE_CATALOG_SETUP_SCRIPT = Operation(
                 'ga4',
                 'instagram',
                 'linkedin_pages',
+                'x',
+                'tiktok_ads',
             ),
         ),
         Param(

@@ -1145,6 +1145,8 @@ SOURCE_UPDATE = Operation(
                     'ga4',
                     'instagram',
                     'linkedin_pages',
+                    'x',
+                    'tiktok_ads',
                 ),
                 nullable=True,
             ),

@@ -266,6 +266,8 @@ class SourceType(OpenStrEnum):
     GA4 = 'ga4'
     INSTAGRAM = 'instagram'
     LINKEDIN_PAGES = 'linkedin_pages'
+    X = 'x'
+    TIKTOK_ADS = 'tiktok_ads'
 
 
 class SyncMode(OpenStrEnum):
@@ -365,6 +367,7 @@ class AdAccountOption(ResponseModel):
     id: str
     login_customer_id: str | None = None
     name: str = ''
+    username: str | None = None
 
 
 class AdAccountsForTokenRequest(RequestModel):

@@ -239,7 +239,7 @@
         "type": "null"
        }
       ],
-      "description": "null: a table of the warehouse's own database. Otherwise the database a model of the project was built in (from the warehouse's schema, built_relations): table_name names the model, read whole",
+      "description": "null: a table of the warehouse's own database. Otherwise the database a model of the project was built in (from the warehouse's schema, built_relations): table_name names the model, read with every column; row_filter may name its columns",
       "title": "Built Database"
      },
      "columns": {
@@ -705,6 +705,18 @@
       "default": "",
       "title": "account name",
       "type": "string"
+     },
+     "username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "X only: the account's handle, without the @.",
+      "title": "username"
      }
     },
     "required": [
@@ -5522,6 +5534,26 @@
     "title": "ConnectedSourceUpdate",
     "type": "object"
    },
+   "CustomerModelSource": {
+    "description": "Where a version came from; the database type ``semantic_customer_model_source`` has exactly these values.",
+    "enum": [
+     "upload",
+     "git",
+     "dbt_import"
+    ],
+    "title": "CustomerModelSource",
+    "type": "string"
+   },
+   "CustomerModelState": {
+    "description": "Where a version is; the database type ``semantic_customer_model_state`` has exactly these values.",
+    "enum": [
+     "draft",
+     "published",
+     "superseded"
+    ],
+    "title": "CustomerModelState",
+    "type": "string"
+   },
    "DBConnectionTestResponse": {
     "description": "``POST /db/test-connection``: a failed connection is a 200 with ``success: false``, never an error.",
     "properties": {
@@ -5786,6 +5818,114 @@
      "default"
     ],
     "title": "DateRangeFilter",
+    "type": "object"
+   },
+   "DbtImportNote": {
+    "description": "Something the import left out or could not decide, for the person who edits the draft.",
+    "properties": {
+     "note": {
+      "title": "Note",
+      "type": "string"
+     },
+     "relation": {
+      "title": "Relation",
+      "type": "string"
+     }
+    },
+    "required": [
+     "relation",
+     "note"
+    ],
+    "title": "DbtImportNote",
+    "type": "object"
+   },
+   "DbtImportOut": {
+    "description": "The generated model, what it names, and what the import left out.",
+    "properties": {
+     "cubes": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Cubes",
+      "type": "array"
+     },
+     "digest": {
+      "title": "Digest",
+      "type": "string"
+     },
+     "draft": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ModelVersionSummary"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "metrics": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Metrics",
+      "type": "array"
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/DbtImportNote"
+      },
+      "title": "Notes",
+      "type": "array"
+     },
+     "yaml": {
+      "title": "Yaml",
+      "type": "string"
+     }
+    },
+    "required": [
+     "yaml",
+     "digest",
+     "cubes",
+     "metrics",
+     "notes",
+     "draft"
+    ],
+    "title": "DbtImportOut",
+    "type": "object"
+   },
+   "DbtImportRequest": {
+    "additionalProperties": false,
+    "properties": {
+     "dry_run": {
+      "default": false,
+      "title": "Dry Run",
+      "type": "boolean"
+     },
+     "relations": {
+      "anyOf": [
+       {
+        "items": {
+         "maxLength": 255,
+         "minLength": 1,
+         "type": "string"
+        },
+        "maxItems": 500,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relations"
+     },
+     "replace_draft": {
+      "default": false,
+      "title": "Replace Draft",
+      "type": "boolean"
+     }
+    },
+    "title": "DbtImportRequest",
     "type": "object"
    },
    "DefaultRoleOut": {
@@ -7292,6 +7432,57 @@
     "title": "GitConnectionOut",
     "type": "object"
    },
+   "GitFileProblem": {
+    "description": "One thing wrong with a git commit's ``semantic/`` files.",
+    "properties": {
+     "file": {
+      "title": "File",
+      "type": "string"
+     },
+     "path": {
+      "title": "Path",
+      "type": "string"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file",
+     "path",
+     "reason"
+    ],
+    "title": "GitFileProblem",
+    "type": "object"
+   },
+   "GitModelError": {
+    "description": "Why the ``semantic/`` files of an applied commit were not stored as the draft.",
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "commit": {
+      "title": "Commit",
+      "type": "string"
+     },
+     "errors": {
+      "items": {
+       "$ref": "#/components/schemas/GitFileProblem"
+      },
+      "title": "Errors",
+      "type": "array"
+     }
+    },
+    "required": [
+     "commit",
+     "code",
+     "errors"
+    ],
+    "title": "GitModelError",
+    "type": "object"
+   },
    "GitSyncError": {
     "additionalProperties": false,
     "description": "Why the last sync did not apply its commit; the last applied commit keeps building.",
@@ -8712,6 +8903,29 @@
     "title": "MemberOffboarding",
     "type": "object"
    },
+   "MemberPrivilege": {
+    "description": "A privilege granted to one explicit member of the project.",
+    "properties": {
+     "privilege": {
+      "enum": [
+       "semantic.model.write",
+       "semantic.model.publish"
+      ],
+      "title": "Privilege",
+      "type": "string"
+     },
+     "user_id": {
+      "title": "User Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "user_id",
+     "privilege"
+    ],
+    "title": "MemberPrivilege",
+    "type": "object"
+   },
    "MemberSearchOut": {
     "properties": {
      "members": {
@@ -9187,6 +9401,17 @@
    },
    "MetricOut": {
     "properties": {
+     "customer_model_version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Customer Model Version"
+     },
      "description": {
       "title": "Description",
       "type": "string"
@@ -9227,6 +9452,9 @@
       ],
       "title": "Reason"
      },
+     "source": {
+      "$ref": "#/components/schemas/MetricSource"
+     },
      "state": {
       "$ref": "#/components/schemas/MetricState"
      },
@@ -9263,7 +9491,9 @@
      "dimensions",
      "time_dimension",
      "grains",
-     "filter_ops"
+     "filter_ops",
+     "source",
+     "customer_model_version"
     ],
     "title": "MetricOut",
     "type": "object"
@@ -9468,6 +9698,15 @@
     "title": "MetricQueryOut",
     "type": "object"
    },
+   "MetricSource": {
+    "description": "Who defined a metric: Databay's catalogue, or the project's published customer model.",
+    "enum": [
+     "builtin",
+     "customer"
+    ],
+    "title": "MetricSource",
+    "type": "string"
+   },
    "MetricState": {
     "enum": [
      "ready",
@@ -9484,6 +9723,220 @@
     ],
     "title": "Mode",
     "type": "string"
+   },
+   "ModelUpload": {
+    "additionalProperties": false,
+    "properties": {
+     "yaml": {
+      "minLength": 1,
+      "title": "Yaml",
+      "type": "string"
+     }
+    },
+    "required": [
+     "yaml"
+    ],
+    "title": "ModelUpload",
+    "type": "object"
+   },
+   "ModelValidationOut": {
+    "description": "A model that passed: its digest and what it names.",
+    "properties": {
+     "cubes": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Cubes",
+      "type": "array"
+     },
+     "digest": {
+      "title": "Digest",
+      "type": "string"
+     },
+     "metrics": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Metrics",
+      "type": "array"
+     }
+    },
+    "required": [
+     "digest",
+     "cubes",
+     "metrics"
+    ],
+    "title": "ModelValidationOut",
+    "type": "object"
+   },
+   "ModelVersionListOut": {
+    "description": "Every version, newest first, and the git sync's last commit and refusal.",
+    "properties": {
+     "last_git_commit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Git Commit"
+     },
+     "last_git_error": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GitModelError"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "versions": {
+      "items": {
+       "$ref": "#/components/schemas/ModelVersionSummary"
+      },
+      "title": "Versions",
+      "type": "array"
+     }
+    },
+    "required": [
+     "versions",
+     "last_git_commit",
+     "last_git_error"
+    ],
+    "title": "ModelVersionListOut",
+    "type": "object"
+   },
+   "ModelVersionOut": {
+    "properties": {
+     "author_user_id": {
+      "title": "Author User Id",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "digest": {
+      "title": "Digest",
+      "type": "string"
+     },
+     "git_commit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Git Commit"
+     },
+     "published_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Published At"
+     },
+     "source": {
+      "$ref": "#/components/schemas/CustomerModelSource"
+     },
+     "state": {
+      "$ref": "#/components/schemas/CustomerModelState"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "yaml": {
+      "title": "Yaml",
+      "type": "string"
+     }
+    },
+    "required": [
+     "version",
+     "state",
+     "source",
+     "git_commit",
+     "author_user_id",
+     "digest",
+     "created_at",
+     "published_at",
+     "yaml"
+    ],
+    "title": "ModelVersionOut",
+    "type": "object"
+   },
+   "ModelVersionSummary": {
+    "properties": {
+     "author_user_id": {
+      "title": "Author User Id",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "digest": {
+      "title": "Digest",
+      "type": "string"
+     },
+     "git_commit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Git Commit"
+     },
+     "published_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Published At"
+     },
+     "source": {
+      "$ref": "#/components/schemas/CustomerModelSource"
+     },
+     "state": {
+      "$ref": "#/components/schemas/CustomerModelState"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "version",
+     "state",
+     "source",
+     "git_commit",
+     "author_user_id",
+     "digest",
+     "created_at",
+     "published_at"
+    ],
+    "title": "ModelVersionSummary",
+    "type": "object"
    },
    "MongoDBConnectedConfig": {
     "properties": {
@@ -15915,6 +16368,7 @@
     "type": "object"
    },
    "RowFilterOp": {
+    "description": "A filter condition's operator.\n\nOnly ``is_null`` matches a NULL: every comparison, ``ne`` and ``not_in`` included, leaves out a row whose\ncolumn is NULL, in every enforcer (ClickHouse ``!=`` and ``NOT IN`` already do; Cube's ``notEquals`` and\n``notIn`` need an added ``set`` condition).",
     "enum": [
      "eq",
      "ne",
@@ -17285,7 +17739,9 @@
      "google_ads",
      "ga4",
      "instagram",
-     "linkedin_pages"
+     "linkedin_pages",
+     "x",
+     "tiktok_ads"
     ],
     "title": "SourceType",
     "type": "string"
@@ -27183,7 +27639,7 @@
   },
   "/api/configstore/projects/{project_id}/warehouse-access/roles/{role_id}/rules": {
    "put": {
-    "description": "Replace the role's rules (revision-checked), each checked at write time.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``, ``built_table_restricted_upstream``;\n409 ``conflicting_table_rules`` and ``access_role_revision_conflict``.",
+    "description": "Replace the role's rules (revision-checked), each checked at write time.\n\nA rule naming a built relation (``built_database``) reads every column of it and may carry a ``row_filter``\nover the relation's own columns; the warehouse and the semantic layer both apply it. For example\n``{\"db_uuid\": \"...\", \"built_database\": \"...\", \"table_name\": \"orders_daily\", \"row_filter\": {\"all\": [{\"column\":\n\"channel\", \"op\": \"in\", \"value\": [\"web\", \"pos\"]}, {\"column\": \"country\", \"op\": \"is_not_null\"}]}}``.\n\nRefusals: 422 ``rule_duplicate_table``, ``rule_scope_invalid``, ``rule_overlap``,\n``rule_warehouse_not_managed``, ``rule_warehouse_not_visible``, ``access_capability_unsupported``,\n``rule_table_unknown``, ``rule_column_unknown``, ``row_filter_invalid``, ``built_table_restricted_upstream``;\n409 ``conflicting_table_rules`` and ``access_role_revision_conflict``.",
     "operationId": "warehouse_access_role_set_rules",
     "parameters": [
      {
@@ -34790,6 +35246,9 @@
      "404": {
       "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
      },
+     "409": {
+      "description": "model_not_published: the metric is only in the draft customer model; publish it"
+     },
      "422": {
       "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
      },
@@ -34881,6 +35340,9 @@
      "404": {
       "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
      },
+     "409": {
+      "description": "model_not_published: the metric is only in the draft customer model; publish it"
+     },
      "422": {
       "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
      },
@@ -34959,6 +35421,9 @@
      "404": {
       "description": "metric_not_found (did_you_mean), or resource_not_visible: the project is gone"
      },
+     "409": {
+      "description": "model_not_published: the metric is only in the draft customer model; publish it"
+     },
      "422": {
       "description": "request_invalid naming the field, or ambiguous_warehouse naming the warehouses"
      },
@@ -34990,6 +35455,462 @@
      "noun": "metrics",
      "project": "path:project_id",
      "verb": "describe"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/draft": {
+   "get": {
+    "description": "Show the project's draft metric model.",
+    "operationId": "metric_models_show_draft",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelVersionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the project has no such version"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Draft",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models show-draft"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "show-draft"
+    }
+   },
+   "put": {
+    "description": "Validate a metric model and store it as the project's draft, replacing the draft there is.",
+    "operationId": "metric_models_push",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ModelUpload"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelVersionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Draft",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models push --yaml \"$(cat metrics.yml)\""
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "push"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/import-dbt": {
+   "post": {
+    "description": "Generate a draft metric model from the project's built dbt models and their yml; it is never published.",
+    "operationId": "metric_models_import_dbt",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DbtImportRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DbtImportOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "409": {
+      "description": "draft_exists: the project has a draft and replace_draft is false"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     },
+     "503": {
+      "description": "elt_unavailable: the project's built models could not be read"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Post Import Dbt",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models import-dbt --dry-run"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "import-dbt"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/publish": {
+   "post": {
+    "description": "Publish the project's draft metric model; the published version it replaces is kept as superseded.",
+    "operationId": "metric_models_publish",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelVersionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the project has no such version"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Post Publish",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models publish"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "publish"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/published": {
+   "get": {
+    "description": "Show the project's published metric model.",
+    "operationId": "metric_models_show_published",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelVersionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the project has no such version"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Published",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models show-published"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "show-published"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/validate": {
+   "post": {
+    "description": "Validate a metric model without storing it.",
+    "operationId": "metric_models_validate",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ModelUpload"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelValidationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Post Validate",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models validate --yaml \"$(cat metrics.yml)\""
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "validate"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/versions": {
+   "get": {
+    "description": "List every version of the project's metric model, newest first.",
+    "operationId": "metric_models_list",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelVersionListOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Versions",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models list"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "list"
     }
    }
   },
@@ -36177,6 +37098,162 @@
     }
    }
   },
+  "/api/workspace/projects/{project_id}/members/{user_id}/privileges/{privilege}": {
+   "delete": {
+    "operationId": "project_privilege_revoke",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "privilege",
+      "required": true,
+      "schema": {
+       "enum": [
+        "semantic.model.write",
+        "semantic.model.publish"
+       ],
+       "title": "Privilege",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Revoke Privilege",
+    "tags": [
+     "workspace"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": true,
+     "examples": [
+      "databay project-privilege revoke <project_id> <user_id> semantic.model.publish"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "project-privilege",
+     "project": "path:project_id",
+     "verb": "revoke"
+    }
+   },
+   "put": {
+    "description": "Project admins: grant an explicit member a privilege (404 ``project_member_not_found`` for anyone else).",
+    "operationId": "project_privilege_grant",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "privilege",
+      "required": true,
+      "schema": {
+       "enum": [
+        "semantic.model.write",
+        "semantic.model.publish"
+       ],
+       "title": "Privilege",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MemberPrivilege"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Grant Privilege",
+    "tags": [
+     "workspace"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay project-privilege grant <project_id> <user_id> semantic.model.publish"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "project-privilege",
+     "project": "path:project_id",
+     "verb": "grant"
+    }
+   }
+  },
   "/api/workspace/projects/{project_id}/people": {
    "get": {
     "description": "Project admins: one page of everyone who reads the project now, with their role; follow ``next_first``.",
@@ -36246,6 +37323,71 @@
      "noun": "project-member",
      "project": "path:project_id",
      "verb": "people"
+    }
+   }
+  },
+  "/api/workspace/projects/{project_id}/privileges": {
+   "get": {
+    "description": "Project admins: the privileges granted to members. Admins hold every privilege without a grant.",
+    "operationId": "project_privilege_list",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/MemberPrivilege"
+         },
+         "title": "Response Project Privilege List",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Privileges",
+    "tags": [
+     "workspace"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay project-privilege list <project_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "project-privilege",
+     "project": "path:project_id",
+     "verb": "list"
     }
    }
   },

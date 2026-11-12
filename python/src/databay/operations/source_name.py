@@ -46,6 +46,8 @@ SOURCE_NAME_CHECK = Operation(
                     'ga4',
                     'instagram',
                     'linkedin_pages',
+                    'x',
+                    'tiktok_ads',
                 ),
                 nullable=True,
             ),

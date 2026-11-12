@@ -142,6 +142,8 @@ SOURCE_CHECK_RUN_START = Operation(
                     'ga4',
                     'instagram',
                     'linkedin_pages',
+                    'x',
+                    'tiktok_ads',
                 ),
                 nullable=True,
             ),
