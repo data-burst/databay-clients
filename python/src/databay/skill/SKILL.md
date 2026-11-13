@@ -3,9 +3,10 @@ name: databay
 description: >-
   Drive a Databay server with the databay CLI: sign in, pick a project, add and check a
   database source, create pipes that replicate its tables into a warehouse, wait for them,
-  query metrics such as net sales, query the warehouse with SQL, and build dashboards. Use
-  when the user asks to move or sync data with Databay, create or fix a pipe, ask for a
-  metric, query a Databay warehouse, build a dashboard, or run any `databay` command.
+  query metrics such as net sales, define and publish metrics, query the warehouse with SQL,
+  build dashboards, and connect a BI tool. Use when the user asks to move or sync data with
+  Databay, create or fix a pipe, ask for or define a metric, query a Databay warehouse, build
+  a dashboard, connect a BI tool, or run any `databay` command.
 ---
 
 # databay
@@ -215,6 +216,41 @@ version; a draft changes nothing until it is published.
 3. **Publish** the draft: `databay metric-models publish --output json`. Then `databay metrics list`
    shows them with `source` `customer`.
 
+Defining metrics needs the `model_write` privilege and publishing needs `model_publish`;
+`databay project my-access --output json` shows what this user holds. Before publishing, show the user
+what it would change: `databay metric-models changes --output json` lists each metric and table the
+publish adds, changes or removes.
+
+### Edit one metric
+
+To add, change or remove one metric without rewriting the YAML, use the form commands. Each takes the
+`revision` the last answer gave; `draft_changed` means someone wrote the draft since, so read it again
+and redo your change. `model_managed_in_git` means the project keeps its model in git: edit the
+`semantic/` files there instead.
+
+1. **Read** the model: `databay metric-models metric-list --output json` gives the `revision`, the
+   `tables` (each with its `breakdowns`) and the `metrics`. A metric or table with `editable` false
+   can only change in the YAML (`reason` says why; a write to it is `metric_needs_yaml`).
+2. **Write** one metric. `aggregation` is `count` (no `column`), `count_distinct`, `sum`, `avg`, `min`
+   or `max`; `conditions` filter the rows it counts (`op` is `=`, `!=`, `>`, `>=`, `<`, `<=`, `in`,
+   `is_null` or `is_not_null`). A metric on a table no cube reads yet also needs `--breakdowns`, the
+   columns it breaks down by (`type` `string`, `number` or `time`):
+
+   ```
+   databay metric-models metric-add --revision <revision> --metric '{"name": "order_total", "description": "Sum of order totals.", "table": "orders", "aggregation": "sum", "column": "total", "conditions": []}' --breakdowns '[{"column": "created_at", "type": "time"}, {"column": "channel", "type": "string"}]' --output json
+   databay metric-models metric-update <project_id> order_total --revision <revision> --metric '{"name": "order_total", "description": "Sum of paid order totals.", "table": "orders", "aggregation": "sum", "column": "total", "conditions": [{"column": "status", "op": "=", "value": "paid"}]}' --output json
+   databay metric-models set-breakdowns <project_id> orders --revision <revision> --breakdowns '[{"column": "created_at", "type": "time"}]' --output json
+   ```
+
+   `metric-update`, `metric-remove` and `set-breakdowns` take the project id as their first argument.
+   Removing a metric (`metric-remove <project_id> <metric> --revision <revision>`) needs `--yes`, so ask
+   first. `affected_metrics` in the answer lists the table's other metrics a breakdown change reaches:
+   tell the user. `comments_dropped` true means the YAML's comments are gone.
+3. **Publish** with the last answer's revision, so you publish the draft you checked:
+   `databay metric-models publish --revision <revision> --output json`.
+
+### Start from dbt
+
 To start from the project's built dbt models instead, `databay metric-models import-dbt --dry-run --output json`
 shows the YAML it would write; without `--dry-run` it stores that as the draft, and `draft_exists`
 means there is one already (pass `--replace-draft` only when the user agrees to lose it). Review it with
@@ -232,6 +268,16 @@ databay dashboards create --name <name> --output json
 databay dashboards-card create --board-id <board_id> --warehouse-id <sink_db_uuid> --title <title> --spec '{"spec_version": 1, "query": {"sql": "select count(*) as n from <dest_table_name>"}, "chart": {"type": "kpi", "y": ["n"]}}' --output json
 databay dashboards run <board_id> --output json
 ```
+
+A metric card shows metrics of the project's model instead of SQL, so its numbers match `metrics
+query`. Its spec is `spec_version` 2, and its `warehouse-id` must be one of the metric's `warehouses`:
+
+```
+databay dashboards-card create --board-id <board_id> --warehouse-id <warehouse_id> --title "Net sales by channel" --spec '{"spec_version": 2, "query": {"metrics": ["net_sales"], "dimensions": ["channel"], "time": {"grain": "week", "default": "last_90_days"}, "order": [{"member": "net_sales", "direction": "desc"}], "limit": 10}, "chart": {"type": "bar", "x": "channel", "y": ["net_sales"]}}' --output json
+```
+
+`time.from_filter` and a filter's `from_filter` read a board filter by its key, like a SQL card's
+variables. `metric_card_invalid` names the part of the spec to fix.
 
 - **`run` exits 0 even when a card fails.** Check `error` on every entry of `cards`, and report
   any that is set instead of saying the dashboard works.
@@ -252,6 +298,21 @@ databay dashboards run <board_id> --output json
 
 The built-in dashboards that come with the product are only in the web app: no command reads
 them, so send the user there.
+
+## Connect a BI tool
+
+A BI tool (Tableau, Power BI, Metabase, DBeaver) reads the project's metrics over the PostgreSQL
+protocol, signing in with an org API key that lists the project. Show the user where to connect:
+
+```
+databay api-key list --output json
+databay api-key-project bi-connection <key_id> <project_id> --output json
+```
+
+The answer gives `host`, `port`, `database`, `username` and `sslmode`. The password is the key's
+secret, which only the user has: never ask for it or print it. The key sees only the metrics its
+warehouse access roles grant, and a query past the row cap comes back cut short without an error,
+so tell the user to aggregate in the tool rather than export raw rows.
 
 ## Read a failure
 
