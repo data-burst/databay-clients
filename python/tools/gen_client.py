@@ -259,6 +259,9 @@ def body_of(spec: Spec, op: dict[str, Any], where: str) -> Any:  # noqa: ANN401
     if set(content) != {"application/json"}:
         raise SpecError(f"{where}: request body content {sorted(content)} is not handled")
     raw = content["application/json"]["schema"]
+    options = non_null(raw.get("anyOf", []))
+    if "anyOf" in raw and len(options) == 1:
+        raw = options[0]
     schema_name = spec.ref_name(raw)
     schema = spec.resolve(raw)
     if "discriminator" in schema:

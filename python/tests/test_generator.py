@@ -312,3 +312,18 @@ def test_a_schema_name_that_would_clash_with_another_class_is_a_generation_error
 
     with pytest.raises(generator.SpecError, match="Row-Output: this schema name cannot become the class name"):
         generator.python_schema_names({"components": {"schemas": {"Row-Output": {}, "RowOutput": {}}}})
+
+
+def test_an_optional_body_is_read_as_its_one_schema(monkeypatch, tmp_path):
+    spec = json.loads(SPEC.read_text(encoding="utf-8"))
+    for item in spec["paths"].values():
+        for op in item.values():
+            body = op.get("requestBody", {}).get("content", {}).get("application/json")
+            if body and "$ref" in body["schema"] and op.get("x-databay-client", {}).get("noun") == "source":
+                body["schema"] = {"anyOf": [body["schema"], {"type": "null"}], "title": "Body"}
+    path = tmp_path / "core.json"
+    path.write_text(json.dumps(spec), encoding="utf-8")
+
+    done = _generate("--check", "--spec", str(path))
+
+    assert done.returncode == 0, done.stderr
