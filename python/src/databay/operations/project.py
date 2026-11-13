@@ -233,6 +233,38 @@ PROJECT_LIST = Operation(
     ),
 )
 
+PROJECT_MY_ACCESS = Operation(
+    operation_id='project_my_access',
+    noun='project',
+    verb='my-access',
+    method='get',
+    path='/api/workspace/projects/{project_id}/my-access',
+    summary='Get My Access',
+    description='Your own role in the project and what it lets you do, the privileges granted to you included.',
+    project='path:project_id',
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='project_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Project Id',
+        ),
+    ),
+    body=None,
+    response=Response(
+        kind='json',
+        model='project:MyAccess',
+        shape='object',
+    ),
+    examples=(
+        'databay project my-access <project_id>',
+    ),
+)
+
 PROJECT_UPDATE = Operation(
     operation_id='project_update',
     noun='project',
@@ -309,5 +341,6 @@ OPERATIONS = (
     PROJECT_DELETE_RETRY,
     PROJECT_GET,
     PROJECT_LIST,
+    PROJECT_MY_ACCESS,
     PROJECT_UPDATE,
 )

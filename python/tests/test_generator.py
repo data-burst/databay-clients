@@ -11,13 +11,13 @@ import sys
 import tomllib
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import pytest
-from pydantic import ValidationError
+from pydantic import Field, TypeAdapter, ValidationError
 
 from databay.models.pipe import PipeV2StatusResponse
-from databay.models.shared import BoardOut, CardSpec, PipeV2Status
+from databay.models.shared import BoardOut, CardOut, PipeV2Status
 from databay.spec import API_VERSION
 from databay.version import CLIENT_VERSION
 
@@ -205,10 +205,13 @@ def test_a_filter_type_this_client_does_not_know_refuses_the_whole_board():
 
 
 def test_a_spec_version_this_client_does_not_know_is_refused():
-    with pytest.raises(ValidationError) as caught:
-        CardSpec.model_validate({"spec_version": 2, "query": {"sql": "select 1"}, "chart": {"type": "table"}})
+    field = CardOut.model_fields["spec"]
+    spec = TypeAdapter(Annotated[field.annotation, Field(discriminator=field.discriminator)])
 
-    assert "spec_version" in {error["loc"][0] for error in caught.value.errors()}
+    with pytest.raises(ValidationError) as caught:
+        spec.validate_python({"spec_version": 3, "query": {"sql": "select 1"}, "chart": {"type": "table"}})
+
+    assert [error["type"] for error in caught.value.errors()] == ["union_tag_invalid"]
 
 
 def _load_generator(monkeypatch: pytest.MonkeyPatch) -> Any:

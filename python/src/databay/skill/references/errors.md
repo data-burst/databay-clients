@@ -195,7 +195,9 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `docs_slug_taken` | 1 | fix_and_retry | none |  | Pick another slug. |
 | `docs_unavailable` | 6 | retry | none | 3 | Retry in a moment. |
 | `draft_already_published` | 1 | do_first | none |  | Create a new draft from the published version. |
+| `draft_changed` | 1 | fix_and_retry | none |  | Reload the draft metric model and make your change again. |
 | `draft_exists` | 1 | fix_and_retry | none |  | Edit the existing draft, or replace it. |
+| `draft_render_missing` | 1 | fix_and_retry | none |  | Run the preview again. |
 | `effective_not_lowering` | 1 | fix_and_retry | none |  | Send the change without an effective date; it applies now. |
 | `elt_unavailable` | 6 | retry | none | 3 | The models could not be listed; retry in a moment. |
 | `email_not_verified` | 1 | ask_human | none |  | Open the link we emailed you, or send a new one from the sign-in page. |
@@ -207,6 +209,21 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `extra_is_primary` | 1 | fix_and_retry | none |  | Leave the primary property out of the extra properties. |
 | `feature_not_in_plan` | 1 | ask_human | none |  | Ask an organization admin to move to a plan that includes this feature. |
 | `feature_not_rollout` | 1 | fix_and_retry | none |  | Pick a rollout feature; only those can be set per organization. |
+| `file_check_busy` | 6 | retry | none | 3 | Retry after the Retry-After interval. |
+| `file_check_timeout` | 1 | fix_and_retry | none |  | Upload a smaller file, or save the workbook's data as CSV. |
+| `file_columns_limit_reached` | 1 | fix_and_retry | none |  | Remove columns from the named tab so it stays within the limit. |
+| `file_encoding_unsupported` | 1 | fix_and_retry | none |  | Pick the file's encoding in the file settings, or save it as UTF-8. |
+| `file_header_invalid` | 1 | fix_and_retry | none |  | Give every column of the named tab a unique name in its header row, or set that tab's header row. |
+| `file_not_uploaded` | 1 | do_first | none |  | Upload a file to the source first. |
+| `file_shared_strings_too_large` | 1 | fix_and_retry | none |  | Save the workbook's data as CSV and upload that instead. |
+| `file_stage_expired` | 1 | do_first | none |  | Upload the file again to check it. |
+| `file_stage_superseded` | 1 | ask_human | none |  | Review the source's current file, then upload yours again if it should replace it. |
+| `file_too_large` | 1 | fix_and_retry | none |  | Upload a smaller file, or split it into several files. |
+| `file_type_unsupported` | 1 | fix_and_retry | none |  | Save the file as .csv, .tsv or .xlsx and upload it again. |
+| `file_unavailable` | 1 | do_first | none |  | Upload the file to the source again. |
+| `file_uncompressed_too_large` | 1 | fix_and_retry | none |  | Remove unused sheets or rows from the workbook, or save the data as CSV. |
+| `file_unreadable` | 1 | fix_and_retry | none |  | Open the file, save it again as .csv or .xlsx, and upload the new copy. |
+| `file_upload_needs_acknowledgement` | 1 | ask_human | none |  | Review the listed warnings and confirm again, acknowledging each one. |
 | `filter_type_conflict` | 1 | fix_and_retry | none |  | Rename the filter, keep its kind, or take the card off this dashboard. |
 | `folder_cycle` | 1 | fix_and_retry | none |  | Move the folder somewhere outside itself. |
 | `folder_name_taken` | 1 | fix_and_retry | none |  | Pick another folder name. |
@@ -288,7 +305,11 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `member_not_found` | 1 | fix_and_retry | none |  | List the organization's members and pick one of them. |
 | `member_not_in_organization` | 1 | do_first | none |  | Invite them to the organization first. |
 | `member_role_unchanged` | 1 | fix_and_retry | none |  | Pick a role the member does not hold yet. |
+| `metric_card_invalid` | 1 | fix_and_retry | none |  | Edit the card to use the metric's own dimensions. |
+| `metric_cards_unavailable` | 1 | fix_and_retry | none |  | Save the card with a SQL query instead of a metric. |
+| `metric_needs_yaml` | 1 | fix_and_retry | none |  | Edit this metric in the model's YAML and push the model. |
 | `metric_not_found` | 1 | fix_and_retry | none |  | List the metrics you can query and use one of their names. |
+| `metric_not_granted` | 1 | ask_human | none |  | Ask an admin for a warehouse access role that includes this metric. |
 | `metric_query_failed` | 6 | retry | none | 3 | The metric query failed; retry in a moment. |
 | `migration_refused` | 1 | fix_and_retry | none |  | Fix each organization listed in refused, or leave it out, then run the move again. |
 | `missing_feature_values` | 1 | fix_and_retry | none |  | Set a value for each feature listed in problems. |
@@ -298,6 +319,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `model_check_unavailable` | 6 | retry | none | 3 | Retry in a moment; nothing was saved. |
 | `model_in_git` | 1 | ask_human | none |  | Edit this model in its repository; Databay syncs the change. |
 | `model_in_use` | 1 | fix_and_retry | none |  | Change or delete the models listed in readers first, then delete this one. |
+| `model_managed_in_git` | 1 | fix_and_retry | none |  | Edit the semantic files in the project's git repository instead. |
 | `model_name_reserved` | 1 | fix_and_retry | none |  | Pick a name without the reserved part. |
 | `model_name_taken` | 1 | fix_and_retry | none |  | Pick another name for the model. |
 | `model_not_published` | 1 | do_first | none |  | Publish the project's draft metric model, then query again. |
@@ -501,6 +523,7 @@ Read `recovery.action` first; the exit code is the coarse class.
 | `shopify_source_undeletable` | 1 | ask_human | none |  | Uninstall the app from Shopify to remove this source. |
 | `shopify_store_not_found` | 1 | fix_and_retry | none |  | Check the store's address, then try again. |
 | `sibling_being_removed` | 6 | retry | none | 3 | Retry in a few minutes; another account of this type is still being removed. |
+| `sign_in_rate_limited` | 6 | retry | none | 1 | Check the key's secret, then retry after the Retry-After interval. |
 | `sink_column_type_required` | 1 | fix_and_retry | none |  | Retry without sink_column_type; the warehouse picks the column type. |
 | `sink_in_use` | 1 | do_first | none |  | Delete the pipelines listed in pipes first. |
 | `sink_not_found` | 1 | fix_and_retry | none |  | List the warehouses and pick one you can see. |
@@ -651,6 +674,13 @@ A pipe that fails records one of these in `error_code`; a wait that ends on the 
 | `dest_schema_rejected` | fix_and_retry | unknown |  | Point the pipe at a new destination table, or drop the existing table if you no longer need its data. |
 | `dest_unreachable` | retry | unknown | 3 | Retry the pipe; if it keeps failing, check the destination warehouse's connection details. |
 | `destination_table_incompatible` | fix_and_retry | none |  | Drop or rename the existing destination table and restart the pipe, or land it under another name. |
+| `file_cells_limit_reached` | fix_and_retry | none |  | Remove rows or columns from the tab or split it, then upload it again. |
+| `file_rows_limit_reached` | fix_and_retry | none |  | Remove rows from the tab or split it into smaller files, then upload it again. |
+| `file_tab_missing` | fix_and_retry | none |  | Upload a file that has the pipe's tab; the pipe runs again once it is confirmed. |
+| `file_unavailable` | do_first | none |  | Upload the file to the source again; the pipe runs once it is confirmed. |
+| `file_unreadable` | fix_and_retry | none |  | Fix the named tab or the file settings, then upload the file again. |
+| `file_value_type_mismatch` | fix_and_retry | none |  | Fix the value at the named tab, row and column, then upload the file again. |
+| `ingest_dependency_unavailable` | retry | none | 3 | Wait for the pipe to retry on its own; nothing needs changing. |
 | `internal_unclassified` | ask_human | unknown |  | Send the error reference to Databay support. |
 | `lane_spill_exhausted` | do_first | partial |  | Resync the pipe to copy the table again; contact support if it happens again. |
 | `lane_stalled` | do_first | partial |  | Check the pipe's errors, then resync the pipe to copy the table again. |

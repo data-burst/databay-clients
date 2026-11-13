@@ -52,6 +52,7 @@ class ApiKeyCreated(ResponseModel):
     revoked_at: datetime | None
     role: ApiKeyCreatedRole
     rotated_at: datetime | None
+    service_account_id: str
     status: ApiKeyCreatedStatus
 
 
@@ -65,6 +66,7 @@ class ApiKeyOut(ResponseModel):
     revoked_at: datetime | None
     role: ApiKeyOutRole
     rotated_at: datetime | None
+    service_account_id: str
     status: ApiKeyOutStatus
 
 

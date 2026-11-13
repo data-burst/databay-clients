@@ -10,6 +10,7 @@ group = noun_group(
     'api-key-project',
     (
         _ops.API_KEY_PROJECT_ADD,
+        _ops.API_KEY_PROJECT_BI_CONNECTION,
         _ops.API_KEY_PROJECT_REMOVE,
     ),
 )

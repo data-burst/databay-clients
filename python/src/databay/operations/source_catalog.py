@@ -67,6 +67,7 @@ SOURCE_CATALOG_SETUP_SCRIPT = Operation(
                 'linkedin_pages',
                 'x',
                 'tiktok_ads',
+                'file_upload',
             ),
         ),
         Param(

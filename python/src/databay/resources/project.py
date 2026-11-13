@@ -11,7 +11,7 @@ from databay.operations import project as _ops
 from databay.resource import Resource, UNSET, Unset
 
 if TYPE_CHECKING:
-    from databay.models.project import DeleteManifest, DeleteRetry, Project, ProjectListResponse
+    from databay.models.project import DeleteManifest, DeleteRetry, MyAccess, Project, ProjectListResponse
 
 
 class ProjectResource(Resource):
@@ -69,6 +69,15 @@ class ProjectResource(Resource):
     def list(self) -> ProjectListResponse:
         """List Projects. ``databay project list``."""
         return self._call(_ops.PROJECT_LIST, {})
+
+    def my_access(
+        self,
+        *,
+        project_id: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> MyAccess:
+        """Get My Access. ``databay project my-access``."""
+        return self._call(_ops.PROJECT_MY_ACCESS, {'project_id': project_id}, project=project)
 
     def update(
         self,

@@ -9,10 +9,16 @@ from databay.operations import metric_models as _ops
 group = noun_group(
     'metric-models',
     (
+        _ops.METRIC_MODELS_CHANGES,
         _ops.METRIC_MODELS_IMPORT_DBT,
         _ops.METRIC_MODELS_LIST,
+        _ops.METRIC_MODELS_METRIC_ADD,
+        _ops.METRIC_MODELS_METRIC_LIST,
+        _ops.METRIC_MODELS_METRIC_REMOVE,
+        _ops.METRIC_MODELS_METRIC_UPDATE,
         _ops.METRIC_MODELS_PUBLISH,
         _ops.METRIC_MODELS_PUSH,
+        _ops.METRIC_MODELS_SET_BREAKDOWNS,
         _ops.METRIC_MODELS_SHOW_DRAFT,
         _ops.METRIC_MODELS_SHOW_PUBLISHED,
         _ops.METRIC_MODELS_VALIDATE,

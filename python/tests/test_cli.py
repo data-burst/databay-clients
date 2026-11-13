@@ -490,6 +490,7 @@ KEY = {
     "created_at": "2026-10-30T00:00:00Z",
     "created_by": "u",
     "client_id": "apikey-1",
+    "service_account_id": "sa-1",
     "revoked_at": None,
     "rotated_at": None,
 }

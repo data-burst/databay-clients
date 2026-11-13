@@ -11,7 +11,7 @@ from databay.operations import api_key_project as _ops
 from databay.resource import Resource, UNSET, Unset
 
 if TYPE_CHECKING:
-    from databay.models.api_key_project import ApiKeyProjectOut
+    from databay.models.api_key_project import ApiKeyBiConnectionOut, ApiKeyProjectOut
 
 
 class ApiKeyProjectResource(Resource):
@@ -25,6 +25,16 @@ class ApiKeyProjectResource(Resource):
     ) -> ApiKeyProjectOut:
         """Add Project. ``databay api-key-project add``."""
         return self._call(_ops.API_KEY_PROJECT_ADD, {'key_id': key_id, 'project_id': project_id}, project=project)
+
+    def bi_connection(
+        self,
+        *,
+        key_id: str,
+        project_id: str | Unset = UNSET,
+        project: str | None = None,
+    ) -> ApiKeyBiConnectionOut:
+        """Bi Connection. ``databay api-key-project bi-connection``."""
+        return self._call(_ops.API_KEY_PROJECT_BI_CONNECTION, {'key_id': key_id, 'project_id': project_id}, project=project)
 
     def remove(
         self,

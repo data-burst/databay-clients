@@ -91,6 +91,18 @@ SOURCE_CREATE = Operation(
         discriminator='source_type',
         variants=(
             (
+                'file_upload',
+                'FileUploadConnectedConfig',
+                (
+                    Param(
+                        name='settings',
+                        location='body',
+                        kind='json',
+                        required=False,
+                    ),
+                ),
+            ),
+            (
                 'ga4',
                 'Ga4ConnectedConfig',
                 (
@@ -1147,6 +1159,7 @@ SOURCE_UPDATE = Operation(
                     'linkedin_pages',
                     'x',
                     'tiktok_ads',
+                    'file_upload',
                 ),
                 nullable=True,
             ),

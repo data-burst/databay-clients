@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from pydantic import Field
+
 from databay.model_base import OpenStrEnum, RequestModel, ResponseModel
 
 
@@ -14,12 +16,74 @@ class CustomerModelSource(OpenStrEnum):
     UPLOAD = 'upload'
     GIT = 'git'
     DBT_IMPORT = 'dbt_import'
+    FORM = 'form'
 
 
 class CustomerModelState(OpenStrEnum):
     DRAFT = 'draft'
     PUBLISHED = 'published'
     SUPERSEDED = 'superseded'
+
+
+class DimensionType(OpenStrEnum):
+    TIME = 'time'
+    STRING = 'string'
+    NUMBER = 'number'
+
+
+class MeasureFilterOp(OpenStrEnum):
+    EQ = '='
+    NE = '!='
+    GT = '>'
+    GE = '>='
+    LT = '<'
+    LE = '<='
+    IN = 'in'
+    IS_NULL = 'is_null'
+    IS_NOT_NULL = 'is_not_null'
+
+
+class MeasureType(OpenStrEnum):
+    SUM = 'sum'
+    COUNT = 'count'
+    COUNT_DISTINCT = 'count_distinct'
+    AVG = 'avg'
+    MIN = 'min'
+    MAX = 'max'
+    NUMBER = 'number'
+
+
+class MetricFormat(OpenStrEnum):
+    NUMBER = 'number'
+    CURRENCY = 'currency'
+    PERCENT = 'percent'
+
+
+class ModelChange(OpenStrEnum):
+    UNCHANGED = 'unchanged'
+    ADDED = 'added'
+    CHANGED = 'changed'
+    REMOVED = 'removed'
+
+
+class NotFormEditable(OpenStrEnum):
+    SEVERAL_TABLES = 'several_tables'
+    MAPPED_COLUMNS = 'mapped_columns'
+    SHARED_TABLE = 'shared_table'
+    CUSTOM_CUBE_NAME = 'custom_cube_name'
+    RENAMED_BREAKDOWN = 'renamed_breakdown'
+    OVER_METRICS = 'over_metrics'
+    COLUMN_EXPRESSION = 'column_expression'
+
+
+class Breakdown(ResponseModel):
+    column: str
+    type: str
+
+
+class BreakdownsWrite(RequestModel):
+    breakdowns: list[Breakdown]
+    revision: int
 
 
 class DbtImportNote(ResponseModel):
@@ -39,11 +103,13 @@ class ModelVersionSummary(ResponseModel):
 
 
 class DbtImportOut(ResponseModel):
+    comments_dropped: bool
     cubes: list[str]
     digest: str
     draft: ModelVersionSummary | None
     metrics: list[str]
     notes: list[DbtImportNote]
+    revision: int | None
     yaml: str
 
 
@@ -51,6 +117,47 @@ class DbtImportRequest(RequestModel):
     dry_run: bool = False
     relations: list[str] | None = None
     replace_draft: bool = False
+    revision: int | None = None
+
+
+class DimensionSpec(ResponseModel):
+    column: str
+    name: str
+    type: DimensionType
+
+
+class FormCondition(ResponseModel):
+    column: str
+    op: str
+    value: int | float | str | None = None
+    values: list[int | float | str] | None = None
+
+
+class MetricFields(ResponseModel):
+    aggregation: str
+    column: str | None = None
+    conditions: list[FormCondition] | None = None
+    description: str
+    format: str | None = None
+    name: str
+    table: str
+    title: str | None = None
+
+
+class FormMetric(ResponseModel):
+    cube: str
+    editable: bool
+    fields_: MetricFields | None = Field(alias='fields')
+    name: str
+    reason: NotFormEditable | None
+
+
+class FormTable(ResponseModel):
+    breakdowns: list[Breakdown]
+    cube: str
+    editable: bool
+    reason: NotFormEditable | None
+    table: str
 
 
 class GitFileProblem(ResponseModel):
@@ -63,6 +170,75 @@ class GitModelError(ResponseModel):
     code: str
     commit: str
     errors: list[GitFileProblem]
+
+
+class MeasureFilter(ResponseModel):
+    column: str
+    op: MeasureFilterOp
+    value: int | float | str | None = None
+    values: list[int | float | str] | None = None
+
+
+class MetricEditOut(ResponseModel):
+    affected_metrics: list[str]
+    comments_dropped: bool
+    draft: ModelVersionSummary
+    revision: int
+
+
+class MetricFormOut(ResponseModel):
+    based_on: CustomerModelState | None
+    git_managed: bool
+    metrics: list[FormMetric]
+    revision: int
+    tables: list[FormTable]
+
+
+class MetricSpec(ResponseModel):
+    description: str
+    filters: list[MeasureFilter] = []
+    format: MetricFormat | None = None
+    name: str
+    sql: str | None = None
+    title: str | None = None
+    type: MeasureType
+
+
+class MetricWrite(RequestModel):
+    breakdowns: list[Breakdown] | None = None
+    metric: MetricFields
+    revision: int
+
+
+class ModelMetricChange(ResponseModel):
+    change: ModelChange
+    cube: str
+    draft: MetricSpec | None
+    name: str
+    published: MetricSpec | None
+    table: str
+
+
+class ModelTableChange(ResponseModel):
+    change: ModelChange
+    cube: str
+    draft: list[DimensionSpec] | None
+    published: list[DimensionSpec] | None
+    table: str
+
+
+class ModelChangesOut(ResponseModel):
+    draft: ModelVersionSummary | None
+    git_managed: bool
+    metrics: list[ModelMetricChange]
+    published_version: int | None
+    revision: int
+    tables: list[ModelTableChange]
+
+
+class ModelPush(RequestModel):
+    revision: int | None = None
+    yaml: str
 
 
 class ModelUpload(RequestModel):
@@ -87,7 +263,12 @@ class ModelVersionOut(ResponseModel):
     digest: str
     git_commit: str | None
     published_at: datetime | None
+    revision: int
     source: CustomerModelSource
     state: CustomerModelState
     version: int
     yaml: str
+
+
+class PublishRequest(RequestModel):
+    revision: int | None = None

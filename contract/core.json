@@ -1,6 +1,39 @@
 {
  "components": {
   "schemas": {
+   "AccessCapabilities": {
+    "properties": {
+     "admin": {
+      "title": "Admin",
+      "type": "boolean"
+     },
+     "edit": {
+      "title": "Edit",
+      "type": "boolean"
+     },
+     "model_publish": {
+      "title": "Model Publish",
+      "type": "boolean"
+     },
+     "model_write": {
+      "title": "Model Write",
+      "type": "boolean"
+     },
+     "view": {
+      "title": "View",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "view",
+     "edit",
+     "admin",
+     "model_write",
+     "model_publish"
+    ],
+    "title": "AccessCapabilities",
+    "type": "object"
+   },
    "AccessPreviewIn": {
     "additionalProperties": false,
     "properties": {
@@ -1254,6 +1287,89 @@
     "title": "AnyOf",
     "type": "object"
    },
+   "ApiKeyBiConnectionOut": {
+    "description": "Where a BI tool signs in with the key for one project. The password is the key's secret, never answered here.",
+    "properties": {
+     "database": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Any name works: the project comes from the username.",
+      "title": "Database"
+     },
+     "endpoint": {
+      "description": "`off`: this server runs no BI endpoint, and every other field is null.",
+      "enum": [
+       "on",
+       "off"
+      ],
+      "title": "Endpoint",
+      "type": "string"
+     },
+     "host": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Host"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Port"
+     },
+     "sslmode": {
+      "anyOf": [
+       {
+        "const": "verify-full",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The server takes only TLS, verified against the host.",
+      "title": "Sslmode"
+     },
+     "username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "`<client_id>@<project_id>`.",
+      "title": "Username"
+     }
+    },
+    "required": [
+     "endpoint",
+     "host",
+     "port",
+     "sslmode",
+     "database",
+     "username"
+    ],
+    "title": "ApiKeyBiConnectionOut",
+    "type": "object"
+   },
    "ApiKeyCreateRequest": {
     "properties": {
      "name": {
@@ -1363,6 +1479,11 @@
       ],
       "title": "Rotated At"
      },
+     "service_account_id": {
+      "description": "The `sub` of the key's tokens: the holder id to assign it warehouse access roles as a member.",
+      "title": "Service Account Id",
+      "type": "string"
+     },
      "status": {
       "enum": [
        "active",
@@ -1377,6 +1498,7 @@
      "name",
      "role",
      "client_id",
+     "service_account_id",
      "status",
      "project_ids",
      "created_by",
@@ -1468,6 +1590,11 @@
       ],
       "title": "Rotated At"
      },
+     "service_account_id": {
+      "description": "The `sub` of the key's tokens: the holder id to assign it warehouse access roles as a member.",
+      "title": "Service Account Id",
+      "type": "string"
+     },
      "status": {
       "enum": [
        "active",
@@ -1482,6 +1609,7 @@
      "name",
      "role",
      "client_id",
+     "service_account_id",
      "status",
      "project_ids",
      "created_by",
@@ -1843,7 +1971,8 @@
    "AuthKind": {
     "enum": [
      "static_credentials",
-     "oauth"
+     "oauth",
+     "none"
     ],
     "title": "AuthKind",
     "type": "string"
@@ -2859,6 +2988,28 @@
     "title": "BranchCheckRequest",
     "type": "object"
    },
+   "Breakdown": {
+    "additionalProperties": false,
+    "description": "One column a table's metrics break down by: a dimension named as its column.",
+    "properties": {
+     "column": {
+      "maxLength": 500,
+      "title": "Column",
+      "type": "string"
+     },
+     "type": {
+      "maxLength": 500,
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "column",
+     "type"
+    ],
+    "title": "Breakdown",
+    "type": "object"
+   },
    "BreakdownLine": {
     "properties": {
      "pipe_uuid": {
@@ -2894,6 +3045,29 @@
      "value"
     ],
     "title": "BreakdownLine",
+    "type": "object"
+   },
+   "BreakdownsWrite": {
+    "additionalProperties": false,
+    "properties": {
+     "breakdowns": {
+      "items": {
+       "$ref": "#/components/schemas/Breakdown"
+      },
+      "maxItems": 50,
+      "title": "Breakdowns",
+      "type": "array"
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision",
+     "breakdowns"
+    ],
+    "title": "BreakdownsWrite",
     "type": "object"
    },
    "BudgetPut": {
@@ -3277,7 +3451,22 @@
       "type": "integer"
      },
      "spec": {
-      "$ref": "#/components/schemas/CardSpec"
+      "discriminator": {
+       "mapping": {
+        "1": "#/components/schemas/SqlCardSpec",
+        "2": "#/components/schemas/MetricCardSpec"
+       },
+       "propertyName": "spec_version"
+      },
+      "oneOf": [
+       {
+        "$ref": "#/components/schemas/SqlCardSpec"
+       },
+       {
+        "$ref": "#/components/schemas/MetricCardSpec"
+       }
+      ],
+      "title": "Spec"
      },
      "title": {
       "title": "Title",
@@ -3671,29 +3860,6 @@
      }
     },
     "title": "CardRunRequest",
-    "type": "object"
-   },
-   "CardSpec": {
-    "additionalProperties": false,
-    "properties": {
-     "chart": {
-      "$ref": "#/components/schemas/CardChart"
-     },
-     "query": {
-      "$ref": "#/components/schemas/CardQuery"
-     },
-     "spec_version": {
-      "const": 1,
-      "title": "Spec Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "spec_version",
-     "query",
-     "chart"
-    ],
-    "title": "CardSpec",
     "type": "object"
    },
    "ChangeEventOperation": {
@@ -4949,6 +5115,7 @@
       "description": "per-type connection config (discriminated on source_type); persisted encrypted",
       "discriminator": {
        "mapping": {
+        "file_upload": "#/components/schemas/FileUploadConnectedConfig",
         "ga4": "#/components/schemas/Ga4ConnectedConfig",
         "google_ads": "#/components/schemas/GoogleAdsConnectedConfig",
         "instagram": "#/components/schemas/InstagramConnectedConfig",
@@ -4992,6 +5159,9 @@
        },
        {
         "$ref": "#/components/schemas/LinkedInPagesConnectedConfig"
+       },
+       {
+        "$ref": "#/components/schemas/FileUploadConnectedConfig"
        }
       ],
       "title": "source config"
@@ -5539,7 +5709,8 @@
     "enum": [
      "upload",
      "git",
-     "dbt_import"
+     "dbt_import",
+     "form"
     ],
     "title": "CustomerModelSource",
     "type": "string"
@@ -5840,8 +6011,12 @@
     "type": "object"
    },
    "DbtImportOut": {
-    "description": "The generated model, what it names, and what the import left out.",
+    "description": "The draft the import makes, what it adds, and what it left out.",
     "properties": {
+     "comments_dropped": {
+      "title": "Comments Dropped",
+      "type": "boolean"
+     },
      "cubes": {
       "items": {
        "type": "string"
@@ -5877,6 +6052,17 @@
       "title": "Notes",
       "type": "array"
      },
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     },
      "yaml": {
       "title": "Yaml",
       "type": "string"
@@ -5888,7 +6074,9 @@
      "cubes",
      "metrics",
      "notes",
-     "draft"
+     "comments_dropped",
+     "draft",
+     "revision"
     ],
     "title": "DbtImportOut",
     "type": "object"
@@ -5923,6 +6111,17 @@
       "default": false,
       "title": "Replace Draft",
       "type": "boolean"
+     },
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
      }
     },
     "title": "DbtImportRequest",
@@ -6708,6 +6907,42 @@
     "title": "DestinationPreviewWarningCode",
     "type": "string"
    },
+   "DimensionSpec": {
+    "additionalProperties": false,
+    "properties": {
+     "column": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Column",
+      "type": "string"
+     },
+     "name": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Name",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/DimensionType"
+     }
+    },
+    "required": [
+     "name",
+     "type",
+     "column"
+    ],
+    "title": "DimensionSpec",
+    "type": "object"
+   },
+   "DimensionType": {
+    "enum": [
+     "time",
+     "string",
+     "number"
+    ],
+    "title": "DimensionType",
+    "type": "string"
+   },
    "DisableIn": {
     "additionalProperties": false,
     "properties": {
@@ -7022,6 +7257,58 @@
     "title": "FeatureSource",
     "type": "string"
    },
+   "FileParseSettings": {
+    "additionalProperties": false,
+    "description": "How a file is read. A CSV or TSV has one tab, ``data``.",
+    "properties": {
+     "delimiter": {
+      "anyOf": [
+       {
+        "maxLength": 1,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "One character between CSV fields. Left out: a comma for .csv, a tab for .tsv.",
+      "title": "Delimiter"
+     },
+     "encoding": {
+      "default": "utf-8",
+      "description": "Text encoding of a CSV or TSV file, such as utf-8 or cp1252.",
+      "title": "Encoding",
+      "type": "string"
+     },
+     "header_rows": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "description": "The 1-based header row of each tab, by tab name; a tab left out has its header on row 1.",
+      "title": "Header Rows",
+      "type": "object"
+     }
+    },
+    "title": "FileParseSettings",
+    "type": "object"
+   },
+   "FileUploadConnectedConfig": {
+    "description": "What ``POST /source`` takes for a file source: only how its files are read. The file comes by upload.",
+    "properties": {
+     "settings": {
+      "$ref": "#/components/schemas/FileParseSettings"
+     },
+     "source_type": {
+      "const": "file_upload",
+      "default": "file_upload",
+      "title": "Source Type",
+      "type": "string"
+     }
+    },
+    "title": "FileUploadConnectedConfig",
+    "type": "object"
+   },
    "FilterOp": {
     "enum": [
      "equals",
@@ -7191,6 +7478,158 @@
      "card_count"
     ],
     "title": "FolderTree",
+    "type": "object"
+   },
+   "FormCondition": {
+    "additionalProperties": false,
+    "description": "One \"only count rows where\" condition: a measure ``filters`` entry.",
+    "properties": {
+     "column": {
+      "maxLength": 500,
+      "title": "Column",
+      "type": "string"
+     },
+     "op": {
+      "maxLength": 500,
+      "title": "Op",
+      "type": "string"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "number"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     },
+     "values": {
+      "anyOf": [
+       {
+        "items": {
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "string"
+          }
+         ]
+        },
+        "maxItems": 50,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Values"
+     }
+    },
+    "required": [
+     "column",
+     "op"
+    ],
+    "title": "FormCondition",
+    "type": "object"
+   },
+   "FormMetric": {
+    "properties": {
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
+     "editable": {
+      "title": "Editable",
+      "type": "boolean"
+     },
+     "fields": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricFields"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NotFormEditable"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "name",
+     "cube",
+     "editable",
+     "reason",
+     "fields"
+    ],
+    "title": "FormMetric",
+    "type": "object"
+   },
+   "FormTable": {
+    "description": "A table the model's cubes read, and its breakdowns when the form can edit them.",
+    "properties": {
+     "breakdowns": {
+      "items": {
+       "$ref": "#/components/schemas/Breakdown"
+      },
+      "title": "Breakdowns",
+      "type": "array"
+     },
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
+     "editable": {
+      "title": "Editable",
+      "type": "boolean"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NotFormEditable"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "table": {
+      "title": "Table",
+      "type": "string"
+     }
+    },
+    "required": [
+     "table",
+     "cube",
+     "editable",
+     "reason",
+     "breakdowns"
+    ],
+    "title": "FormTable",
     "type": "object"
    },
    "FreshnessState": {
@@ -8820,6 +9259,102 @@
     "title": "ManifestResponse",
     "type": "object"
    },
+   "MeasureFilter": {
+    "additionalProperties": false,
+    "description": "One condition a measure counts a row under: ``column op value``, ``column in values`` or ``column is_null``.\n\nA measure's filters all hold at once; each renders to one of Cube's measure ``filters``.",
+    "properties": {
+     "column": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Column",
+      "type": "string"
+     },
+     "op": {
+      "$ref": "#/components/schemas/MeasureFilterOp"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "number"
+       },
+       {
+        "maxLength": 100,
+        "pattern": "^[A-Za-z0-9 _.:/-]*$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     },
+     "values": {
+      "anyOf": [
+       {
+        "items": {
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "maxLength": 100,
+           "pattern": "^[A-Za-z0-9 _.:/-]*$",
+           "type": "string"
+          }
+         ]
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Values"
+     }
+    },
+    "required": [
+     "column",
+     "op"
+    ],
+    "title": "MeasureFilter",
+    "type": "object"
+   },
+   "MeasureFilterOp": {
+    "enum": [
+     "=",
+     "!=",
+     ">",
+     ">=",
+     "<",
+     "<=",
+     "in",
+     "is_null",
+     "is_not_null"
+    ],
+    "title": "MeasureFilterOp",
+    "type": "string"
+   },
+   "MeasureType": {
+    "enum": [
+     "sum",
+     "count",
+     "count_distinct",
+     "avg",
+     "min",
+     "max",
+     "number"
+    ],
+    "title": "MeasureType",
+    "type": "string"
+   },
    "Member": {
     "properties": {
      "role": {
@@ -9182,6 +9717,240 @@
     "title": "MeterUsage",
     "type": "object"
    },
+   "MetricCardFilter": {
+    "additionalProperties": false,
+    "description": "A condition on a dimension: fixed ``values``, or the board ``select`` filter ``from_filter`` names.",
+    "properties": {
+     "from_filter": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,62}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "From Filter"
+     },
+     "member": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Member",
+      "type": "string"
+     },
+     "op": {
+      "enum": [
+       "equals",
+       "notEquals",
+       "contains",
+       "notContains",
+       "startsWith",
+       "endsWith",
+       "gt",
+       "gte",
+       "lt",
+       "lte",
+       "set",
+       "notSet"
+      ],
+      "title": "Op",
+      "type": "string"
+     },
+     "values": {
+      "items": {
+       "maxLength": 200,
+       "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Values",
+      "type": "array"
+     }
+    },
+    "required": [
+     "member",
+     "op"
+    ],
+    "title": "MetricCardFilter",
+    "type": "object"
+   },
+   "MetricCardOrder": {
+    "additionalProperties": false,
+    "properties": {
+     "direction": {
+      "default": "asc",
+      "enum": [
+       "asc",
+       "desc"
+      ],
+      "title": "Direction",
+      "type": "string"
+     },
+     "member": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Member",
+      "type": "string"
+     }
+    },
+    "required": [
+     "member"
+    ],
+    "title": "MetricCardOrder",
+    "type": "object"
+   },
+   "MetricCardQuery": {
+    "additionalProperties": false,
+    "description": "What a metric card asks the metrics API: metrics of one cube, their breakdown, time range and filters.\n\nIt reads them in the card's warehouse (``warehouse_id``, set from the metric's warehouses at save), or in the\nboard's ``warehouse`` filter value.",
+    "properties": {
+     "dimensions": {
+      "items": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Dimensions",
+      "type": "array"
+     },
+     "filters": {
+      "items": {
+       "$ref": "#/components/schemas/MetricCardFilter"
+      },
+      "maxItems": 20,
+      "title": "Filters",
+      "type": "array"
+     },
+     "limit": {
+      "anyOf": [
+       {
+        "maximum": 10000.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Limit"
+     },
+     "metrics": {
+      "items": {
+       "maxLength": 64,
+       "pattern": "^[a-z][a-z0-9_]*$",
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Metrics",
+      "type": "array"
+     },
+     "order": {
+      "items": {
+       "$ref": "#/components/schemas/MetricCardOrder"
+      },
+      "maxItems": 10,
+      "title": "Order",
+      "type": "array"
+     },
+     "time": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricCardTime"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "metrics"
+    ],
+    "title": "MetricCardQuery",
+    "type": "object"
+   },
+   "MetricCardSpec": {
+    "additionalProperties": false,
+    "properties": {
+     "chart": {
+      "$ref": "#/components/schemas/CardChart"
+     },
+     "query": {
+      "$ref": "#/components/schemas/MetricCardQuery"
+     },
+     "spec_version": {
+      "const": 2,
+      "title": "Spec Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "spec_version",
+     "query",
+     "chart"
+    ],
+    "title": "MetricCardSpec",
+    "type": "object"
+   },
+   "MetricCardTime": {
+    "additionalProperties": false,
+    "description": "The metric's time dimension: ``grain`` to group by, over the range of the board's ``date_range`` filter.\n\n``from_filter`` names that filter; ``default`` is the range on a board without it. Neither: all time.",
+    "properties": {
+     "default": {
+      "anyOf": [
+       {
+        "enum": [
+         "last_7_days",
+         "last_30_days",
+         "last_90_days",
+         "last_365_days",
+         "this_month",
+         "last_month",
+         "this_year"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default"
+     },
+     "from_filter": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,62}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "From Filter"
+     },
+     "grain": {
+      "anyOf": [
+       {
+        "enum": [
+         "day",
+         "week",
+         "month",
+         "quarter",
+         "year"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Grain"
+     }
+    },
+    "title": "MetricCardTime",
+    "type": "object"
+   },
    "MetricDefinition": {
     "properties": {
      "cube": {
@@ -9230,6 +9999,115 @@
     "title": "MetricDefinition",
     "type": "object"
    },
+   "MetricEditOut": {
+    "description": "The stored draft after a form write.",
+    "properties": {
+     "affected_metrics": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Affected Metrics",
+      "type": "array"
+     },
+     "comments_dropped": {
+      "title": "Comments Dropped",
+      "type": "boolean"
+     },
+     "draft": {
+      "$ref": "#/components/schemas/ModelVersionSummary"
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision",
+     "draft",
+     "affected_metrics",
+     "comments_dropped"
+    ],
+    "title": "MetricEditOut",
+    "type": "object"
+   },
+   "MetricFields": {
+    "additionalProperties": false,
+    "description": "One metric as the form shows it; ``table`` is the relation its cube reads, the cube named as the table.",
+    "properties": {
+     "aggregation": {
+      "maxLength": 500,
+      "title": "Aggregation",
+      "type": "string"
+     },
+     "column": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Column"
+     },
+     "conditions": {
+      "items": {
+       "$ref": "#/components/schemas/FormCondition"
+      },
+      "maxItems": 20,
+      "title": "Conditions",
+      "type": "array"
+     },
+     "description": {
+      "maxLength": 500,
+      "title": "Description",
+      "type": "string"
+     },
+     "format": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Format"
+     },
+     "name": {
+      "maxLength": 500,
+      "title": "Name",
+      "type": "string"
+     },
+     "table": {
+      "maxLength": 500,
+      "title": "Table",
+      "type": "string"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     }
+    },
+    "required": [
+     "name",
+     "description",
+     "table",
+     "aggregation"
+    ],
+    "title": "MetricFields",
+    "type": "object"
+   },
    "MetricFilter": {
     "additionalProperties": false,
     "properties": {
@@ -9258,6 +10136,62 @@
     ],
     "title": "MetricFilter",
     "type": "object"
+   },
+   "MetricFormOut": {
+    "description": "What the form edits: the draft, or the published version while there is no draft.",
+    "properties": {
+     "based_on": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/CustomerModelState"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "git_managed": {
+      "title": "Git Managed",
+      "type": "boolean"
+     },
+     "metrics": {
+      "items": {
+       "$ref": "#/components/schemas/FormMetric"
+      },
+      "title": "Metrics",
+      "type": "array"
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     },
+     "tables": {
+      "items": {
+       "$ref": "#/components/schemas/FormTable"
+      },
+      "title": "Tables",
+      "type": "array"
+     }
+    },
+    "required": [
+     "revision",
+     "based_on",
+     "git_managed",
+     "tables",
+     "metrics"
+    ],
+    "title": "MetricFormOut",
+    "type": "object"
+   },
+   "MetricFormat": {
+    "description": "How a metric's values read; ``number`` is Cube's default and renders no ``format``.",
+    "enum": [
+     "number",
+     "currency",
+     "percent"
+    ],
+    "title": "MetricFormat",
+    "type": "string"
    },
    "MetricGrant": {
     "additionalProperties": false,
@@ -9401,6 +10335,10 @@
    },
    "MetricOut": {
     "properties": {
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
      "customer_model_version": {
       "anyOf": [
        {
@@ -9469,6 +10407,17 @@
       ],
       "title": "Time Dimension"
      },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
      "type": {
       "title": "Type",
       "type": "string"
@@ -9483,7 +10432,9 @@
     },
     "required": [
      "name",
+     "title",
      "description",
+     "cube",
      "type",
      "state",
      "reason",
@@ -9707,6 +10658,80 @@
     "title": "MetricSource",
     "type": "string"
    },
+   "MetricSpec": {
+    "additionalProperties": false,
+    "description": "One built-in metric: a Cube measure named as the metric.",
+    "properties": {
+     "description": {
+      "maxLength": 300,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9 .,;:'()/+&-]+$",
+      "title": "Description",
+      "type": "string"
+     },
+     "filters": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/MeasureFilter"
+      },
+      "maxItems": 5,
+      "title": "Filters",
+      "type": "array"
+     },
+     "format": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricFormat"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "name": {
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Name",
+      "type": "string"
+     },
+     "sql": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sql"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "maxLength": 100,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9 .,;:'()/+&-]+$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "type": {
+      "$ref": "#/components/schemas/MeasureType"
+     }
+    },
+    "required": [
+     "name",
+     "description",
+     "type"
+    ],
+    "title": "MetricSpec",
+    "type": "object"
+   },
    "MetricState": {
     "enum": [
      "ready",
@@ -9716,6 +10741,39 @@
     "title": "MetricState",
     "type": "string"
    },
+   "MetricWrite": {
+    "additionalProperties": false,
+    "properties": {
+     "breakdowns": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/Breakdown"
+        },
+        "maxItems": 50,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Breakdowns"
+     },
+     "metric": {
+      "$ref": "#/components/schemas/MetricFields"
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "revision",
+     "metric"
+    ],
+    "title": "MetricWrite",
+    "type": "object"
+   },
    "Mode": {
     "enum": [
      "shadow",
@@ -9723,6 +10781,202 @@
     ],
     "title": "Mode",
     "type": "string"
+   },
+   "ModelChange": {
+    "description": "What publishing the draft does to a metric or table.",
+    "enum": [
+     "unchanged",
+     "added",
+     "changed",
+     "removed"
+    ],
+    "title": "ModelChange",
+    "type": "string"
+   },
+   "ModelChangesOut": {
+    "properties": {
+     "draft": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ModelVersionSummary"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "git_managed": {
+      "title": "Git Managed",
+      "type": "boolean"
+     },
+     "metrics": {
+      "items": {
+       "$ref": "#/components/schemas/ModelMetricChange"
+      },
+      "title": "Metrics",
+      "type": "array"
+     },
+     "published_version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Published Version"
+     },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     },
+     "tables": {
+      "items": {
+       "$ref": "#/components/schemas/ModelTableChange"
+      },
+      "title": "Tables",
+      "type": "array"
+     }
+    },
+    "required": [
+     "revision",
+     "git_managed",
+     "published_version",
+     "draft",
+     "metrics",
+     "tables"
+    ],
+    "title": "ModelChangesOut",
+    "type": "object"
+   },
+   "ModelMetricChange": {
+    "properties": {
+     "change": {
+      "$ref": "#/components/schemas/ModelChange"
+     },
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
+     "draft": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricSpec"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "published": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MetricSpec"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "table": {
+      "title": "Table",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "cube",
+     "table",
+     "change",
+     "published",
+     "draft"
+    ],
+    "title": "ModelMetricChange",
+    "type": "object"
+   },
+   "ModelPush": {
+    "additionalProperties": false,
+    "properties": {
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     },
+     "yaml": {
+      "minLength": 1,
+      "title": "Yaml",
+      "type": "string"
+     }
+    },
+    "required": [
+     "yaml"
+    ],
+    "title": "ModelPush",
+    "type": "object"
+   },
+   "ModelTableChange": {
+    "description": "One cube, and whether the draft changes its description, sources or breakdowns (dimensions).",
+    "properties": {
+     "change": {
+      "$ref": "#/components/schemas/ModelChange"
+     },
+     "cube": {
+      "title": "Cube",
+      "type": "string"
+     },
+     "draft": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/DimensionSpec"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Draft"
+     },
+     "published": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/DimensionSpec"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Published"
+     },
+     "table": {
+      "title": "Table",
+      "type": "string"
+     }
+    },
+    "required": [
+     "cube",
+     "table",
+     "change",
+     "published",
+     "draft"
+    ],
+    "title": "ModelTableChange",
+    "type": "object"
    },
    "ModelUpload": {
     "additionalProperties": false,
@@ -9847,6 +11101,10 @@
       ],
       "title": "Published At"
      },
+     "revision": {
+      "title": "Revision",
+      "type": "integer"
+     },
      "source": {
       "$ref": "#/components/schemas/CustomerModelSource"
      },
@@ -9871,7 +11129,8 @@
      "digest",
      "created_at",
      "published_at",
-     "yaml"
+     "yaml",
+     "revision"
     ],
     "title": "ModelVersionOut",
     "type": "object"
@@ -9995,6 +11254,34 @@
      "target_project_id"
     ],
     "title": "MovePipeline",
+    "type": "object"
+   },
+   "MyAccess": {
+    "description": "The caller's own role in one project and what it lets them do, granted privileges included.",
+    "properties": {
+     "capabilities": {
+      "$ref": "#/components/schemas/AccessCapabilities"
+     },
+     "project_id": {
+      "title": "Project Id",
+      "type": "string"
+     },
+     "role": {
+      "enum": [
+       "viewer",
+       "editor",
+       "admin"
+      ],
+      "title": "Role",
+      "type": "string"
+     }
+    },
+    "required": [
+     "project_id",
+     "role",
+     "capabilities"
+    ],
+    "title": "MyAccess",
     "type": "object"
    },
    "MyOrganizationOut": {
@@ -10414,6 +11701,20 @@
      "provider_busy"
     ],
     "title": "NoAnswerReason",
+    "type": "string"
+   },
+   "NotFormEditable": {
+    "description": "Why the form shows a metric or a table read-only; edit it in the YAML.",
+    "enum": [
+     "several_tables",
+     "mapped_columns",
+     "shared_table",
+     "custom_cube_name",
+     "renamed_breakdown",
+     "over_metrics",
+     "column_expression"
+    ],
+    "title": "NotFormEditable",
     "type": "string"
    },
    "NotebookBindingResponse": {
@@ -13736,6 +15037,28 @@
       "description": "Stable product error code for a FAILED pipe, e.g. 'source_auth_failed'. Append-only vocabulary: codes are never renamed or repurposed, so a client may branch on them. Null when the pipe has not failed.",
       "title": "Error Code"
      },
+     "error_detail": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "integer"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Where the pipe's last failed run stopped, for a file pipe: the tab, and when the error names them the row (its line in the file), column and limit. Never a cell value. Null when the last run did not fail or its error names no place.",
+      "title": "Error Detail"
+     },
      "health": {
       "$ref": "#/components/schemas/PipeHealth",
       "description": "Whether replication is WORKING, as a closed vocabulary: healthy / not_landing_data / unknown / stale / not_reporting / not_monitored. This is the field a UI should colour, NOT ``pipe_status`` \u2014 a pipe reads ACTIVE the whole time its replication task is dead. Derived server-side because the rules that turn the underlying columns into a verdict are not obvious: a paused pipe's columns are frozen, and an unreachable engine must read as 'no information' rather than as the last thing we happened to see."
@@ -15501,6 +16824,24 @@
      "text"
     ],
     "title": "PublicationOption",
+    "type": "object"
+   },
+   "PublishRequest": {
+    "additionalProperties": false,
+    "properties": {
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     }
+    },
+    "title": "PublishRequest",
     "type": "object"
    },
    "QueryMetadata": {
@@ -17741,10 +19082,34 @@
      "instagram",
      "linkedin_pages",
      "x",
-     "tiktok_ads"
+     "tiktok_ads",
+     "file_upload"
     ],
     "title": "SourceType",
     "type": "string"
+   },
+   "SqlCardSpec": {
+    "additionalProperties": false,
+    "properties": {
+     "chart": {
+      "$ref": "#/components/schemas/CardChart"
+     },
+     "query": {
+      "$ref": "#/components/schemas/CardQuery"
+     },
+     "spec_version": {
+      "const": 1,
+      "title": "Spec Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "spec_version",
+     "query",
+     "chart"
+    ],
+    "title": "SqlCardSpec",
+    "type": "object"
    },
    "SqlExecuteRequest": {
     "additionalProperties": false,
@@ -20012,6 +21377,81 @@
      "noun": "api-key-project",
      "project": "path:project_id",
      "verb": "add"
+    }
+   }
+  },
+  "/api/auth/api-keys/{key_id}/projects/{project_id}/bi-connection": {
+   "get": {
+    "description": "Where a BI tool signs in with the key for this project; the password is the key's secret, not shown here.",
+    "operationId": "api_key_project_bi_connection",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "key_id",
+      "required": true,
+      "schema": {
+       "maxLength": 36,
+       "minLength": 1,
+       "title": "Key Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ApiKeyBiConnectionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Bi Connection",
+    "tags": [
+     "auth",
+     "api-keys"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay api-key-project bi-connection <key_id> <project_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "api-key-project",
+     "project": "path:project_id",
+     "verb": "bi-connection"
     }
    }
   },
@@ -35458,6 +36898,62 @@
     }
    }
   },
+  "/api/semantic/projects/{project_id}/models/changes": {
+   "get": {
+    "description": "Compare the draft metric model with the published one: the metrics and breakdowns a publish would change.",
+    "operationId": "metric_models_changes",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelChangesOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Changes",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models changes"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "changes"
+    }
+   }
+  },
   "/api/semantic/projects/{project_id}/models/draft": {
    "get": {
     "description": "Show the project's draft metric model.",
@@ -35543,7 +37039,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ModelUpload"
+        "$ref": "#/components/schemas/ModelPush"
        }
       }
      },
@@ -35559,6 +37055,9 @@
        }
       },
       "description": "Successful Response"
+     },
+     "409": {
+      "description": "draft_changed: the draft changed since the named revision (changed_by, changed_at)"
      },
      "422": {
       "description": "model_rejected: errors names each field (path) and why (reason)"
@@ -35588,9 +37087,390 @@
     }
    }
   },
+  "/api/semantic/projects/{project_id}/models/draft/metrics": {
+   "get": {
+    "description": "List the tables and metrics of the draft (or published) metric model, and which the metric form can edit.",
+    "operationId": "metric_models_metric_list",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricFormOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Form",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models metric-list"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "metric-list"
+    }
+   },
+   "post": {
+    "description": "Add one metric to the draft metric model.",
+    "operationId": "metric_models_metric_add",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MetricWrite"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricEditOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the model has no such metric or table"
+     },
+     "409": {
+      "description": "draft_changed (changed_by, changed_at, revision), model_managed_in_git, or metric_needs_yaml (reason): the form cannot make this write"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Post Metric",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models metric-add --file metric.json"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "metric-add"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/draft/metrics/{metric_name}": {
+   "delete": {
+    "description": "Remove one metric from the draft metric model.",
+    "operationId": "metric_models_metric_remove",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "metric_name",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Metric Name",
+       "type": "string"
+      }
+     },
+     {
+      "description": "The revision the form read.",
+      "in": "query",
+      "name": "revision",
+      "required": true,
+      "schema": {
+       "description": "The revision the form read.",
+       "title": "Revision",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricEditOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the model has no such metric or table"
+     },
+     "409": {
+      "description": "draft_changed (changed_by, changed_at, revision), model_managed_in_git, or metric_needs_yaml (reason): the form cannot make this write"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Delete Metric",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": true,
+     "examples": [
+      "databay metric-models metric-remove <project_id> order_total --revision 5 --yes"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "metric-remove"
+    }
+   },
+   "put": {
+    "description": "Replace one metric of the draft metric model.",
+    "operationId": "metric_models_metric_update",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "metric_name",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Metric Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MetricWrite"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricEditOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the model has no such metric or table"
+     },
+     "409": {
+      "description": "draft_changed (changed_by, changed_at, revision), model_managed_in_git, or metric_needs_yaml (reason): the form cannot make this write"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Metric",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models metric-update <project_id> order_total --file metric.json"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "metric-update"
+    }
+   }
+  },
+  "/api/semantic/projects/{project_id}/models/draft/tables/{table}/breakdowns": {
+   "put": {
+    "description": "Set the columns one table's metrics break down by; the answer lists the metrics this affects.",
+    "operationId": "metric_models_set_breakdowns",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "maxLength": 64,
+       "minLength": 1,
+       "title": "Project Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "table",
+      "required": true,
+      "schema": {
+       "maxLength": 255,
+       "minLength": 1,
+       "title": "Table",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BreakdownsWrite"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MetricEditOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "description": "resource_not_found: the model has no such metric or table"
+     },
+     "409": {
+      "description": "draft_changed (changed_by, changed_at, revision), model_managed_in_git, or metric_needs_yaml (reason): the form cannot make this write"
+     },
+     "422": {
+      "description": "model_rejected: errors names each field (path) and why (reason)"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Breakdowns",
+    "tags": [
+     "customer models"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay metric-models set-breakdowns <project_id> orders --file breakdowns.json"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "metric-models",
+     "project": "path:project_id",
+     "verb": "set-breakdowns"
+    }
+   }
+  },
   "/api/semantic/projects/{project_id}/models/import-dbt": {
    "post": {
-    "description": "Generate a draft metric model from the project's built dbt models and their yml; it is never published.",
+    "description": "Add cubes for the project's built dbt models to the draft metric model; it is never published.",
     "operationId": "metric_models_import_dbt",
     "parameters": [
      {
@@ -35627,7 +37507,7 @@
       "description": "Successful Response"
      },
      "409": {
-      "description": "draft_exists: the project has a draft and replace_draft is false"
+      "description": "draft_changed: the draft changed since the named revision (changed_by, changed_at)"
      },
      "422": {
       "description": "model_rejected: errors names each field (path) and why (reason)"
@@ -35677,6 +37557,23 @@
       }
      }
     ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/PublishRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
     "responses": {
      "200": {
       "content": {
@@ -35690,6 +37587,9 @@
      },
      "404": {
       "description": "resource_not_found: the project has no such version"
+     },
+     "409": {
+      "description": "draft_changed: the draft changed since the named revision (changed_by, changed_at)"
      },
      "422": {
       "description": "model_rejected: errors names each field (path) and why (reason)"
@@ -37251,6 +39151,67 @@
      "noun": "project-privilege",
      "project": "path:project_id",
      "verb": "grant"
+    }
+   }
+  },
+  "/api/workspace/projects/{project_id}/my-access": {
+   "get": {
+    "description": "Your own role in the project and what it lets you do, the privileges granted to you included.",
+    "operationId": "project_my_access",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "project_id",
+      "required": true,
+      "schema": {
+       "title": "Project Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MyAccess"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get My Access",
+    "tags": [
+     "workspace"
+    ],
+    "x-databay-client": {
+     "agent_shape": "direct",
+     "columns": [],
+     "destructive": false,
+     "examples": [
+      "databay project my-access <project_id>"
+     ],
+     "idempotent": false,
+     "kind": "exposed",
+     "noun": "project",
+     "project": "path:project_id",
+     "verb": "my-access"
     }
    }
   },

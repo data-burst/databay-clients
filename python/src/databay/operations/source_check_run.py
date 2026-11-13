@@ -144,6 +144,7 @@ SOURCE_CHECK_RUN_START = Operation(
                     'linkedin_pages',
                     'x',
                     'tiktok_ads',
+                    'file_upload',
                 ),
                 nullable=True,
             ),

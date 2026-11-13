@@ -18,6 +18,8 @@ from databay.errors import DatabayUsageError
 BASE = f"/api/semantic/projects/{PROJECT}/metrics"
 NET_SALES = {
     "name": "net_sales",
+    "title": "Net sales",
+    "cube": "orders",
     "description": "Gross sales less discounts and returns.",
     "type": "sum",
     "state": "ready",
