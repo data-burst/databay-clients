@@ -28,6 +28,12 @@ dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's
 - `databay metric-models push|validate|publish|show-draft|show-published|list|import-dbt`: a project's own
   metric model, which the agent skill teaches (validate, push, publish, import from dbt).
   `databay project-privilege list|grant|revoke`: a member's privileges in a project.
+- `databay metric-models metric-list|metric-add|metric-update|metric-remove|set-breakdowns|changes`: edit one
+  metric or one table's breakdowns on the draft's `--revision` (`draft_changed` when it moved), and see what a
+  publish changes; `publish --revision` publishes the draft that was checked. `databay project my-access` shows
+  the caller's role and privileges. Dashboard cards take metric specs (`spec_version` 2).
+- `databay api-key-project bi-connection <key_id> <project_id>`: where a BI tool signs in with an API key.
+- The agent skill teaches the metric form commands, metric cards and connecting a BI tool.
 - On a terminal, an error answered with a 5xx prints its `trace_id`.
 - Dashboards follow the server's cards model: a card belongs to the project (`dashboards-card`), is put
   on dashboards with `dashboards-placement`, and a dashboard takes `--refresh-interval-s`;
