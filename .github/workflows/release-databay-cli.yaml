@@ -35,25 +35,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install uv
-        if: github.event_name == 'push'
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: "0.13.4"
-          enable-cache: false
-
-      # Only a contract that is one release may ship; any other push to main releases nothing.
-      - name: Is contract/ one release
-        id: ready
-        if: github.event_name == 'push'
-        run: |
-          if uv run --no-project --python 3.13 python python/tools/release_client.py ready; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Python Semantic Release
         id: semver
-        if: steps.ready.outputs.ready == 'true'
+        if: github.event_name == 'push'
         uses: python-semantic-release/python-semantic-release@b700dbeb1f431a0fcc30a79f3f0869407fe07278 # v10.7.0
         with:
           directory: python

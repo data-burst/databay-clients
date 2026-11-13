@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import re
 import shutil
@@ -78,23 +77,6 @@ def _write_source(contract: Path, commit: str) -> None:
     (contract / "SOURCE").write_text(f"commit {commit}\n{digests}", encoding="utf-8")
 
 
-def _release_sync(root: Path) -> None:
-    """What a release sync of a cut brings: the released spec equal to core, and its meta."""
-    contract = root / "contract"
-    shutil.copyfile(contract / "core.json", contract / "core.released.json")
-    document = json.loads((contract / "core.json").read_text(encoding="utf-8"))
-    registry = json.loads((contract / "error_codes.json").read_text(encoding="utf-8"))
-    version = json.loads((contract / "api_version.json").read_text(encoding="utf-8"))["api_version"]
-    meta = {
-        "api_version": version,
-        "since": {f"{m.upper()} {path}": version for path, methods in document["paths"].items() for m in methods},
-        "error_codes": sorted(registry["error_codes"]),
-        "cdc_error_codes": sorted(registry["cdc_error_codes"]),
-    }
-    (contract / "core.released.meta.json").write_text(json.dumps(meta, indent=1, sort_keys=True) + "\n", "utf-8")
-    _write_source(contract, "c" * 40)
-
-
 @pytest.fixture(scope="module")
 def template(tmp_path_factory) -> Path:
     root = tmp_path_factory.mktemp("repo")
@@ -105,7 +87,6 @@ def template(tmp_path_factory) -> Path:
     for relative in COPIED_DIRECTORIES:
         shutil.copytree(REPO / relative, root / relative, ignore=_ignore_bytecode)
     (root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
-    _release_sync(root)
     _git(root, "init", "--quiet", "--initial-branch=main")
     _git(root, "add", "-A")
     _git(root, "commit", "--quiet", "-m", "start")
@@ -172,21 +153,6 @@ def test_stamp_refuses_what_is_not_a_version(repo, version) -> None:
     assert _git(repo, "status", "--porcelain") == ""
 
 
-def test_ready_accepts_a_release_sync(repo) -> None:
-    assert _release(repo, "ready").returncode == 0
-
-
-def test_ready_refuses_a_contract_with_no_release(repo) -> None:
-    for name in ("core.released.json", "core.released.meta.json"):
-        (repo / "contract" / name).unlink()
-    _write_source(repo / "contract", "d" * 40)
-
-    done = _release(repo, "ready")
-
-    assert done.returncode != 0
-    assert "contract/core.released.json does not exist" in done.stderr
-
-
 @pytest.mark.parametrize(
     ("tag", "message"),
     [
@@ -213,31 +179,6 @@ def test_check_refuses_a_contract_file_edited_by_hand(repo) -> None:
 
     assert done.returncode != 0
     assert "error_codes.json differs from the digest SOURCE records" in done.stderr
-
-
-def test_check_refuses_a_released_spec_that_differs_from_core(repo) -> None:
-    _cut(repo, "0.2.0")
-    path = repo / "contract/core.json"
-    document = json.loads(path.read_text(encoding="utf-8"))
-    document["info"]["description"] = "a sync after the cut"
-    path.write_text(json.dumps(document, indent=1, sort_keys=True) + "\n", encoding="utf-8")
-    _write_source(repo / "contract", "e" * 40)
-
-    done = _release(repo, "check", "--tag", "python/v0.2.0")
-
-    assert done.returncode != 0
-    assert "core.released.json differs from core.json" in done.stderr
-
-
-def test_check_refuses_an_api_version_the_release_did_not_record(repo) -> None:
-    _cut(repo, "0.2.0")
-    (repo / "contract/api_version.json").write_text('{\n "api_version": "1.1"\n}\n', encoding="utf-8")
-    _write_source(repo / "contract", "e" * 40)
-
-    done = _release(repo, "check", "--tag", "python/v0.2.0")
-
-    assert done.returncode != 0
-    assert "records API 1.0, but api_version.json is 1.1" in done.stderr
 
 
 def test_check_refuses_a_generated_client_that_does_not_match(repo) -> None:
@@ -337,14 +278,15 @@ def test_semantic_release_tags_what_the_script_checks() -> None:
     assert _triggers(_workflow(RELEASE_WORKFLOW))["push"] == {"branches": ["main"]}
 
 
-def test_semantic_release_runs_only_on_a_contract_that_is_one_release() -> None:
-    steps = _workflow(RELEASE_WORKFLOW)["jobs"]["version"]["steps"]
-    ready = next(i for i, step in enumerate(steps) if "release_client.py ready" in str(step.get("run", "")))
-    semver = next(i for i, step in enumerate(steps) if "python-semantic-release" in str(step.get("uses", "")))
+def test_semantic_release_runs_from_python_on_each_push_to_main() -> None:
+    step = next(
+        step
+        for step in _workflow(RELEASE_WORKFLOW)["jobs"]["version"]["steps"]
+        if "python-semantic-release" in str(step.get("uses", ""))
+    )
 
-    assert ready < semver
-    assert steps[semver]["if"] == "steps.ready.outputs.ready == 'true'"
-    assert steps[semver]["with"]["directory"] == "python"
+    assert step["if"] == "github.event_name == 'push'"
+    assert step["with"]["directory"] == "python"
 
 
 def test_no_other_workflow_runs_on_a_release_tag() -> None:

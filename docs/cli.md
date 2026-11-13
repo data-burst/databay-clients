@@ -89,26 +89,16 @@ to `main` runs `.github/workflows/release-databay-cli.yaml`, and
 from the conventional commits since the last `python/v*` tag: `feat` is a minor release, `fix` and `perf`
 a patch, a `!` after the type a major one, and anything else no release.
 
-A push releases nothing unless `contract/` is one release: the server team has cut a release of the
-contract and synced it here as a release sync, so `contract/core.released.json` equals
-`contract/core.json`. `contract/` is one release when its files match the digests in `contract/SOURCE`,
-the released spec equals `core.json`, and the released meta records the same `api_version` and error
-codes as `api_version.json` and `error_codes.json`. Check it locally with:
-
-```bash
-python python/tools/release_client.py ready
-```
-
 ### What a push to main runs
 
-1. **Versions**, when `release_client.py ready` passes: semantic-release runs
+1. **Versions**, when there is a `feat`, `fix` or `perf` commit since the last tag: semantic-release runs
    `release_client.py stamp <version>` (the version in `pyproject.toml` and `uv.lock`, then the
    regenerated client), adds the version's section to `python/CHANGELOG.md`, commits that to `main` as
    `chore(release): databay-cli v<version> [skip ci]`, tags it `python/v<version>` and opens a GitHub
    release. The bot that pushes needs leave to push to `main`.
 2. **Refuses** a tagged commit that is not on `main`, then runs `release_client.py check --tag <tag>`:
-   it refuses a tag that differs from the `pyproject.toml` version, a `contract/` that is not one release,
-   a stale generated client, and a version with no dated changelog section.
+   it refuses a tag that differs from the `pyproject.toml` version, a `contract/` whose files differ from
+   the digests in `contract/SOURCE`, a stale generated client, and a version with no dated changelog section.
 3. **Builds** the sdist and the wheel.
 4. **Tests** the tagged commit: ruff, the client's tests and the regeneration check, through `tests.yaml`.
 5. **Smoke-tests** the wheel in a fresh venv on Python 3.12 and 3.13 (`python/tools/smoke_client_wheel.sh`):

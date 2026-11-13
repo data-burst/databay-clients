@@ -1,15 +1,13 @@
 """
 The steps of a ``databay-cli`` release that semantic-release cannot do itself; see docs/cli.md.
 
-    python python/tools/release_client.py ready                    # may main be released now?
     python python/tools/release_client.py stamp 0.2.0              # write the version semantic-release picked
     python python/tools/release_client.py check --tag python/v0.2.0
 
-``ready`` refuses a ``contract/`` that is not exactly one release synced from the server: the released
-spec equals ``core.json``, its meta matches the API version and error codes, and every file matches the
-digest ``contract/SOURCE`` records. The release workflow runs semantic-release only when it passes.
 ``stamp`` is semantic-release's build command: it sets the version in ``pyproject.toml`` and ``uv.lock``
-and regenerates the client. ``check`` is what the workflow runs on the tag before building.
+and regenerates the client. ``check`` is what the workflow runs on the tag before building: the version
+everywhere, the generated client, the changelog, and a ``contract/`` whose files match the digests
+``contract/SOURCE`` records.
 
 Standard library only: the workflow runs this before installing anything.
 """
@@ -17,7 +15,6 @@ Standard library only: the workflow runs this before installing anything.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
@@ -26,21 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from contract import (
-    API_VERSION_FILE,
-    CONTRACT,
-    ERROR_CODES,
-    RELEASED_SPEC,
-    REPO_ROOT,
-    SOURCE,
-    SPEC,
-    ContractError,
-    api_version_in,
-    load_released,
-    load_source,
-    registry_codes,
-    source_mismatches,
-)
+from contract import CONTRACT, REPO_ROOT, SOURCE, ContractError, load_source, source_mismatches
 
 CLIENT_ROOT = REPO_ROOT / "python"
 PYPROJECT = CLIENT_ROOT / "pyproject.toml"
@@ -99,35 +82,14 @@ def lock_version() -> str:
     return found[0]
 
 
-def refuse_unless_one_release() -> None:
-    """Refuse a ``contract/`` that is not one release exactly as the server's release sync wrote it."""
+def _refuse_an_edited_contract() -> None:
+    """Refuse a ``contract/`` that is not what the server's sync wrote."""
     differ = source_mismatches(CONTRACT, load_source(SOURCE))
     if differ:
         raise ReleaseRefused(
             "contract/ differs from contract/SOURCE; it changes only through the server's sync:\n  "
             + "\n  ".join(differ)
         )
-    if not RELEASED_SPEC.exists():
-        raise ReleaseRefused(
-            f"contract/{RELEASED_SPEC.name} does not exist: the server has not cut a release; "
-            "a release needs a release sync of a cut"
-        )
-    if RELEASED_SPEC.read_bytes() != SPEC.read_bytes():
-        raise ReleaseRefused(
-            f"contract/{RELEASED_SPEC.name} differs from {SPEC.name}: this contract is not one release; "
-            "a release needs a release sync of a cut"
-        )
-    released = load_released(RELEASED_SPEC)
-    if released is None:
-        raise ReleaseRefused(f"contract/{RELEASED_SPEC.name} could not be read")
-    api_version = api_version_in(API_VERSION_FILE)
-    if released.api_version != api_version:
-        raise ReleaseRefused(
-            f"the released contract records API {released.api_version}, but api_version.json is {api_version}"
-        )
-    registry = json.loads(ERROR_CODES.read_text(encoding="utf-8"))
-    if (released.error_codes, released.cdc_error_codes) != registry_codes(registry):
-        raise ReleaseRefused(f"the released contract's error codes differ from {ERROR_CODES.name}")
 
 
 def _regenerate() -> None:
@@ -155,7 +117,7 @@ def check(tag: str) -> None:
     locked = lock_version()
     if locked != current:
         raise ReleaseRefused(f"{CLIENT_LOCK.name} records {PACKAGE} {locked}, but {PYPROJECT.name} is at {current}")
-    refuse_unless_one_release()
+    _refuse_an_edited_contract()
     differ = _generated_files_differ()
     if differ is not None:
         raise ReleaseRefused(f"the generated client does not match this commit:\n{differ}")
@@ -168,17 +130,13 @@ def check(tag: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("ready", help="refuse a contract/ that is not one release")
     commands.add_parser("stamp", help="write a version into the package").add_argument("version")
     commands.add_parser("check", help="refuse a tag that is not this commit's release").add_argument(
         "--tag", required=True
     )
     args = parser.parse_args()
     try:
-        if args.command == "ready":
-            refuse_unless_one_release()
-            print("contract/ is one release")
-        elif args.command == "stamp":
+        if args.command == "stamp":
             stamp(args.version)
             print(f"stamped {PACKAGE} {args.version}")
         else:
