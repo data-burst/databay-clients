@@ -476,6 +476,29 @@ Usage: `databay api-key-project add KEY_ID [PROJECT_ID] [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay api-key-project bi-connection
+
+Where a BI tool signs in with the key for this project; the password is the key's secret, not shown here.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay api-key-project bi-connection <key_id> <project_id>
+```
+
+Usage: `databay api-key-project bi-connection KEY_ID [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `KEY_ID` | yes | Key Id |
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay api-key-project remove
 
 Take one project from the key; a key keeps at least one.
@@ -2008,9 +2031,31 @@ Usage: `databay meta-ads-source list [OPTIONS]`
 
 ## metric-models
 
+### databay metric-models changes
+
+Compare the draft metric model with the published one: the metrics and breakdowns a publish would change.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metric-models changes
+```
+
+Usage: `databay metric-models changes [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay metric-models import-dbt
 
-Generate a draft metric model from the project's built dbt models and their yml; it is never published.
+Add cubes for the project's built dbt models to the draft metric model; it is never published.
 
 Acts in a project, sent as path project_id: --project, else the profile's active project.
 
@@ -2027,6 +2072,7 @@ Usage: `databay metric-models import-dbt [PROJECT_ID] [OPTIONS]`
 | `--dry-run` / `--no-dry-run` |  | Dry Run |
 | `--relations LIST` (repeat) |  | Relations |
 | `--replace-draft` / `--no-replace-draft` |  | Replace Draft |
+| `--revision INTEGER` |  | Revision |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -2056,6 +2102,108 @@ Usage: `databay metric-models list [PROJECT_ID] [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay metric-models metric-add
+
+Add one metric to the draft metric model.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metric-models metric-add --file metric.json
+```
+
+Usage: `databay metric-models metric-add [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--breakdowns JSON` |  | Breakdowns (JSON) |
+| `--metric JSON` | yes | (JSON) |
+| `--revision INTEGER` | yes | Revision |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay metric-models metric-list
+
+List the tables and metrics of the draft (or published) metric model, and which the metric form can edit.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metric-models metric-list
+```
+
+Usage: `databay metric-models metric-list [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay metric-models metric-remove
+
+Remove one metric from the draft metric model.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+Removes or overwrites state: asks on a terminal, and needs --yes when output is captured.
+
+```
+Examples:
+  databay metric-models metric-remove <project_id> order_total --revision 5 --yes
+```
+
+Usage: `databay metric-models metric-remove PROJECT_ID METRIC_NAME [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` | yes | Project Id |
+| `METRIC_NAME` | yes | Metric Name |
+| `--revision INTEGER` | yes | The revision the form read. |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--yes` |  | confirm: this removes or overwrites state |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay metric-models metric-update
+
+Replace one metric of the draft metric model.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metric-models metric-update <project_id> order_total --file metric.json
+```
+
+Usage: `databay metric-models metric-update PROJECT_ID METRIC_NAME [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` | yes | Project Id |
+| `METRIC_NAME` | yes | Metric Name |
+| `--breakdowns JSON` |  | Breakdowns (JSON) |
+| `--metric JSON` | yes | (JSON) |
+| `--revision INTEGER` | yes | Revision |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay metric-models publish
 
 Publish the project's draft metric model; the published version it replaces is kept as superseded.
@@ -2072,6 +2220,8 @@ Usage: `databay metric-models publish [PROJECT_ID] [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `PROJECT_ID` |  | Project Id |
+| `--revision INTEGER` |  | Revision |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
@@ -2094,7 +2244,34 @@ Usage: `databay metric-models push [PROJECT_ID] [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `PROJECT_ID` |  | Project Id |
+| `--revision INTEGER` |  | Revision |
 | `--yaml STRING` | yes | Yaml |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
+### databay metric-models set-breakdowns
+
+Set the columns one table's metrics break down by; the answer lists the metrics this affects.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay metric-models set-breakdowns <project_id> orders --file breakdowns.json
+```
+
+Usage: `databay metric-models set-breakdowns PROJECT_ID TABLE [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` | yes | Project Id |
+| `TABLE` | yes | Table |
+| `--breakdowns JSON` | yes | Breakdowns (JSON) |
+| `--revision INTEGER` | yes | Revision |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
@@ -3386,6 +3563,28 @@ Usage: `databay project list [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay project my-access
+
+Your own role in the project and what it lets you do, the privileges granted to you included.
+
+Acts in a project, sent as path project_id: --project, else the profile's active project.
+
+```
+Examples:
+  databay project my-access <project_id>
+```
+
+Usage: `databay project my-access [PROJECT_ID] [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `PROJECT_ID` |  | Project Id |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay project update
 
 Update Project
@@ -4179,6 +4378,32 @@ Usage: `databay source cascade-delete SOURCE_UUID [OPTIONS]`
 | `--verbose` |  | log each request on stderr, secrets redacted |
 | `--no-retry` |  | send each request once |
 
+### databay source create file_upload
+
+Connect a source: check its credentials and setup, then store it encrypted.
+
+A connection that fails is refused unless ``allow_incomplete`` is set; a failing setup check
+saves as ``setup_incomplete``, and the source's readiness report is the to-do list.
+
+Acts in a project, sent as the X-Databay-Project-ID header: --project, else the profile's active project.
+
+Usage: `databay source create file_upload [OPTIONS]`
+
+| Argument or flag | Required | Description |
+|---|---|---|
+| `--acknowledge-org-visible` / `--no-acknowledge-org-visible` |  | For a SaaS source created in a restricted project, allow the automatic pipelines to land in the organization-wide warehouse, whose tables every organization member can see. Without it no automatic pipeline is created. |
+| `--allow-incomplete` / `--no-allow-incomplete` |  | Save and finish later: save even when Databay cannot connect yet. The source lands in setup_incomplete instead of the request failing. Other failing setup checks save as setup_incomplete regardless. |
+| `--name STRING` | yes | logical name for the connected source |
+| `--publication-mode STRING` |  | Who creates a Postgres source's publication: customer_managed (your admin) or databay_managed. Left out, the source waits for the choice where the deployment offers one. One of: customer_managed, databay_managed. |
+| `--settings JSON` |  | (JSON) |
+| `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
+| `--project TEXT` |  | the project to act in (default: the active project) |
+| `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
+| `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
+| `--profile TEXT` |  | the profile to use (default: current_profile) |
+| `--verbose` |  | log each request on stderr, secrets redacted |
+| `--no-retry` |  | send each request once |
+
 ### databay source create ga4
 
 Connect a source: check its credentials and setup, then store it encrypted.
@@ -4902,7 +5127,7 @@ Usage: `databay source update SOURCE_UUID [OPTIONS]`
 | `--password-env NAME` |  | name of the environment variable that holds password (secret) |
 | `--password-stdin` |  | read password (secret) from stdin |
 | `--port INTEGER` |  | Port |
-| `--source-type STRING` |  | One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads. |
+| `--source-type STRING` |  | One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads, file_upload. |
 | `--ssl-mode STRING` |  | Ssl Mode |
 | `--username STRING` |  | Username |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
@@ -5050,7 +5275,7 @@ Usage: `databay source-check-run start [OPTIONS]`
 | `--password-env NAME` |  | name of the environment variable that holds password (secret) |
 | `--password-stdin` |  | read password (secret) from stdin |
 | `--source-id STRING` |  | the saved source to check again; null for a new source |
-| `--source-type STRING` |  | a new source's type. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads. |
+| `--source-type STRING` |  | a new source's type. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads, file_upload. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--idempotency-key TEXT` |  | repeat an earlier call: the server answers it again and creates nothing (default: a new key) |
@@ -5105,7 +5330,7 @@ Usage: `databay source-hidden-type list [OPTIONS]`
 
 | Argument or flag | Required | Description |
 |---|---|---|
-| `--type LIST` (repeat) | yes | source types to check. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads. |
+| `--type LIST` (repeat) | yes | source types to check. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads, file_upload. |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |
 | `--profile TEXT` |  | the profile to use (default: current_profile) |
 | `--verbose` |  | log each request on stderr, secrets redacted |
@@ -5129,7 +5354,7 @@ Usage: `databay source-name check [OPTIONS]`
 | Argument or flag | Required | Description |
 |---|---|---|
 | `--name STRING` | yes | the name to check |
-| `--source-type STRING` |  | when set, also refuses with quota_reached if the organization can't add this type. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads. |
+| `--source-type STRING` |  | when set, also refuses with quota_reached if the organization can't add this type. One of: postgres, mysql, mssql, mongodb, shopify, meta_ads, google_ads, ga4, instagram, linkedin_pages, x, tiktok_ads, file_upload. |
 | `--file TEXT` |  | read the whole body as JSON from a file, or - for stdin |
 | `--project TEXT` |  | the project to act in (default: the active project) |
 | `--output TEXT` |  | json, table or csv. One of: json, table, csv. |

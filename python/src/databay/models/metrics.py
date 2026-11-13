@@ -95,6 +95,7 @@ class MetricFilter(RequestModel):
 
 
 class MetricOut(ResponseModel):
+    cube: str
     customer_model_version: int | None
     description: str
     dimensions: list[str]
@@ -105,6 +106,7 @@ class MetricOut(ResponseModel):
     source: MetricSource
     state: MetricState
     time_dimension: str | None
+    title: str | None
     type: str
     warehouses: list[str]
 

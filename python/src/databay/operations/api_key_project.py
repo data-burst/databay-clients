@@ -45,6 +45,45 @@ API_KEY_PROJECT_ADD = Operation(
     ),
 )
 
+API_KEY_PROJECT_BI_CONNECTION = Operation(
+    operation_id='api_key_project_bi_connection',
+    noun='api-key-project',
+    verb='bi-connection',
+    method='get',
+    path='/api/auth/api-keys/{key_id}/projects/{project_id}/bi-connection',
+    summary='Bi Connection',
+    description="Where a BI tool signs in with the key for this project; the password is the key's secret, not shown here.",
+    project='path:project_id',
+    destructive=False,
+    idempotent=False,
+    since='1.0',
+    params=(
+        Param(
+            name='key_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Key Id',
+        ),
+        Param(
+            name='project_id',
+            location='path',
+            kind='string',
+            required=True,
+            description='Project Id',
+        ),
+    ),
+    body=None,
+    response=Response(
+        kind='json',
+        model='api_key_project:ApiKeyBiConnectionOut',
+        shape='object',
+    ),
+    examples=(
+        'databay api-key-project bi-connection <key_id> <project_id>',
+    ),
+)
+
 API_KEY_PROJECT_REMOVE = Operation(
     operation_id='api_key_project_remove',
     noun='api-key-project',
@@ -86,5 +125,6 @@ API_KEY_PROJECT_REMOVE = Operation(
 
 OPERATIONS = (
     API_KEY_PROJECT_ADD,
+    API_KEY_PROJECT_BI_CONNECTION,
     API_KEY_PROJECT_REMOVE,
 )

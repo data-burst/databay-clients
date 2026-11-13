@@ -318,6 +318,7 @@ class PipeV2Page(ResponseModel):
 
 class PipeV2StatusResponse(ResponseModel):
     error_code: str | None = None
+    error_detail: dict[str, str | int] | None = None
     health: PipeHealth
     health_detail: str | None = None
     health_detail_code: str | None = None

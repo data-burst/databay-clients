@@ -48,6 +48,7 @@ SOURCE_NAME_CHECK = Operation(
                     'linkedin_pages',
                     'x',
                     'tiktok_ads',
+                    'file_upload',
                 ),
                 nullable=True,
             ),

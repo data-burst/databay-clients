@@ -15,6 +15,7 @@ group = noun_group(
         _ops.PROJECT_DELETE_RETRY,
         _ops.PROJECT_GET,
         _ops.PROJECT_LIST,
+        _ops.PROJECT_MY_ACCESS,
         _ops.PROJECT_UPDATE,
     ),
 )

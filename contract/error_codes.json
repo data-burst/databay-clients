@@ -300,6 +300,48 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "file_cells_limit_reached": {
+   "hint": "Remove rows or columns from the tab or split it, then upload it again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_rows_limit_reached": {
+   "hint": "Remove rows from the tab or split it into smaller files, then upload it again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_tab_missing": {
+   "hint": "Upload a file that has the pipe's tab; the pipe runs again once it is confirmed.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_unavailable": {
+   "hint": "Upload the file to the source again; the pipe runs once it is confirmed.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_unreadable": {
+   "hint": "Fix the named tab or the file settings, then upload the file again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_value_type_mismatch": {
+   "hint": "Fix the value at the named tab, row and column, then upload the file again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "ingest_dependency_unavailable": {
+   "hint": "Wait for the pipe to retry on its own; nothing needs changing.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
   "internal_unclassified": {
    "hint": "Send the error reference to Databay support.",
    "action": "ask_human",
@@ -1286,8 +1328,20 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "draft_changed": {
+   "hint": "Reload the draft metric model and make your change again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "draft_exists": {
    "hint": "Edit the existing draft, or replace it.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "draft_render_missing": {
+   "hint": "Run the preview again.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -1355,6 +1409,96 @@
   "feature_not_rollout": {
    "hint": "Pick a rollout feature; only those can be set per organization.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_check_busy": {
+   "hint": "Retry after the Retry-After interval.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 3
+  },
+  "file_check_timeout": {
+   "hint": "Upload a smaller file, or save the workbook's data as CSV.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_columns_limit_reached": {
+   "hint": "Remove columns from the named tab so it stays within the limit.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_encoding_unsupported": {
+   "hint": "Pick the file's encoding in the file settings, or save it as UTF-8.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_header_invalid": {
+   "hint": "Give every column of the named tab a unique name in its header row, or set that tab's header row.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_not_uploaded": {
+   "hint": "Upload a file to the source first.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_shared_strings_too_large": {
+   "hint": "Save the workbook's data as CSV and upload that instead.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_stage_expired": {
+   "hint": "Upload the file again to check it.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_stage_superseded": {
+   "hint": "Review the source's current file, then upload yours again if it should replace it.",
+   "action": "ask_human",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_too_large": {
+   "hint": "Upload a smaller file, or split it into several files.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_type_unsupported": {
+   "hint": "Save the file as .csv, .tsv or .xlsx and upload it again.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_unavailable": {
+   "hint": "Upload the file to the source again.",
+   "action": "do_first",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_uncompressed_too_large": {
+   "hint": "Remove unused sheets or rows from the workbook, or save the data as CSV.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_unreadable": {
+   "hint": "Open the file, save it again as .csv or .xlsx, and upload the new copy.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "file_upload_needs_acknowledgement": {
+   "hint": "Review the listed warnings and confirm again, acknowledging each one.",
+   "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1844,9 +1988,33 @@
    "side_effects": "none",
    "max_retries": null
   },
+  "metric_card_invalid": {
+   "hint": "Edit the card to use the metric's own dimensions.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "metric_cards_unavailable": {
+   "hint": "Save the card with a SQL query instead of a metric.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "metric_needs_yaml": {
+   "hint": "Edit this metric in the model's YAML and push the model.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
   "metric_not_found": {
    "hint": "List the metrics you can query and use one of their names.",
    "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "metric_not_granted": {
+   "hint": "Ask an admin for a warehouse access role that includes this metric.",
+   "action": "ask_human",
    "side_effects": "none",
    "max_retries": null
   },
@@ -1900,6 +2068,12 @@
   },
   "model_in_use": {
    "hint": "Change or delete the models listed in readers first, then delete this one.",
+   "action": "fix_and_retry",
+   "side_effects": "none",
+   "max_retries": null
+  },
+  "model_managed_in_git": {
+   "hint": "Edit the semantic files in the project's git repository instead.",
    "action": "fix_and_retry",
    "side_effects": "none",
    "max_retries": null
@@ -3121,6 +3295,12 @@
    "action": "retry",
    "side_effects": "none",
    "max_retries": 3
+  },
+  "sign_in_rate_limited": {
+   "hint": "Check the key's secret, then retry after the Retry-After interval.",
+   "action": "retry",
+   "side_effects": "none",
+   "max_retries": 1
   },
   "sink_column_type_required": {
    "hint": "Retry without sink_column_type; the warehouse picks the column type.",

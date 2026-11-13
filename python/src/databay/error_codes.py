@@ -126,7 +126,9 @@ REGISTRY: dict[str, ErrorInfo] = {
     'docs_slug_taken': ErrorInfo('Pick another slug.', 'fix_and_retry', 'none', None),
     'docs_unavailable': ErrorInfo('Retry in a moment.', 'retry', 'none', 3),
     'draft_already_published': ErrorInfo('Create a new draft from the published version.', 'do_first', 'none', None),
+    'draft_changed': ErrorInfo('Reload the draft metric model and make your change again.', 'fix_and_retry', 'none', None),
     'draft_exists': ErrorInfo('Edit the existing draft, or replace it.', 'fix_and_retry', 'none', None),
+    'draft_render_missing': ErrorInfo('Run the preview again.', 'fix_and_retry', 'none', None),
     'effective_not_lowering': ErrorInfo('Send the change without an effective date; it applies now.', 'fix_and_retry', 'none', None),
     'elt_unavailable': ErrorInfo('The models could not be listed; retry in a moment.', 'retry', 'none', 3),
     'email_not_verified': ErrorInfo('Open the link we emailed you, or send a new one from the sign-in page.', 'ask_human', 'none', None),
@@ -138,6 +140,21 @@ REGISTRY: dict[str, ErrorInfo] = {
     'extra_is_primary': ErrorInfo('Leave the primary property out of the extra properties.', 'fix_and_retry', 'none', None),
     'feature_not_in_plan': ErrorInfo('Ask an organization admin to move to a plan that includes this feature.', 'ask_human', 'none', None),
     'feature_not_rollout': ErrorInfo('Pick a rollout feature; only those can be set per organization.', 'fix_and_retry', 'none', None),
+    'file_check_busy': ErrorInfo('Retry after the Retry-After interval.', 'retry', 'none', 3),
+    'file_check_timeout': ErrorInfo("Upload a smaller file, or save the workbook's data as CSV.", 'fix_and_retry', 'none', None),
+    'file_columns_limit_reached': ErrorInfo('Remove columns from the named tab so it stays within the limit.', 'fix_and_retry', 'none', None),
+    'file_encoding_unsupported': ErrorInfo("Pick the file's encoding in the file settings, or save it as UTF-8.", 'fix_and_retry', 'none', None),
+    'file_header_invalid': ErrorInfo("Give every column of the named tab a unique name in its header row, or set that tab's header row.", 'fix_and_retry', 'none', None),
+    'file_not_uploaded': ErrorInfo('Upload a file to the source first.', 'do_first', 'none', None),
+    'file_shared_strings_too_large': ErrorInfo("Save the workbook's data as CSV and upload that instead.", 'fix_and_retry', 'none', None),
+    'file_stage_expired': ErrorInfo('Upload the file again to check it.', 'do_first', 'none', None),
+    'file_stage_superseded': ErrorInfo("Review the source's current file, then upload yours again if it should replace it.", 'ask_human', 'none', None),
+    'file_too_large': ErrorInfo('Upload a smaller file, or split it into several files.', 'fix_and_retry', 'none', None),
+    'file_type_unsupported': ErrorInfo('Save the file as .csv, .tsv or .xlsx and upload it again.', 'fix_and_retry', 'none', None),
+    'file_unavailable': ErrorInfo('Upload the file to the source again.', 'do_first', 'none', None),
+    'file_uncompressed_too_large': ErrorInfo('Remove unused sheets or rows from the workbook, or save the data as CSV.', 'fix_and_retry', 'none', None),
+    'file_unreadable': ErrorInfo('Open the file, save it again as .csv or .xlsx, and upload the new copy.', 'fix_and_retry', 'none', None),
+    'file_upload_needs_acknowledgement': ErrorInfo('Review the listed warnings and confirm again, acknowledging each one.', 'ask_human', 'none', None),
     'filter_type_conflict': ErrorInfo('Rename the filter, keep its kind, or take the card off this dashboard.', 'fix_and_retry', 'none', None),
     'folder_cycle': ErrorInfo('Move the folder somewhere outside itself.', 'fix_and_retry', 'none', None),
     'folder_name_taken': ErrorInfo('Pick another folder name.', 'fix_and_retry', 'none', None),
@@ -219,7 +236,11 @@ REGISTRY: dict[str, ErrorInfo] = {
     'member_not_found': ErrorInfo("List the organization's members and pick one of them.", 'fix_and_retry', 'none', None),
     'member_not_in_organization': ErrorInfo('Invite them to the organization first.', 'do_first', 'none', None),
     'member_role_unchanged': ErrorInfo('Pick a role the member does not hold yet.', 'fix_and_retry', 'none', None),
+    'metric_card_invalid': ErrorInfo("Edit the card to use the metric's own dimensions.", 'fix_and_retry', 'none', None),
+    'metric_cards_unavailable': ErrorInfo('Save the card with a SQL query instead of a metric.', 'fix_and_retry', 'none', None),
+    'metric_needs_yaml': ErrorInfo("Edit this metric in the model's YAML and push the model.", 'fix_and_retry', 'none', None),
     'metric_not_found': ErrorInfo('List the metrics you can query and use one of their names.', 'fix_and_retry', 'none', None),
+    'metric_not_granted': ErrorInfo('Ask an admin for a warehouse access role that includes this metric.', 'ask_human', 'none', None),
     'metric_query_failed': ErrorInfo('The metric query failed; retry in a moment.', 'retry', 'none', 3),
     'migration_refused': ErrorInfo('Fix each organization listed in refused, or leave it out, then run the move again.', 'fix_and_retry', 'none', None),
     'missing_feature_values': ErrorInfo('Set a value for each feature listed in problems.', 'fix_and_retry', 'none', None),
@@ -229,6 +250,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'model_check_unavailable': ErrorInfo('Retry in a moment; nothing was saved.', 'retry', 'none', 3),
     'model_in_git': ErrorInfo('Edit this model in its repository; Databay syncs the change.', 'ask_human', 'none', None),
     'model_in_use': ErrorInfo('Change or delete the models listed in readers first, then delete this one.', 'fix_and_retry', 'none', None),
+    'model_managed_in_git': ErrorInfo("Edit the semantic files in the project's git repository instead.", 'fix_and_retry', 'none', None),
     'model_name_reserved': ErrorInfo('Pick a name without the reserved part.', 'fix_and_retry', 'none', None),
     'model_name_taken': ErrorInfo('Pick another name for the model.', 'fix_and_retry', 'none', None),
     'model_not_published': ErrorInfo("Publish the project's draft metric model, then query again.", 'do_first', 'none', None),
@@ -432,6 +454,7 @@ REGISTRY: dict[str, ErrorInfo] = {
     'shopify_source_undeletable': ErrorInfo('Uninstall the app from Shopify to remove this source.', 'ask_human', 'none', None),
     'shopify_store_not_found': ErrorInfo("Check the store's address, then try again.", 'fix_and_retry', 'none', None),
     'sibling_being_removed': ErrorInfo('Retry in a few minutes; another account of this type is still being removed.', 'retry', 'none', 3),
+    'sign_in_rate_limited': ErrorInfo("Check the key's secret, then retry after the Retry-After interval.", 'retry', 'none', 1),
     'sink_column_type_required': ErrorInfo('Retry without sink_column_type; the warehouse picks the column type.', 'fix_and_retry', 'none', None),
     'sink_in_use': ErrorInfo('Delete the pipelines listed in pipes first.', 'do_first', 'none', None),
     'sink_not_found': ErrorInfo('List the warehouses and pick one you can see.', 'fix_and_retry', 'none', None),
@@ -1008,8 +1031,16 @@ class DraftAlreadyPublishedError(DatabayApiError):
     code = 'draft_already_published'
 
 
+class DraftChangedError(DatabayApiError):
+    code = 'draft_changed'
+
+
 class DraftExistsError(DatabayApiError):
     code = 'draft_exists'
+
+
+class DraftRenderMissingError(DatabayApiError):
+    code = 'draft_render_missing'
 
 
 class EffectiveNotLoweringError(DatabayApiError):
@@ -1054,6 +1085,66 @@ class FeatureNotInPlanError(DatabayApiError):
 
 class FeatureNotRolloutError(DatabayApiError):
     code = 'feature_not_rollout'
+
+
+class FileCheckBusyError(DatabayApiError):
+    code = 'file_check_busy'
+
+
+class FileCheckTimeoutError(DatabayApiError):
+    code = 'file_check_timeout'
+
+
+class FileColumnsLimitReachedError(DatabayApiError):
+    code = 'file_columns_limit_reached'
+
+
+class FileEncodingUnsupportedError(DatabayApiError):
+    code = 'file_encoding_unsupported'
+
+
+class FileHeaderInvalidError(DatabayApiError):
+    code = 'file_header_invalid'
+
+
+class FileNotUploadedError(DatabayApiError):
+    code = 'file_not_uploaded'
+
+
+class FileSharedStringsTooLargeError(DatabayApiError):
+    code = 'file_shared_strings_too_large'
+
+
+class FileStageExpiredError(DatabayApiError):
+    code = 'file_stage_expired'
+
+
+class FileStageSupersededError(DatabayApiError):
+    code = 'file_stage_superseded'
+
+
+class FileTooLargeError(DatabayApiError):
+    code = 'file_too_large'
+
+
+class FileTypeUnsupportedError(DatabayApiError):
+    code = 'file_type_unsupported'
+
+
+class FileUnavailableError(DatabayApiError):
+    code = 'file_unavailable'
+
+
+class FileUncompressedTooLargeError(DatabayApiError):
+    code = 'file_uncompressed_too_large'
+
+
+class FileUnreadableError(DatabayApiError):
+    code = 'file_unreadable'
+
+
+class FileUploadNeedsAcknowledgementError(DatabayApiError):
+    code = 'file_upload_needs_acknowledgement'
 
 
 class FilterTypeConflictError(DatabayApiError):
@@ -1380,8 +1471,24 @@ class MemberRoleUnchangedError(DatabayApiError):
     code = 'member_role_unchanged'
 
 
+class MetricCardInvalidError(DatabayApiError):
+    code = 'metric_card_invalid'
+
+
+class MetricCardsUnavailableError(DatabayApiError):
+    code = 'metric_cards_unavailable'
+
+
+class MetricNeedsYamlError(DatabayApiError):
+    code = 'metric_needs_yaml'
+
+
 class MetricNotFoundError(DatabayApiError):
     code = 'metric_not_found'
+
+
+class MetricNotGrantedError(DatabayApiError):
+    code = 'metric_not_granted'
 
 
 class MetricQueryFailedError(DatabayApiError):
@@ -1418,6 +1525,10 @@ class ModelInGitError(DatabayApiError):
 
 class ModelInUseError(DatabayApiError):
     code = 'model_in_use'
+
+
+class ModelManagedInGitError(DatabayApiError):
+    code = 'model_managed_in_git'
 
 
 class ModelNameReservedError(DatabayApiError):
@@ -2232,6 +2343,10 @@ class SiblingBeingRemovedError(DatabayApiError):
     code = 'sibling_being_removed'
 
 
+class SignInRateLimitedError(DatabayApiError):
+    code = 'sign_in_rate_limited'
+
+
 class SinkColumnTypeRequiredError(DatabayApiError):
     code = 'sink_column_type_required'
 
@@ -2725,7 +2840,9 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'docs_slug_taken': DocsSlugTakenError,
     'docs_unavailable': DocsUnavailableError,
     'draft_already_published': DraftAlreadyPublishedError,
+    'draft_changed': DraftChangedError,
     'draft_exists': DraftExistsError,
+    'draft_render_missing': DraftRenderMissingError,
     'effective_not_lowering': EffectiveNotLoweringError,
     'elt_unavailable': EltUnavailableError,
     'email_not_verified': EmailNotVerifiedError,
@@ -2737,6 +2854,21 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'extra_is_primary': ExtraIsPrimaryError,
     'feature_not_in_plan': FeatureNotInPlanError,
     'feature_not_rollout': FeatureNotRolloutError,
+    'file_check_busy': FileCheckBusyError,
+    'file_check_timeout': FileCheckTimeoutError,
+    'file_columns_limit_reached': FileColumnsLimitReachedError,
+    'file_encoding_unsupported': FileEncodingUnsupportedError,
+    'file_header_invalid': FileHeaderInvalidError,
+    'file_not_uploaded': FileNotUploadedError,
+    'file_shared_strings_too_large': FileSharedStringsTooLargeError,
+    'file_stage_expired': FileStageExpiredError,
+    'file_stage_superseded': FileStageSupersededError,
+    'file_too_large': FileTooLargeError,
+    'file_type_unsupported': FileTypeUnsupportedError,
+    'file_unavailable': FileUnavailableError,
+    'file_uncompressed_too_large': FileUncompressedTooLargeError,
+    'file_unreadable': FileUnreadableError,
+    'file_upload_needs_acknowledgement': FileUploadNeedsAcknowledgementError,
     'filter_type_conflict': FilterTypeConflictError,
     'folder_cycle': FolderCycleError,
     'folder_name_taken': FolderNameTakenError,
@@ -2818,7 +2950,11 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'member_not_found': MemberNotFoundError,
     'member_not_in_organization': MemberNotInOrganizationError,
     'member_role_unchanged': MemberRoleUnchangedError,
+    'metric_card_invalid': MetricCardInvalidError,
+    'metric_cards_unavailable': MetricCardsUnavailableError,
+    'metric_needs_yaml': MetricNeedsYamlError,
     'metric_not_found': MetricNotFoundError,
+    'metric_not_granted': MetricNotGrantedError,
     'metric_query_failed': MetricQueryFailedError,
     'migration_refused': MigrationRefusedError,
     'missing_feature_values': MissingFeatureValuesError,
@@ -2828,6 +2964,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'model_check_unavailable': ModelCheckUnavailableError,
     'model_in_git': ModelInGitError,
     'model_in_use': ModelInUseError,
+    'model_managed_in_git': ModelManagedInGitError,
     'model_name_reserved': ModelNameReservedError,
     'model_name_taken': ModelNameTakenError,
     'model_not_published': ModelNotPublishedError,
@@ -3031,6 +3168,7 @@ EXCEPTIONS: dict[str, type[DatabayApiError]] = {
     'shopify_source_undeletable': ShopifySourceUndeletableError,
     'shopify_store_not_found': ShopifyStoreNotFoundError,
     'sibling_being_removed': SiblingBeingRemovedError,
+    'sign_in_rate_limited': SignInRateLimitedError,
     'sink_column_type_required': SinkColumnTypeRequiredError,
     'sink_in_use': SinkInUseError,
     'sink_not_found': SinkNotFoundError,

@@ -38,6 +38,7 @@ SOURCE_HIDDEN_TYPE_LIST = Operation(
                 'linkedin_pages',
                 'x',
                 'tiktok_ads',
+                'file_upload',
             ),
             item_kind='string',
         ),

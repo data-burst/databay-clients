@@ -29,6 +29,7 @@ class AttachState(OpenStrEnum):
 class AuthKind(OpenStrEnum):
     STATIC_CREDENTIALS = 'static_credentials'
     OAUTH = 'oauth'
+    NONE = 'none'
 
 
 class BackendKind(OpenStrEnum):
@@ -268,6 +269,7 @@ class SourceType(OpenStrEnum):
     LINKEDIN_PAGES = 'linkedin_pages'
     X = 'x'
     TIKTOK_ADS = 'tiktok_ads'
+    FILE_UPLOAD = 'file_upload'
 
 
 class SyncMode(OpenStrEnum):
@@ -322,6 +324,44 @@ class CardChartType(OpenStrEnum):
     SCATTER = 'scatter'
     FUNNEL = 'funnel'
     TABLE = 'table'
+
+
+class MetricCardFilterOp(OpenStrEnum):
+    EQUALS = 'equals'
+    NOTEQUALS = 'notEquals'
+    CONTAINS = 'contains'
+    NOTCONTAINS = 'notContains'
+    STARTSWITH = 'startsWith'
+    ENDSWITH = 'endsWith'
+    GT = 'gt'
+    GTE = 'gte'
+    LT = 'lt'
+    LTE = 'lte'
+    SET = 'set'
+    NOTSET = 'notSet'
+
+
+class MetricCardOrderDirection(OpenStrEnum):
+    ASC = 'asc'
+    DESC = 'desc'
+
+
+class MetricCardTimeDefault(OpenStrEnum):
+    LAST_7_DAYS = 'last_7_days'
+    LAST_30_DAYS = 'last_30_days'
+    LAST_90_DAYS = 'last_90_days'
+    LAST_365_DAYS = 'last_365_days'
+    THIS_MONTH = 'this_month'
+    LAST_MONTH = 'last_month'
+    THIS_YEAR = 'this_year'
+
+
+class MetricCardTimeGrain(OpenStrEnum):
+    DAY = 'day'
+    WEEK = 'week'
+    MONTH = 'month'
+    QUARTER = 'quarter'
+    YEAR = 'year'
 
 
 class CardParamDefault(OpenStrEnum):
@@ -450,6 +490,39 @@ class CardChart(ResponseModel):
     y: list[str] | None = None
 
 
+class MetricCardFilter(ResponseModel):
+    from_filter: str | None = None
+    member: str
+    op: MetricCardFilterOp
+    values: list[str] | None = None
+
+
+class MetricCardOrder(ResponseModel):
+    direction: MetricCardOrderDirection = 'asc'
+    member: str
+
+
+class MetricCardTime(ResponseModel):
+    default: MetricCardTimeDefault | None = None
+    from_filter: str | None = None
+    grain: MetricCardTimeGrain | None = None
+
+
+class MetricCardQuery(ResponseModel):
+    dimensions: list[str] | None = None
+    filters: list[MetricCardFilter] | None = None
+    limit: int | None = None
+    metrics: list[str]
+    order: list[MetricCardOrder] | None = None
+    time: MetricCardTime | None = None
+
+
+class MetricCardSpec(ResponseModel):
+    chart: CardChart
+    query: MetricCardQuery
+    spec_version: Literal[2]
+
+
 class CardParam(ResponseModel):
     default: CardParamDefault | list[str] | None = None
     from_filter: str | None = None
@@ -464,7 +537,7 @@ class CardQuery(ResponseModel):
     sql: str
 
 
-class CardSpec(ResponseModel):
+class SqlCardSpec(ResponseModel):
     chart: CardChart
     query: CardQuery
     spec_version: Literal[1]
@@ -476,7 +549,7 @@ class CardOut(ResponseModel):
     id: str
     project_id: str
     revision: int
-    spec: CardSpec
+    spec: Annotated[SqlCardSpec | MetricCardSpec, Field(discriminator='spec_version')]
     title: str
     updated_at: datetime
     updated_by: str

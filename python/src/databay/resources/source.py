@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from pydantic import SecretStr
 
     from databay.models.shared import ConnectedSourceResponse
-    from databay.models.source import ConnectedSourceDetailResponse, Ga4ConnectedConfig, GoogleAdsConnectedConfig, InstagramConnectedConfig, LinkedInPagesConnectedConfig, MSSQLConnectedConfig, MetaAdsConnectedConfig, MongoDBConnectedConfig, MySQLConnectedConfig, PostgresConnectedConfig, PrecheckReportView, ShopifyConnectedConfig, SourceCascadeDeleteResponse, SourceForceDeleteResponse, SourceListResponse
+    from databay.models.source import ConnectedSourceDetailResponse, FileUploadConnectedConfig, Ga4ConnectedConfig, GoogleAdsConnectedConfig, InstagramConnectedConfig, LinkedInPagesConnectedConfig, MSSQLConnectedConfig, MetaAdsConnectedConfig, MongoDBConnectedConfig, MySQLConnectedConfig, PostgresConnectedConfig, PrecheckReportView, ShopifyConnectedConfig, SourceCascadeDeleteResponse, SourceForceDeleteResponse, SourceListResponse
 
 
 class SourceResource(Resource):
@@ -32,7 +32,7 @@ class SourceResource(Resource):
         self,
         *,
         name: str,
-        config: Ga4ConnectedConfig | GoogleAdsConnectedConfig | InstagramConnectedConfig | LinkedInPagesConnectedConfig | MetaAdsConnectedConfig | MongoDBConnectedConfig | MSSQLConnectedConfig | MySQLConnectedConfig | PostgresConnectedConfig | ShopifyConnectedConfig | dict[str, Any],
+        config: FileUploadConnectedConfig | Ga4ConnectedConfig | GoogleAdsConnectedConfig | InstagramConnectedConfig | LinkedInPagesConnectedConfig | MetaAdsConnectedConfig | MongoDBConnectedConfig | MSSQLConnectedConfig | MySQLConnectedConfig | PostgresConnectedConfig | ShopifyConnectedConfig | dict[str, Any],
         acknowledge_org_visible: bool | Unset = UNSET,
         allow_incomplete: bool | Unset = UNSET,
         publication_mode: str | None | Unset = UNSET,

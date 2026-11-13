@@ -48,6 +48,17 @@ class PrecheckReportViewProvider(OpenStrEnum):
     UNKNOWN = 'unknown'
 
 
+class FileParseSettings(RequestModel):
+    delimiter: str | None = None
+    encoding: str = 'utf-8'
+    header_rows: dict[str, int] | None = None
+
+
+class FileUploadConnectedConfig(RequestModel):
+    settings: FileParseSettings | None = None
+    source_type: Literal['file_upload'] = 'file_upload'
+
+
 class Ga4ConnectedConfig(RequestModel):
     extra_account_ids: list[str] | None = None
     multi_property: bool = False
@@ -144,7 +155,7 @@ class ShopifyConnectedConfig(RequestModel):
 class ConnectedSourceCreate(RequestModel):
     acknowledge_org_visible: bool = False
     allow_incomplete: bool = False
-    config: Annotated[PostgresConnectedConfig | MySQLConnectedConfig | MSSQLConnectedConfig | MongoDBConnectedConfig | ShopifyConnectedConfig | MetaAdsConnectedConfig | GoogleAdsConnectedConfig | Ga4ConnectedConfig | InstagramConnectedConfig | LinkedInPagesConnectedConfig, Field(discriminator='source_type')]
+    config: Annotated[PostgresConnectedConfig | MySQLConnectedConfig | MSSQLConnectedConfig | MongoDBConnectedConfig | ShopifyConnectedConfig | MetaAdsConnectedConfig | GoogleAdsConnectedConfig | Ga4ConnectedConfig | InstagramConnectedConfig | LinkedInPagesConnectedConfig | FileUploadConnectedConfig, Field(discriminator='source_type')]
     name: str
     publication_mode: PublicationMode | None = None
 
