@@ -444,7 +444,12 @@ class TypeWriter:
         return name
 
 
+OPERATOR_MEMBERS = {"=": "EQ", "!=": "NE", ">": "GT", ">=": "GE", "<": "LT", "<=": "LE"}
+
+
 def member_name(value: str, enum: str) -> str:
+    if value in OPERATOR_MEMBERS:
+        return OPERATOR_MEMBERS[value]
     name = re.sub(r"[^0-9A-Za-z]+", "_", value).strip("_").upper() or "EMPTY"
     if name[0].isdigit():
         name = f"V_{name}"
