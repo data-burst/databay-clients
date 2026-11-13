@@ -327,3 +327,11 @@ def test_an_optional_body_is_read_as_its_one_schema(monkeypatch, tmp_path):
     done = _generate("--check", "--spec", str(path))
 
     assert done.returncode == 0, done.stderr
+
+
+def test_comparison_operator_values_get_their_own_member_names(monkeypatch):
+    generator = _load_generator(monkeypatch)
+
+    lines = generator.render_enum("Op", ("=", "!=", ">", ">=", "<", "<=", "in"))
+
+    assert [line.split(" = ")[0].strip() for line in lines[1:] if line] == ["EQ", "NE", "GT", "GE", "LT", "LE", "IN"]
