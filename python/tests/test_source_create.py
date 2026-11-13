@@ -42,6 +42,7 @@ VARIANTS = {
     "mysql": Variant(("password",), DATABASE_FLAGS, DATABASE_CONFIG),
     "mssql": Variant(("password",), DATABASE_FLAGS, DATABASE_CONFIG),
     "mongodb": Variant(("password",), DATABASE_FLAGS, DATABASE_CONFIG),
+    "file_upload": Variant(()),
     "shopify": Variant(("access_token",), ("--start-date", "2024-01-01"), {"start_date": "2024-01-01"}),
     "meta_ads": Variant(
         ("access_token", "app_secret"),
