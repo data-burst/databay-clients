@@ -1,17 +1,82 @@
 name: release databay-cli
 
-# Publishes python/ to PyPI through trusted publishing. docs/cli.md has the release steps.
+# Each push to main lets semantic-release pick the next version from the commits since the last
+# python/v* tag, then builds, tests and publishes python/ to PyPI through trusted publishing. A
+# GITHUB_TOKEN-pushed tag starts no workflow, so it all runs here. docs/cli.md has the details.
 on:
   push:
-    tags:
-      - "python/v*"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "An existing tag to publish again, like python/v0.2.0"
+        required: true
 
 permissions:
   contents: read
 
+# Two releases at once would race for the same version and the push to main.
+concurrency:
+  group: release-databay-cli
+  cancel-in-progress: false
+
 jobs:
+  version:
+    name: pick the version and tag it
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # the release commit, the tag and the GitHub release
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'push'
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        if: github.event_name == 'push'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.4"
+          enable-cache: false
+
+      # Only a contract that is one release may ship; any other push to main releases nothing.
+      - name: Is contract/ one release
+        id: ready
+        if: github.event_name == 'push'
+        run: |
+          if uv run --no-project --python 3.13 python python/tools/release_client.py ready; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Python Semantic Release
+        id: semver
+        if: steps.ready.outputs.ready == 'true'
+        uses: python-semantic-release/python-semantic-release@b700dbeb1f431a0fcc30a79f3f0869407fe07278 # v10.7.0
+        with:
+          directory: python
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pick the tag to publish
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          RELEASED: ${{ steps.semver.outputs.released }}
+          RELEASED_TAG: ${{ steps.semver.outputs.tag }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          elif [ "$RELEASED" = "true" ]; then
+            echo "tag=$RELEASED_TAG" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: check the tag and build
+    needs: version
+    if: needs.version.outputs.tag != ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -19,6 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.version.outputs.tag }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,17 +95,17 @@ jobs:
           enable-cache: false
 
       - name: Refuse a commit that is not on main
-        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+        run: git merge-base --is-ancestor HEAD origin/main
 
       - name: Refuse a tag that is not this commit's release
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: uv run --no-project --python 3.13 python python/tools/release_client.py check --tag "$TAG"
 
       - name: Read the version
         id: version
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: echo "version=${TAG#python/v}" >> "$GITHUB_OUTPUT"
 
       - name: Build the sdist and wheel
@@ -54,11 +120,15 @@ jobs:
 
   tests:
     name: tests
+    needs: version
+    if: needs.version.outputs.tag != ''
     uses: ./.github/workflows/tests.yaml
+    with:
+      ref: ${{ needs.version.outputs.tag }}
 
   smoke:
     name: smoke test (Python ${{ matrix.python }})
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -67,6 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.version.outputs.tag }}
           persist-credentials: false
 
       - name: Install uv

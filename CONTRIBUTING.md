@@ -32,5 +32,6 @@ the skill's reference pages. They are marked in `.gitattributes`, and each start
 
 ## Commits
 
-Use conventional commit messages (`fix(cli): ...`, `feat(sdk): ...`). Add a line under
-`## Unreleased` in `python/CHANGELOG.md` for a change users notice.
+Use conventional commit messages (`fix(cli): ...`, `feat(sdk): ...`): they pick the next version and
+write `python/CHANGELOG.md`. `feat` is a minor release, `fix` and `perf` a patch, and `!` after the type
+(`feat(cli)!: ...`) a major one; the rest release nothing.

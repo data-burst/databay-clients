@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -127,146 +128,63 @@ def _commit_and_push(root: Path, message: str) -> None:
     _git(root, "push", "--quiet", "origin", "main")
 
 
-def _land(root: Path) -> None:
-    """Merge the release branch prepare left checked out, as its PR would."""
-    branch = _git(root, "branch", "--show-current").strip()
-    _git(root, "switch", "--quiet", "main")
-    _git(root, "merge", "--quiet", "--ff-only", branch)
-    _git(root, "push", "--quiet", "origin", "main")
+def _semantic_release() -> dict:
+    return tomllib.loads((REPO / "python/pyproject.toml").read_text(encoding="utf-8"))["tool"]["semantic_release"]
 
 
-def test_prepare_commits_a_release_that_check_accepts_and_tags_nothing(repo) -> None:
-    done = _release(repo, "prepare", "0.2.0")
+def _cut(root: Path, version: str) -> None:
+    """What semantic-release leaves on main: the stamped version and a dated changelog section."""
+    assert _release(root, "stamp", version).returncode == 0
+    path = root / "python/CHANGELOG.md"
+    flag = "<!-- version list -->\n"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(flag, f"{flag}\n## v{version} (2026-11-14)\n\n- Initial Release\n"),
+        encoding="utf-8",
+    )
+    _commit_and_push(root, f"chore(release): databay-cli v{version} [skip ci]")
 
-    assert done.returncode == 0, done.stderr
-    assert _git(repo, "branch", "--show-current").strip() == "release/databay-cli-v0.2.0"
-    assert _git(repo, "status", "--porcelain") == ""
-    assert _git(repo, "tag") == ""
-    assert set(_git(repo, "diff", "--name-only", "main", "HEAD").split()) == {
-        "python/CHANGELOG.md",
-        "python/pyproject.toml",
-        "python/uv.lock",
-        "python/src/databay/version.py",
-    }
+
+def test_stamp_writes_the_version_everywhere_and_check_accepts_the_release(repo) -> None:
+    _cut(repo, "0.2.0")
+
     assert 'version = "0.2.0"' in (repo / "python/pyproject.toml").read_text(encoding="utf-8")
     assert 'CLIENT_VERSION = "0.2.0"' in (repo / "python/src/databay/version.py").read_text(encoding="utf-8")
     assert re.search(r'name = "databay-cli"\nversion = "0.2.0"', (repo / "python/uv.lock").read_text(encoding="utf-8"))
-    changelog = (repo / "python/CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased, _, dated = changelog.partition("## Unreleased\n")[2].partition("## 0.2.0 - ")
-    assert unreleased.strip() == ""
-    assert "First release" in dated
     assert _generated_check(repo).returncode == 0
     assert _release(repo, "check", "--tag", "python/v0.2.0").returncode == 0
 
 
-@pytest.mark.parametrize(
-    ("version", "message"),
-    [
-        pytest.param("0.1.0", "does not go up", id="the same version"),
-        pytest.param("0.0.9", "does not go up", id="a lower version"),
-        pytest.param("0.2", "is not a version", id="not major.minor.patch"),
-        pytest.param("0.2.0rc1", "is not a version", id="a pre-release"),
-    ],
-)
-def test_prepare_refuses_a_version_that_does_not_go_up(repo, version, message) -> None:
-    done = _release(repo, "prepare", version)
+def test_stamp_changes_only_the_files_semantic_release_commits(repo) -> None:
+    assets = _semantic_release()["assets"]
+    assert _release(repo, "stamp", "0.2.0").returncode == 0
+
+    changed = {line[3:] for line in _git(repo, "status", "--porcelain").splitlines()}
+
+    assert changed <= set(assets)
+
+
+@pytest.mark.parametrize("version", ["0.2", "0.2.0rc1", "next"])
+def test_stamp_refuses_what_is_not_a_version(repo, version) -> None:
+    done = _release(repo, "stamp", version)
 
     assert done.returncode != 0
-    assert message in done.stderr
+    assert "is not a version" in done.stderr
     assert _git(repo, "status", "--porcelain") == ""
-    assert _git(repo, "branch", "--show-current").strip() == "main"
 
 
-def test_prepare_refuses_a_dirty_tree(repo) -> None:
-    (repo / "stray.txt").write_text("x", encoding="utf-8")
-
-    done = _release(repo, "prepare", "0.2.0")
-
-    assert done.returncode != 0
-    assert "uncommitted changes" in done.stderr
-    assert "stray.txt" in done.stderr
-    assert _git(repo, "branch", "--show-current").strip() == "main"
+def test_ready_accepts_a_release_sync(repo) -> None:
+    assert _release(repo, "ready").returncode == 0
 
 
-def test_prepare_refuses_a_missing_git_identity_before_writing_anything(repo) -> None:
-    done = _release(repo, "prepare", "0.2.0", env={"GIT_COMMITTER_NAME": ""})
-
-    assert done.returncode != 0
-    assert "GIT_COMMITTER_IDENT" in done.stderr
-    assert _git(repo, "status", "--porcelain") == ""
-    assert _git(repo, "branch", "--show-current").strip() == "main"
-
-
-def test_prepare_refuses_a_branch_that_is_not_main(repo) -> None:
-    _git(repo, "switch", "--quiet", "-c", "feature")
-    _git(repo, "commit", "--quiet", "--allow-empty", "-m", "unmerged")
-
-    done = _release(repo, "prepare", "0.2.0")
-
-    assert done.returncode != 0
-    assert "not origin/main" in done.stderr
-
-
-def test_prepare_refuses_a_main_behind_origin(repo) -> None:
-    _git(repo, "commit", "--quiet", "--allow-empty", "-m", "someone else's merge")
-    _git(repo, "push", "--quiet", "origin", "main")
-    _git(repo, "reset", "--quiet", "--hard", "HEAD~1")
-
-    done = _release(repo, "prepare", "0.2.0")
-
-    assert done.returncode != 0
-    assert "not origin/main" in done.stderr
-
-
-def test_a_failed_prepare_leaves_the_repo_as_it_was_and_can_run_again(repo) -> None:
-    hook = repo / ".git" / "hooks" / "pre-commit"
-    hook.parent.mkdir(exist_ok=True)
-    hook.write_text("#!/bin/sh\necho refused by the hook >&2\nexit 1\n", encoding="utf-8")
-    hook.chmod(0o755)
-
-    done = _release(repo, "prepare", "0.2.0")
-
-    assert done.returncode != 0
-    assert "refused by the hook" in done.stderr
-    assert _git(repo, "branch", "--show-current").strip() == "main"
-    assert _git(repo, "status", "--porcelain") == ""
-    assert _git(repo, "branch", "--list", "release/*") == ""
-    hook.unlink()
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
-
-
-def test_prepare_refuses_an_empty_changelog_section(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
-    _land(repo)
-
-    done = _release(repo, "prepare", "0.3.0")
-
-    assert done.returncode != 0
-    assert "'## Unreleased' is empty" in done.stderr
-
-
-def test_prepare_refuses_a_stale_generated_client(repo) -> None:
-    path = repo / "python/src/databay/spec.py"
-    path.write_text(path.read_text(encoding="utf-8") + "\n# edited\n", encoding="utf-8")
-    _commit_and_push(repo, "edit a generated file")
-
-    done = _release(repo, "prepare", "0.2.0")
-
-    assert done.returncode != 0
-    assert "the generated client is stale" in done.stderr
-
-
-def test_prepare_refuses_a_contract_with_no_release(repo) -> None:
+def test_ready_refuses_a_contract_with_no_release(repo) -> None:
     for name in ("core.released.json", "core.released.meta.json"):
         (repo / "contract" / name).unlink()
     _write_source(repo / "contract", "d" * 40)
-    _commit_and_push(repo, "a sync with no cut")
 
-    done = _release(repo, "prepare", "0.2.0")
+    done = _release(repo, "ready")
 
     assert done.returncode != 0
     assert "contract/core.released.json does not exist" in done.stderr
-    assert _git(repo, "branch", "--show-current").strip() == "main"
 
 
 @pytest.mark.parametrize(
@@ -278,7 +196,7 @@ def test_prepare_refuses_a_contract_with_no_release(repo) -> None:
     ],
 )
 def test_check_refuses_a_tag_that_differs_from_the_package_version(repo, tag, message) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
 
     done = _release(repo, "check", "--tag", tag)
 
@@ -287,7 +205,7 @@ def test_check_refuses_a_tag_that_differs_from_the_package_version(repo, tag, me
 
 
 def test_check_refuses_a_contract_file_edited_by_hand(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     path = repo / "contract/error_codes.json"
     path.write_bytes(path.read_bytes() + b"\n")
 
@@ -298,7 +216,7 @@ def test_check_refuses_a_contract_file_edited_by_hand(repo) -> None:
 
 
 def test_check_refuses_a_released_spec_that_differs_from_core(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     path = repo / "contract/core.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     document["info"]["description"] = "a sync after the cut"
@@ -312,7 +230,7 @@ def test_check_refuses_a_released_spec_that_differs_from_core(repo) -> None:
 
 
 def test_check_refuses_an_api_version_the_release_did_not_record(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     (repo / "contract/api_version.json").write_text('{\n "api_version": "1.1"\n}\n', encoding="utf-8")
     _write_source(repo / "contract", "e" * 40)
 
@@ -323,7 +241,7 @@ def test_check_refuses_an_api_version_the_release_did_not_record(repo) -> None:
 
 
 def test_check_refuses_a_generated_client_that_does_not_match(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     path = repo / "python/src/databay/version.py"
     path.write_text(path.read_text(encoding="utf-8").replace("0.2.0", "0.1.0"), encoding="utf-8")
 
@@ -335,7 +253,7 @@ def test_check_refuses_a_generated_client_that_does_not_match(repo) -> None:
 
 
 def test_check_refuses_a_lock_that_records_another_version(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     path = repo / "python/uv.lock"
     path.write_text(
         path.read_text(encoding="utf-8").replace(
@@ -351,9 +269,9 @@ def test_check_refuses_a_lock_that_records_another_version(repo) -> None:
 
 
 def test_check_refuses_a_version_with_no_changelog_section(repo) -> None:
-    assert _release(repo, "prepare", "0.2.0").returncode == 0
+    _cut(repo, "0.2.0")
     path = repo / "python/CHANGELOG.md"
-    path.write_text(re.sub(r"## 0\.2\.0 - .*\n", "", path.read_text(encoding="utf-8")), encoding="utf-8")
+    path.write_text(re.sub(r"## v0\.2\.0 .*\n", "", path.read_text(encoding="utf-8")), encoding="utf-8")
 
     done = _release(repo, "check", "--tag", "python/v0.2.0")
 
@@ -394,7 +312,7 @@ def test_the_workflow_publishes_only_after_the_tests_and_the_smoke_test() -> Non
     steps = "\n".join(str(step.get("run", "")) for step in jobs["build"]["steps"])
 
     assert sorted(jobs["publish"]["needs"]) == ["smoke", "tests"]
-    assert jobs["smoke"]["needs"] == "build"
+    assert jobs["smoke"]["needs"] == ["version", "build"]
     assert jobs["tests"]["uses"] == "./.github/workflows/tests.yaml"
     assert steps.index("python/tools/release_client.py check") < steps.index("uv build")
 
@@ -409,12 +327,24 @@ def test_the_tests_workflow_runs_on_pull_requests_and_can_be_called() -> None:
         assert command in steps
 
 
-def test_the_workflows_tag_trigger_matches_the_tag_the_script_checks() -> None:
+def test_semantic_release_tags_what_the_script_checks() -> None:
     script = (REPO / "python/tools/release_client.py").read_text(encoding="utf-8")
     prefix = re.search(r'^TAG_PREFIX = "([^"]+)"$', script, re.MULTILINE)
 
     assert prefix is not None
-    assert _triggers(_workflow(RELEASE_WORKFLOW)) == {"push": {"tags": [f"{prefix.group(1)}*"]}}
+    assert _semantic_release()["tag_format"] == f"{prefix.group(1)}{{version}}"
+    assert set(_triggers(_workflow(RELEASE_WORKFLOW))) == {"push", "workflow_dispatch"}
+    assert _triggers(_workflow(RELEASE_WORKFLOW))["push"] == {"branches": ["main"]}
+
+
+def test_semantic_release_runs_only_on_a_contract_that_is_one_release() -> None:
+    steps = _workflow(RELEASE_WORKFLOW)["jobs"]["version"]["steps"]
+    ready = next(i for i, step in enumerate(steps) if "release_client.py ready" in str(step.get("run", "")))
+    semver = next(i for i, step in enumerate(steps) if "python-semantic-release" in str(step.get("uses", "")))
+
+    assert ready < semver
+    assert steps[semver]["if"] == "steps.ready.outputs.ready == 'true'"
+    assert steps[semver]["with"]["directory"] == "python"
 
 
 def test_no_other_workflow_runs_on_a_release_tag() -> None:

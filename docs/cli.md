@@ -82,50 +82,43 @@ records the server commit it was copied from and a sha256 of each file. See `CON
 
 ## Releasing
 
-Publishing is not reversible: PyPI never lets a version be used twice. A release is a PR and then a
-tag, so the tagged commit is exactly what ships.
+Publishing is not reversible: PyPI never lets a version be used twice. Releases are automatic: each push
+to `main` runs `.github/workflows/release-databay-cli.yaml`, and
+[python-semantic-release](https://python-semantic-release.readthedocs.io/) (configured under
+`[tool.semantic_release]` in `python/pyproject.toml`) picks the next version
+from the conventional commits since the last `python/v*` tag: `feat` is a minor release, `fix` and `perf`
+a patch, a `!` after the type a major one, and anything else no release.
 
-1. The server team cuts a release of the contract and syncs it here as a release sync, so
-   `contract/core.released.json` equals `contract/core.json`.
-2. List the changes under `## Unreleased` in `python/CHANGELOG.md`, in a normal PR.
-3. On a clean `main` equal to `origin/main`, with a git identity set, run the script with a version
-   higher than the current one:
+A push releases nothing unless `contract/` is one release: the server team has cut a release of the
+contract and synced it here as a release sync, so `contract/core.released.json` equals
+`contract/core.json`. `contract/` is one release when its files match the digests in `contract/SOURCE`,
+the released spec equals `core.json`, and the released meta records the same `api_version` and error
+codes as `api_version.json` and `error_codes.json`. Check it locally with:
 
-   ```bash
-   python python/tools/release_client.py prepare 0.2.0
-   ```
+```bash
+python python/tools/release_client.py ready
+```
 
-   The script commits on `release/databay-cli-v0.2.0`: it sets the version in `pyproject.toml` and
-   `uv.lock`, dates the changelog section and regenerates the client. It never pushes, tags or
-   publishes. It refuses a dirty tree, a commit that is not `origin/main`, a version that does not go
-   up, an empty `Unreleased` section, a stale generated client, and a `contract/` that is not one
-   release (below). If a later step fails, it puts the repository back where it started.
-4. Push the branch, open a PR and merge it. Nothing is published yet.
-5. An owner tags the merge commit. The tag is the release:
+### What a push to main runs
 
-   ```bash
-   git tag python/v0.2.0 <merge commit>
-   git push origin python/v0.2.0
-   ```
-
-`contract/` is one release when its files match the digests in `contract/SOURCE`, the released spec
-equals `core.json`, and the released meta records the same `api_version` and error codes as
-`api_version.json` and `error_codes.json`.
-
-### What the tag runs
-
-`.github/workflows/release-databay-cli.yaml`:
-
-1. **Refuses** a commit that is not on `main`, then runs `python/tools/release_client.py check --tag <tag>`:
+1. **Versions**, when `release_client.py ready` passes: semantic-release runs
+   `release_client.py stamp <version>` (the version in `pyproject.toml` and `uv.lock`, then the
+   regenerated client), adds the version's section to `python/CHANGELOG.md`, commits that to `main` as
+   `chore(release): databay-cli v<version> [skip ci]`, tags it `python/v<version>` and opens a GitHub
+   release. The bot that pushes needs leave to push to `main`.
+2. **Refuses** a tagged commit that is not on `main`, then runs `release_client.py check --tag <tag>`:
    it refuses a tag that differs from the `pyproject.toml` version, a `contract/` that is not one release,
    a stale generated client, and a version with no dated changelog section.
-2. **Builds** the sdist and the wheel.
-3. **Tests**: ruff, the client's tests and the regeneration check, through `tests.yaml`.
-4. **Smoke-tests** the wheel in a fresh venv on Python 3.12 and 3.13 (`python/tools/smoke_client_wheel.sh`):
+3. **Builds** the sdist and the wheel.
+4. **Tests** the tagged commit: ruff, the client's tests and the regeneration check, through `tests.yaml`.
+5. **Smoke-tests** the wheel in a fresh venv on Python 3.12 and 3.13 (`python/tools/smoke_client_wheel.sh`):
    the skill and license files are in it, `databay --help` and `--version` work, and `databay skill
    install` writes the skill to a temporary folder.
-5. **Publishes** with PyPI trusted publishing from the `pypi` environment, once the tests and the smoke
+6. **Publishes** with PyPI trusted publishing from the `pypi` environment, once the tests and the smoke
    tests have passed and its required reviewer approves. This job alone holds `id-token: write`, and no
    PyPI token is stored anywhere.
+
+If publishing fails after the tag exists, run the workflow by hand (**Run workflow**) with that tag,
+like `python/v0.2.0`: it skips versioning and builds, tests and publishes the tag again.
 
 Every action in the workflows is pinned to a commit, and uv to a fixed version.

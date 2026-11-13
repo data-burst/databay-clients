@@ -1,10 +1,12 @@
 # Changelog
 
-`databay-cli`: the Databay SDK and the `databay` command. New entries go under Unreleased; a release
-dates them (`python/tools/release_client.py`, see `docs/cli.md`). This package's version is separate from
+`databay-cli`: the Databay SDK and the `databay` command. semantic-release writes each version's section from
+the conventional commits since the one before (see `docs/cli.md`). This package's version is separate from
 `api_version`, the version of the API a client speaks.
 
-## Unreleased
+<!-- version list -->
+
+## What the first release holds
 
 ### Added
 

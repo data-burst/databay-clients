@@ -1,16 +1,15 @@
 """
-Prepare a ``databay-cli`` release, and check that a tagged commit is one.
+The steps of a ``databay-cli`` release that semantic-release cannot do itself; see docs/cli.md.
 
-    python python/tools/release_client.py prepare 0.2.0       # commit the release on a new branch
+    python python/tools/release_client.py ready                    # may main be released now?
+    python python/tools/release_client.py stamp 0.2.0              # write the version semantic-release picked
     python python/tools/release_client.py check --tag python/v0.2.0
 
-``prepare`` moves the version, dates the changelog's Unreleased section and regenerates the client. It
-commits that on ``release/databay-cli-v<version>`` for a PR that merges before the tag, and never
-pushes, tags or publishes. ``check`` is what the release workflow runs on the tag; see docs/cli.md.
-
-Both refuse a ``contract/`` that is not exactly one release synced from the server: the released spec
-equals ``core.json``, its meta matches the API version and error codes, and every file matches the
-digest ``contract/SOURCE`` records.
+``ready`` refuses a ``contract/`` that is not exactly one release synced from the server: the released
+spec equals ``core.json``, its meta matches the API version and error codes, and every file matches the
+digest ``contract/SOURCE`` records. The release workflow runs semantic-release only when it passes.
+``stamp`` is semantic-release's build command: it sets the version in ``pyproject.toml`` and ``uv.lock``
+and regenerates the client. ``check`` is what the workflow runs on the tag before building.
 
 Standard library only: the workflow runs this before installing anything.
 """
@@ -23,7 +22,6 @@ import re
 import subprocess
 import sys
 import tomllib
-from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -51,7 +49,6 @@ CHANGELOG = CLIENT_ROOT / "CHANGELOG.md"
 GENERATOR = CLIENT_ROOT / "tools" / "gen_client.py"
 PACKAGE = "databay-cli"
 TAG_PREFIX = "python/v"
-UNRELEASED_HEADING = "## Unreleased"
 
 
 class ReleaseRefused(Exception):
@@ -71,13 +68,6 @@ def project_version() -> str:
 
 def _run(*command: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, capture_output=True, text=True, check=False, cwd=REPO_ROOT)  # noqa: S603
-
-
-def _git(*args: str) -> str:
-    done = _run("git", *args)
-    if done.returncode != 0:
-        raise ReleaseRefused(f"git {' '.join(args)} failed: {done.stderr.strip()}")
-    return done.stdout
 
 
 def _generated_files_differ() -> str | None:
@@ -107,22 +97,6 @@ def lock_version() -> str:
     if len(found) != 1:
         raise ReleaseRefused(f"{CLIENT_LOCK.name}: expected one {PACKAGE} entry, found {len(found)}")
     return found[0]
-
-
-def _unreleased_notes(text: str) -> str:
-    if text.count(f"{UNRELEASED_HEADING}\n") != 1:
-        raise ReleaseRefused(f"{CHANGELOG.name}: expected one '{UNRELEASED_HEADING}' heading")
-    _, _, rest = text.partition(f"{UNRELEASED_HEADING}\n")
-    return re.split(r"^## ", rest, maxsplit=1, flags=re.MULTILINE)[0].strip()
-
-
-def _date_changelog(version: str) -> None:
-    text = CHANGELOG.read_text(encoding="utf-8")
-    today = datetime.now(UTC).date().isoformat()
-    CHANGELOG.write_text(
-        text.replace(f"{UNRELEASED_HEADING}\n", f"{UNRELEASED_HEADING}\n\n## {version} - {today}\n", 1),
-        encoding="utf-8",
-    )
 
 
 def refuse_unless_one_release() -> None:
@@ -156,74 +130,17 @@ def refuse_unless_one_release() -> None:
         raise ReleaseRefused(f"the released contract's error codes differ from {ERROR_CODES.name}")
 
 
-def _refuse_unless_current_main() -> None:
-    """The tag goes on the merge of this branch, so the release starts from what main holds now."""
-    _git("fetch", "--quiet", "origin", "main")
-    head = _git("rev-parse", "HEAD").strip()
-    main = _git("rev-parse", "origin/main").strip()
-    if head != main:
-        raise ReleaseRefused(f"HEAD is {head}, not origin/main ({main}); switch to main and pull first")
-
-
-def _write_release(version: str) -> None:
-    _set_version(version)
-    _date_changelog(version)
-    _regenerate()
-    check(f"{TAG_PREFIX}{version}")
-    _git("add", "-A", "--", "python")
-    _git("commit", "-m", f"chore(release): databay-cli {version}")
-
-
-def _roll_back(start: list[str], branch: str) -> None:
-    """Back to where ``prepare`` started. The tree was clean then, so this removes only what ``prepare`` wrote."""
-    _git("reset", "--hard", "--quiet")
-    _git("clean", "-fdq", "--", "python")
-    _git("switch", "--quiet", *start)
-    _git("branch", "-D", "--quiet", branch)
-
-
 def _regenerate() -> None:
     done = _run(sys.executable, str(GENERATOR))
     if done.returncode != 0:
         raise ReleaseRefused(f"python/tools/gen_client.py failed:\n{done.stdout}{done.stderr}")
 
 
-def prepare(version: str) -> str:
-    """Commit the release on a new branch and return the branch's name."""
-    new = parse_version(version)
-    current = project_version()
-    if new <= parse_version(current):
-        raise ReleaseRefused(f"version {version} does not go up: {PYPROJECT.name} is at {current}")
-    dirty = _git("status", "--porcelain")
-    if dirty.strip():
-        raise ReleaseRefused(
-            f"the working tree has uncommitted changes; commit or remove them first:\n{dirty.rstrip()}"
-        )
-    _git("var", "GIT_AUTHOR_IDENT")
-    _git("var", "GIT_COMMITTER_IDENT")
-    _refuse_unless_current_main()
-    refuse_unless_one_release()
-    differ = _generated_files_differ()
-    if differ is not None:
-        raise ReleaseRefused(f"the generated client is stale; run python python/tools/gen_client.py first:\n{differ}")
-    if not _unreleased_notes(CHANGELOG.read_text(encoding="utf-8")):
-        raise ReleaseRefused(f"{CHANGELOG.name}: '{UNRELEASED_HEADING}' is empty; say what this release changes")
-
-    branch = f"release/databay-cli-v{version}"
-    current_branch = _git("branch", "--show-current").strip()
-    start = [current_branch] if current_branch else ["--detach", _git("rev-parse", "HEAD").strip()]
-    _git("switch", "--quiet", "-c", branch)
-    try:
-        _write_release(version)
-    except Exception as exc:
-        try:
-            _roll_back(start, branch)
-        except ReleaseRefused as failed:
-            raise ReleaseRefused(
-                f"{exc}\nthen rolling back failed, so the repository is not as it was: {failed}"
-            ) from exc
-        raise
-    return branch
+def stamp(version: str) -> None:
+    """Write ``version`` everywhere the package records it."""
+    parse_version(version)
+    _set_version(version)
+    _regenerate()
 
 
 def check(tag: str) -> None:
@@ -243,7 +160,7 @@ def check(tag: str) -> None:
     if differ is not None:
         raise ReleaseRefused(f"the generated client does not match this commit:\n{differ}")
     if not re.search(
-        rf"^## {re.escape(version)} - \d{{4}}-\d{{2}}-\d{{2}}$", CHANGELOG.read_text("utf-8"), re.MULTILINE
+        rf"^## v{re.escape(version)} \(\d{{4}}-\d{{2}}-\d{{2}}\)$", CHANGELOG.read_text("utf-8"), re.MULTILINE
     ):
         raise ReleaseRefused(f"{CHANGELOG.name} has no section for {version}")
 
@@ -251,18 +168,19 @@ def check(tag: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("prepare", help="commit a release on a new branch").add_argument("version")
+    commands.add_parser("ready", help="refuse a contract/ that is not one release")
+    commands.add_parser("stamp", help="write a version into the package").add_argument("version")
     commands.add_parser("check", help="refuse a tag that is not this commit's release").add_argument(
         "--tag", required=True
     )
     args = parser.parse_args()
     try:
-        if args.command == "prepare":
-            branch = prepare(args.version)
-            print(
-                f"committed the release on {branch}. Next: push it and open a PR. After it merges, an owner tags "
-                f"the merge commit on main with {TAG_PREFIX}{args.version}; the tag publishes to PyPI."
-            )
+        if args.command == "ready":
+            refuse_unless_one_release()
+            print("contract/ is one release")
+        elif args.command == "stamp":
+            stamp(args.version)
+            print(f"stamped {PACKAGE} {args.version}")
         else:
             check(args.tag)
             print(f"{args.tag} matches this commit")
