@@ -61,6 +61,10 @@ mode = "update"
 # The first release would otherwise list every commit since the repository began.
 mask_initial_release = true
 
+# PyPI gets the wheel from the workflow; the GitHub release carries no files.
+[tool.semantic_release.publish]
+upload_to_vcs_release = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
