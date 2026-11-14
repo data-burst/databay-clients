@@ -136,12 +136,13 @@ def test_stamp_writes_the_version_everywhere_and_check_accepts_the_release(repo)
 
 
 def test_stamp_changes_only_the_files_semantic_release_commits(repo) -> None:
-    assets = _semantic_release()["assets"]
+    staged = _semantic_release()["build_command"].partition("&& git add ")[2].split()
     assert _release(repo, "stamp", "0.2.0").returncode == 0
 
     changed = {line[3:] for line in _git(repo, "status", "--porcelain").splitlines()}
 
-    assert changed <= set(assets)
+    assert staged
+    assert changed <= {f"python/{path}" for path in staged}
 
 
 @pytest.mark.parametrize("version", ["0.2", "0.2.0rc1", "next"])

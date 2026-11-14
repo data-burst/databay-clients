@@ -49,10 +49,10 @@ tag_format = "python/v{version}"
 commit_message = "chore(release): databay-cli v{version} [skip ci]"
 # Start at 0.x like the unreleased package: without it, the first release is 1.0.0.
 allow_zero_version = true
-# release_client.py owns the version: pyproject.toml, uv.lock and the generated version.py.
-build_command = "python3 tools/release_client.py stamp \"$NEW_VERSION\""
-# semantic-release stages these from the repository root, unlike the changelog, which it finds from python/.
-assets = ["python/pyproject.toml", "python/uv.lock", "python/src/databay/version.py"]
+# release_client.py owns the version: pyproject.toml, uv.lock and the generated version.py. They are
+# staged here, not listed as `assets`: semantic-release also uploads assets to the GitHub release, from
+# the wrong folder, and fails after tagging.
+build_command = "python3 tools/release_client.py stamp \"$NEW_VERSION\" && git add pyproject.toml uv.lock src/databay/version.py"
 
 [tool.semantic_release.changelog]
 mode = "update"
@@ -60,10 +60,6 @@ mode = "update"
 [tool.semantic_release.changelog.default_templates]
 # The first release would otherwise list every commit since the repository began.
 mask_initial_release = true
-
-# PyPI gets the wheel from the workflow; the GitHub release carries no files.
-[tool.semantic_release.publish]
-upload_to_vcs_release = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
