@@ -6,10 +6,8 @@ ships with it lets an agent such as Claude Code drive the server through the com
 Needs Python 3.12 or newer, on Linux or macOS. The package is `databay-cli`; the `databay` project on
 PyPI is unrelated.
 
-Until the first PyPI release, install it from the repository:
-
 ```bash
-uv tool install "git+https://github.com/data-burst/databay-clients#subdirectory=python"
+uv tool install databay-cli
 databay login --server https://<host>
 databay skill install --target claude
 ```

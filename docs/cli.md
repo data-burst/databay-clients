@@ -8,15 +8,12 @@ client contract in `contract/`.
 The package is **`databay-cli`**; the command is `databay`. `databay` on PyPI is an unrelated project.
 Never install it.
 
-Nothing has been published to PyPI yet, so install from this repository. uv fetches a suitable Python:
+Install it from PyPI; uv fetches a suitable Python:
 
 ```bash
-uv tool install "git+https://github.com/data-burst/databay-clients#subdirectory=python"
-uv tool install --force "git+https://github.com/data-burst/databay-clients#subdirectory=python"   # later
+uv tool install databay-cli
+uv tool upgrade databay-cli   # later
 ```
-
-Don't run `uv tool install databay-cli` yet: until the first publish, that name on PyPI is not ours.
-The first publish replaces this section with the PyPI commands.
 
 ## Sign in
 

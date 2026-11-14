@@ -12,7 +12,7 @@ Apache-2.0.
 Install the CLI and sign in:
 
 ```bash
-uv tool install "git+https://github.com/data-burst/databay-clients#subdirectory=python"
+uv tool install databay-cli
 databay login --server https://<host>
 ```
 
