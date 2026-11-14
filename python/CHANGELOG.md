@@ -6,6 +6,19 @@ the conventional commits since the one before (see `docs/cli.md`). This package'
 
 <!-- version list -->
 
+## v0.1.2 (2026-11-14)
+
+### Bug Fixes
+
+- **tests**: Compare against the package version, not 0.1.0
+  ([`2f62c27`](https://github.com/data-burst/databay-clients/commit/2f62c271f2a7cecf17183561ff7c199290531ef9))
+
+### Continuous Integration
+
+- **release**: Stage the stamped files instead of listing them as assets
+  ([`cf690a9`](https://github.com/data-burst/databay-clients/commit/cf690a914430b8ea0ab0445aca273b6b22c6a0e6))
+
+
 ## v0.1.1 (2026-11-14)
 
 ### Bug Fixes
