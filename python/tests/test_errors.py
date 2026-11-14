@@ -15,6 +15,7 @@ from databay.errors import DatabayFeatureDisabled
 from databay.feature_header import FEATURE_SOURCE_HINTS
 from databay.sdk import Databay
 from databay.tokens import StaticToken
+from databay.version import CLIENT_VERSION
 
 PIPE = "11111111-2222-3333-4444-555555555555"
 PIPE_PATH = f"/api/cdc/pipe/{PIPE}"
@@ -102,7 +103,7 @@ def test_the_error_object_carries_recovery_from_the_registry_and_context(cli, se
     context = error["context"]
     assert context["server"] == SERVER
     assert context["profile"] == "test"
-    assert context["cli_version"] == "0.1.0"
+    assert context["cli_version"] == CLIENT_VERSION
     assert context["api_version"] == "1.0"
     assert context["request_id"] == server.calls("GET", PIPE_PATH)[0].headers["x-correlation-id"]
 

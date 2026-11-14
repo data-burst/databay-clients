@@ -9,6 +9,7 @@ from conftest import SERVER, TOKEN, FakeServer, answer
 from databay.errors import DatabayError
 from databay.tokens import StaticToken
 from databay.transport import Request, Transport
+from databay.version import CLIENT_VERSION
 
 
 def _transport(server: FakeServer, events: list, sleeps: list, *, retries: bool = True) -> Transport:
@@ -116,7 +117,7 @@ def test_every_request_says_who_sent_it(server):
 
     sent = server.calls("GET", "/x")[0]
     assert sent.headers["authorization"] == f"Bearer {TOKEN}"
-    assert sent.headers["user-agent"] == "databay-python/0.1.0 (sdk)"
+    assert sent.headers["user-agent"] == f"databay-python/{CLIENT_VERSION} (sdk)"
     assert sent.headers["traceparent"].startswith("00-")
 
 
