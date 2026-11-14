@@ -1,6 +1,6 @@
 [project]
 name = "databay-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "Databay SDK and the databay CLI, generated from the Databay client contract"
 readme = "README.md"
 requires-python = ">=3.12"

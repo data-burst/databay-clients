@@ -6,6 +6,19 @@ the conventional commits since the one before (see `docs/cli.md`). This package'
 
 <!-- version list -->
 
+## v0.1.1 (2026-11-14)
+
+### Bug Fixes
+
+- **readme**: Install databay-cli from PyPI
+  ([`2f1bdd9`](https://github.com/data-burst/databay-clients/commit/2f1bdd972036d2930a434dba1cfccf96f5d69f0f))
+
+### Continuous Integration
+
+- **release**: Attach no files to the GitHub release
+  ([`6b0d8b4`](https://github.com/data-burst/databay-clients/commit/6b0d8b4d0596642a7c767ef1b02a61c6ab667d07))
+
+
 ## v0.1.0 (2026-11-13)
 
 - Initial Release
